@@ -1,0 +1,77 @@
+<h1>Digital NZ Query Syntax</h1>
+
+<p>The DigitalNZ search system uses Apache Lucene syntax, which is fully described in the <a href="http://lucene.apache.org/java/2_4_0/queryparsersyntax.html">Apache Lucene Query Parser Syntax</a> documentation.</p>
+<p>Lucene syntax is very powerful, and gives you access to numerous features, including fielded search, boolean operators, Google-style operators, nesting and grouping, proximity operators, wildcards, even fuzzy search.</p>
+<h2>Examples</h2>
+<p>Complex queries can be built up using boolean operators (<em>AND</em>, <em>NOT</em>) and with fielded searches using <em>field:value</em> syntax.</p>
+
+<ul>
+    <li>Results from 1908: <b>year:1908</b></li>
+    <li>Results from the 20th century: <b>century:1900-1999</b></li>
+    <li>Results where the location is Wellington: <b>placename:Wellington</b></li>
+    <li>Results where the location starts with Wellington: <b>placename:Wellington*</b></li>
+
+    <li>Results from Auckland in 1908: <b>placename:Auckland* AND year:1908</b></li>
+    <li>Results from North Otago Museum: <b>content_partner:&quot;North Otago Museum&quot;</b></li>
+    <li>Results covered by Crown Copyright: <b>rights:&quot;Crown copyright&quot;</b></li>
+    <li>Date range searching: <b>date:[1900-01-01T00:00:00Z TO 1903-01-01T00:00:00Z]</b></li>
+
+    <li>And finally, you can search for everything in DigitalNZ by specifying that you want every value from every field: <b>*:*</b></li>
+</ul>
+<h2>Fielded, full text, and date searching</h2>
+<p>DigitalNZ offers exact match, full text, and date range searching.</p>
+<h3>Exact match indexing</h3>
+<p>Exact match searches require that the search text matches the indexed data exactly. Fields that can be searched using exact matches include:</p>
+<ul>
+    <li>id</li>
+
+    <li>category</li>
+    <li>content_partner</li>
+    <li>century</li>
+    <li>creator</li>
+    <li>decade</li>
+    <li>language</li>
+
+    <li>placename (metadata to be cleaned up)</li>
+    <li>rights</li>
+    <li>subject</li>
+    <li>year</li>
+</ul>
+<p>Note that DigitalNZ generates the <em>year</em>, <em>decade </em>and <em>century </em>values based on any <em>date</em> metadata associated with a record.</p>
+
+<h3>Text indexing</h3>
+<p>Text index searches do not require an exact match, instead the search text will match against words that appear anywhere in the indexed data. Fields that can be searched using text indexing include:</p>
+<ul>
+    <li>title</li>
+    <li>description</li>
+    <li>fulltext (not used yet, currently full text is stored in the description field)</li>
+    <li>text (the default search field - see below)</li>
+
+</ul>
+<h3>Date range indexing</h3>
+<p>Date indexed fields must be searched using date range syntax. Fields that can be searched using date range indexing include</p>
+<ul>
+    <li>date (any date associated with the item)</li>
+    <li>syndication_date (the date it was added to DigitalNZ)</li>
+</ul>
+<h2>The default search field</h2>
+<p>The &quot;text&quot; field is the default search field: if you do not specify a field explicitly, the text field will be searched.</p>
+
+<p>The text field is not a real field, it is a copy of all these fields: title, description, category, content_partner, creator, subject, year, placename, and fulltext.</p>
+<p>&nbsp;</p>
+
+<hr/>
+
+<p>Source: <a href="http://www.digitalnz.org/developer/api-docs/query-syntax/">Digital NZ Query Syntax</a></p>
+
+<p>Copyright &copy; 2009 National Library of New Zealand</p>
+
+<p>This program is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.</p>
+
+<p>This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   <a href="http://www.fsf.org/licensing/licenses/gpl.html">GNU General Public License</a> for more details.</p>
