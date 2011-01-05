@@ -40,7 +40,7 @@ if (!$blockinstance = get_record($table, 'id', $id)) {
 $blockconfig = unserialize(base64_decode($blockinstance->configdata));
 
 $searchprovider = '';
-$searchprovidername = get_string('blockname', 'block_extsearch');
+$searchprovidername = get_string('pluginname', 'block_extsearch');
 if (!empty($blockconfig->search_provider)) {
     $searchprovider = clean_param($blockconfig->search_provider, PARAM_ALPHANUM);
     $searchprovidername = get_string($blockconfig->search_provider, 'block_extsearch');
