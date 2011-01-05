@@ -99,7 +99,7 @@ if (!empty($direction)) {
 }
 print '<input type="text" id="query" name="query" size="48" value="'.htmlspecialchars($query).'" />';
 print '<input type="submit" value="'.get_string('searchbutton', 'block_extsearch').'" />';
-print helpbutton('querysyntax_'.$searchprovider, get_string('querysyntax', 'block_extsearch'), 'block_extsearch').'</p>';
+print $OUTPUT->help_icon('querysyntax_'.$searchprovider, 'block_extsearch', get_string('querysyntax','block_extsearch')).'</p>';
 print '</form>';
 
 if (!empty($query) && $searchengine->search()) {
