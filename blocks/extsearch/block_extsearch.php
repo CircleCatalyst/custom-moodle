@@ -1,6 +1,5 @@
 <?php
 
-define('BLOCK_VERSION', 2010070800);
 require_once "$CFG->dirroot/blocks/moodleblock.class.php";
 
   /**
@@ -16,9 +15,8 @@ require_once "$CFG->dirroot/blocks/moodleblock.class.php";
   class block_extsearch extends block_base {
 
     function init() {
-      $this->title = get_string('blockname', 'block_extsearch');
+      $this->title = get_string('pluginname', 'block_extsearch');
       $this->cron = 0;
-      $this->version = BLOCK_VERSION;
     }
 
     function instance_allow_multiple() {
