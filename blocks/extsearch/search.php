@@ -14,7 +14,7 @@ $filter   = optional_param('filter',array(), PARAM_TEXT);
 $direction = optional_param('direction',0,PARAM_INT); //options 0 or 1. if 1, sets sort direction to desc. (DNZ specific)
 $sort     = optional_param('sort','',PARAM_TEXT); //field to sort by (category, content_provider, date, syndication_date, title) (DNZ specific)
 
-if (!$course = get_record('course', 'id', $courseid)) {
+if (!$course = $DB->get_record('course', array('id'=>$courseid))) {
     print_error('error:incorrectcourseid', 'block_extsearch');
 }
 $courselink = $CFG->wwwroot.'/course/view.php?id='.$courseid;
@@ -23,13 +23,7 @@ if ($page < 0) {
     $page = 0;
 }
 
-if ($pinned) {
-    $table = 'block_pinned';
-} else {
-    $table = 'block_instance';
-}
-
-if (!$blockinstance = get_record($table, 'id', $id)) {
+if (!$blockinstance = $DB->get_record('block_instances', array('id'=>$id))) {
     if (empty($choose)) {
         print_error('error:incorrectblockid', 'block_extsearch', $courselink);
     }
