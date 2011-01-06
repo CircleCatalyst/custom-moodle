@@ -25,6 +25,7 @@ way of using an external search engine from within a course page.
 
 It currently supports these search providers:
 - DigitalNZ (http://www.digitalnz.org)
+- EDNA/Education Network Australia (http://www.edna.edu.au)
 - Google Web Search (http://www.google.com)
 
 

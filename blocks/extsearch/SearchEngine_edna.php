@@ -112,8 +112,8 @@ function get_node_value($xmlnode, $nodename, $attributename='', $attributevalue=
 }
 
 /**
- * Search Results parser for the Education Sector Federated Search
- * engine (http://www.esfs.govt.nz).
+ * Search Results parser for the Education Network Australia
+ * engine (http://www.edna.edu.au).
  */
 class SearchResults_edna extends SearchResults {
 

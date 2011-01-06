@@ -11,7 +11,7 @@ $string['error:unsupportedsearchprovider'] = 'The search provider configured for
 $string['pluginname'] = 'External Search';
 $string['cached'] = 'Cached';
 $string['digitalnz'] = 'Digital NZ';
-$string['digitalnzapikey'] = 'To use the DigitalNZ and/or EDNA service, you must provide your own <a href="http://www.digitalnz.org/dashboard/api_key">API key</a>.';
+$string['digitalnzapikey'] = 'To use the DigitalNZ and/or EDNA (Education Network Australia) service, you must provide your own <a href="http://www.digitalnz.org/dashboard/api_key">API key</a>.';
 $string['digitalnzapikey2'] = 'DigitalNZ API key';
 $string['entersearchterms'] = 'To search {$a}, enter some search terms in the box below.';
 $string['edna'] = 'EDNA';
@@ -128,6 +128,8 @@ $string['querysyntax_edna_help'] = <<<EOL
 <li>To search for a specific phrase: <b>"spring break"</b></li>
 <li>To search for both a specific phrase and a word: <b>"spring break" summer</b></li>
 </ul>
+
+<p>For more information consult <a href="http://www.edna.edu.au">www.edna.edu.au</a>.</p>
 EOL;
 
 $string['querysyntax_google_help'] = <<<EOL
