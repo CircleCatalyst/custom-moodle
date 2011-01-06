@@ -246,7 +246,8 @@ class SearchResults
      */
     function print_pager($page)
     {
-        global $CFG;
+        global $CFG, $OUTPUT;
+        require_once($CFG->dirroot.'/lib/outputcomponents.php');
 
         // Sanity checks
         if ($page < 0) {
@@ -265,7 +266,7 @@ class SearchResults
         if (!empty($this->resultsetid)) {
             $this->baseurl .= "searchid=$this->resultsetid&amp;";
         }
-        print_paging_bar($this->numresults, $page, $this->perpage, $this->get_baseurl(), 'page');
+        print $OUTPUT->render(new paging_bar($this->numresults, $page, $this->perpage, $this->get_baseurl(), 'page'));
     }
 
     /**

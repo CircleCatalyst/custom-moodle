@@ -14,6 +14,14 @@ $filter   = optional_param('filter',array(), PARAM_TEXT);
 $direction = optional_param('direction',0,PARAM_INT); //options 0 or 1. if 1, sets sort direction to desc. (DNZ specific)
 $sort     = optional_param('sort','',PARAM_TEXT); //field to sort by (category, content_provider, date, syndication_date, title) (DNZ specific)
 
+if ($courseid && ($courseid <> SITEID)){
+    $PAGE->set_course($DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST));
+    $PAGE->set_context(get_context_instance(CONTEXT_COURSE, $courseid));
+} else {
+    $PAGE->set_context(get_context_instance(CONTEXT_SYSTEM));
+}
+$PAGE->set_url(qualified_me());
+
 if (!$course = $DB->get_record('course', array('id'=>$courseid))) {
     print_error('error:incorrectcourseid', 'block_extsearch');
 }
@@ -48,10 +56,6 @@ if (!file_exists("$searchengineclassname.php")) {
 // Page header
 $pagetitle = $searchprovidername;
 $navlinks = array();
-if ($courseid != SITEID) {
-    $navlinks[] = array('name' => $course->fullname, 'link' => $courselink, 'type' => 'course');
-    $pagetitle = $course->fullname . ': ' . $pagetitle;
-}
 $navlinks[] = array('name' => $searchprovidername, 'link' => '', 'type' => 'activity');
 $navigation = build_navigation($navlinks);
 
@@ -106,6 +110,6 @@ if (!empty($query) && $searchengine->search()) {
     $searchengine->print_results($id, $courseid, $choose);
 }
 
-print_footer($course, $courseid);
+print $OUTPUT->footer();
 
 ?>
