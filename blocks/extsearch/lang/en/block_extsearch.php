@@ -4,7 +4,6 @@ $string['error:emptyqueryparam'] = 'Empty search query. Please enter some search
 $string['error:incorrectblockid'] = 'Block instance ID is incorrect';
 $string['error:incorrectblockidpicker'] = 'Could not find an instance of the External Search block in the course. Ask the course creator to make sure that one is available and properly configured for the correct search engine.';
 $string['error:incorrectcourseid'] = 'Course ID is incorrect';
-$string['error:missingesfsclienttoken'] = 'Missing ESFS client token. Your site administrator must reconfigure this block before it can be used.';
 $string['error:missingdigitalnzapikey'] = 'Missing DigitalNZ API key. Your site administrator must reconfigure this block before it can be used.';
 $string['error:servererror'] = 'Problem connecting to the {$a} server';
 $string['error:unsupportedsearchprovider'] = 'The search provider configured for this block is not supported. Contact the course creator to get this fixed.';
@@ -16,9 +15,6 @@ $string['digitalnzapikey'] = 'To use the DigitalNZ and/or EDNA service, you must
 $string['digitalnzapikey2'] = 'DigitalNZ API key';
 $string['entersearchterms'] = 'To search {$a}, enter some search terms in the box below.';
 $string['edna'] = 'EDNA';
-$string['esfs'] = 'Education Sector Federated Search';
-$string['esfsclienttoken'] = 'Token granted to each client system upon registration with the ESFS administration system';
-$string['esfsclienttoken2'] = 'ESFS Client Authentication Token';
 $string['forquery'] = 'for <b>{$a}</b>.';
 $string['google'] = 'Google Web Search';
 $string['googleapikey'] = 'If you have your own <a href="http://code.google.com/apis/ajaxsearch/signup.html">Google AJAX Search API key</a>, you may provide it here. This is optional and leaving the field blank is fine.';
@@ -43,7 +39,6 @@ $string['searchprovider_label'] = 'Select the search provider to use:';
 $string['similarpages'] = 'Similar pages';
 $string['querysyntax_digitalnz'] = 'Digital NZ Query Syntax';
 $string['querysyntax_edna'] = 'EDNA Query Syntax';
-$string['querysyntax_esfs'] = 'Education Sector Federated Search Query Syntax';
 $string['querysyntax_google'] = 'Google Search Query Syntax';
 
 $string['querysyntax_digitalnz_help'] = <<<EOL
@@ -125,17 +120,6 @@ $string['querysyntax_digitalnz_help'] = <<<EOL
 EOL;
 
 $string['querysyntax_edna_help'] = <<<EOL
-<p>Here are some example queries:</p>
-
-<ul>
-<li>To search for a single word: <b>childhood</b></li>
-<li>To search for two words: <b>frogs toads</b></li>
-<li>To search for a specific phrase: <b>"spring break"</b></li>
-<li>To search for both a specific phrase and a word: <b>"spring break" summer</b></li>
-</ul>
-EOL;
-
-$string['querysyntax_esfs_help'] = <<<EOL
 <p>Here are some example queries:</p>
 
 <ul>

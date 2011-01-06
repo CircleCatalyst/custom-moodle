@@ -24,7 +24,6 @@ This block is used to allow teachers to provide their students with an easy
 way of using an external search engine from within a course page.
 
 It currently supports these search providers:
-- Education Sector Federated Search (http://www.esfs.govt.nz)
 - DigitalNZ (http://www.digitalnz.org)
 - Google Web Search (http://www.google.com)
 

@@ -22,11 +22,6 @@ class block_extsearch_edit_form extends block_edit_form {
             $default = 'digitalnz';
         }
 
-        $esfsclienttoken = get_config(NULL, 'block_extsearch_esfs_client_token');
-        if (!empty($esfsclienttoken)) {
-            $options['esfs'] = get_string('esfs', 'block_extsearch');
-            $default = 'esfs';
-        }
         $mform->addElement('select', 'config_search_provider', get_string('searchprovider_label','block_extsearch'), $options);
         $mform->setDefault('config_search_provider', $default);
 
