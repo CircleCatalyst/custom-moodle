@@ -1,0 +1,21 @@
+
+/**
+  * Theme Colour Controls
+  *
+  */
+
+
+/* Primary Colour */  
+#page, html, body {
+	background: #555454;
+}
+
+/* Secondary Colour */
+.navbar, .navbar-home {
+  background: #a1a1a1; 
+}
+
+/* Tertiary Colour */
+.block .header {
+	background: #a1a1a1;	
+}
