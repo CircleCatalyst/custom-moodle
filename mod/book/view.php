@@ -79,7 +79,7 @@ if (!$chapters) {
         redirect('edit.php?cmid='.$cm->id); //no chapters - add new one
         die;
     } else {
-        error('Error reading book chapters.');
+        print_error('error_readingchapters', 'book');
     }
 }
 /// check chapterid and read chapter data
@@ -99,7 +99,7 @@ if ($chapterid == '0') { // go to first chapter if no given
 $PAGE->set_url('/mod/book/view.php', array('id'=>$id, 'chapterid'=>$chapterid));
 
 if (!$chapter = $DB->get_record('book_chapters', array('id'=>$chapterid, 'bookid'=>$book->id))) {
-    error('Error reading book chapters.');
+    print_error('error_readingchapters', 'book');
 }
 
 //check all variables
@@ -109,7 +109,7 @@ unset($chapterid);
 
 /// chapter is hidden for students
 if (!$viewhidden and $chapter->hidden) {
-    error('Error reading book chapters.');
+    print_error('error_readingchapters', 'book');
 }
 
 // =========================================================================
@@ -137,6 +137,7 @@ $found = 0;
 foreach ($chapters as $ch) {
     if ($found) {
         $nextid= $ch->id;
+        $nextname = trim(strip_tags(format_text($ch->title)));
         break;
     }
     if ($ch->id == $chapter->id) {
@@ -144,6 +145,7 @@ foreach ($chapters as $ch) {
     }
     if (!$found) {
         $previd = $ch->id;
+        $prevname = trim(strip_tags(format_text($ch->title)));
     }
 }
 if ($ch == current($chapters)) {
@@ -151,18 +153,18 @@ if ($ch == current($chapters)) {
 }
 $chnavigation = '';
 if ($previd) {
-    $chnavigation .= '<a title="'.get_string('navprev', 'book').'" href="view.php?id='.$cm->id.'&amp;chapterid='.$previd.'"><img src="'.$OUTPUT->pix_url('nav_prev', 'mod_book').'" class="bigicon" alt="'.get_string('navprev', 'book').'"/></a>';
+    $chnavigation .= '<span class="chapter_nav"><a title="'.get_string('navprev', 'book').'" href="view.php?id='.$cm->id.'&amp;chapterid='.$previd.'"><img src="'.$OUTPUT->pix_url('nav_prev', 'mod_book').'" class="bigicon" alt="'.get_string('navprev', 'book').'"/>'.$prevname.' </a></span>';
 } else {
     $chnavigation .= '<img src="'.$OUTPUT->pix_url('nav_prev_dis', 'mod_book').'" class="bigicon" alt="" />';
 }
 if ($nextid) {
-    $chnavigation .= '<a title="'.get_string('navnext', 'book').'" href="view.php?id='.$cm->id.'&amp;chapterid='.$nextid.'"><img src="'.$OUTPUT->pix_url('nav_next', 'mod_book').'" class="bigicon" alt="'.get_string('navnext', 'book').'" /></a>';
+    $chnavigation .= '<span class="chapter_nav"><a title="'.get_string('navnext', 'book').'" href="view.php?id='.$cm->id.'&amp;chapterid='.$nextid.'">'.$nextname.' <img src="'.$OUTPUT->pix_url('nav_next', 'mod_book').'" class="bigicon" alt="'.get_string('navnext', 'book').'" /></a></span>';
 } else {
     $sec = '';
     if ($section = $DB->get_record('course_sections', array('id'=>$cm->section))) {
         $sec = $section->section;
     }
-    $chnavigation .= '<a title="'.get_string('navexit', 'book').'" href="../../course/view.php?id='.$course->id.'#section-'.$sec.'"><img src="'.$OUTPUT->pix_url('nav_exit', 'mod_book').'" class="bigicon" alt="'.get_string('navexit', 'book').'" /></a>';
+    $chnavigation .= '<span class="chapter_nav"><a title="'.get_string('navexit', 'book').'" href="../../course/view.php?id='.$course->id.'#section-'.$sec.'"><img src="'.$OUTPUT->pix_url('nav_exit', 'mod_book').'" class="bigicon" alt="'.get_string('navexit', 'book').'" /></a></span>';
 }
 
 /// prepare print icons
