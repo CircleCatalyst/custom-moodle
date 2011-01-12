@@ -153,7 +153,7 @@ $chnavigation = '';
 if ($previd) {
     $chnavigation .= '<a title="'.get_string('navprev', 'book').'" href="view.php?id='.$cm->id.'&amp;chapterid='.$previd.'"><img src="'.$OUTPUT->pix_url('nav_prev', 'mod_book').'" class="bigicon" alt="'.get_string('navprev', 'book').'"/></a>';
 } else {
-    $chnavigation .= '<img src="pix/nav_prev_dis.gif" class="bigicon" alt="" />';
+    $chnavigation .= '<img src="'.$OUTPUT->pix_url('nav_prev_dis', 'mod_book').'" class="bigicon" alt="" />';
 }
 if ($nextid) {
     $chnavigation .= '<a title="'.get_string('navnext', 'book').'" href="view.php?id='.$cm->id.'&amp;chapterid='.$nextid.'"><img src="'.$OUTPUT->pix_url('nav_next', 'mod_book').'" class="bigicon" alt="'.get_string('navnext', 'book').'" /></a>';
@@ -176,7 +176,7 @@ if (!$allowprint) {
 
 // prepare $toc and $currtitle, $currsubtitle
 $print = 0;
-include('toc.php');
+$toc = book_get_toc($cm, $book, $chapters, $chapter, $edit);
 
 $tocwidth = get_config('tocwidth', 'book');
 if ($edit) {
@@ -217,7 +217,7 @@ $generateimscp = ''; //TODO after new file handling
     <td style="width:<?php echo $tocwidth ?>px" align="left"><div class="clearer">&nbsp;</div>
         <?php
         echo $OUTPUT->box_start('generalbox');
-        echo $toc;
+        echo $toc->content;
         echo $OUTPUT->box_end();
         if ($allowedit and $edit) {
             echo '<div class="faq">';
@@ -231,10 +231,10 @@ $generateimscp = ''; //TODO after new file handling
         echo $OUTPUT->box_start('generalbox');
         echo '<div class="book_content">';
         if (!$book->customtitles) {
-          if ($currsubtitle == '&nbsp;') {
-              echo '<p class="book_chapter_title">'.$currtitle.'</p>';
+          if ($toc->currsubtitle == '&nbsp;') {
+              echo '<p class="book_chapter_title">'.$toc->currtitle.'</p>';
           } else {
-              echo '<p class="book_chapter_title">'.$currtitle.'<br />'.$currsubtitle.'</p>';
+              echo '<p class="book_chapter_title">'.$toc->currtitle.'<br />'.$toc->currsubtitle.'</p>';
           }
         }
         $chaptertext = file_rewrite_pluginfile_urls($chapter->content, 'pluginfile.php', $context->id, 'mod_book', 'chapter', $chapter->id);

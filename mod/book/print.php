@@ -78,7 +78,7 @@ if ($chapter) {
 
     $print = 0;
     $edit = 0;
-    require('toc.php');
+    $toc = book_get_toc($cm, $book, $chapters, $chapter, $edit);
 
     /// page header
     ?>
@@ -96,10 +96,10 @@ if ($chapter) {
     <?php
 
     if (!$book->customtitles) {
-        if ($currsubtitle == '&nbsp;') {
-            echo '<p class="book_chapter_title">'.$currtitle.'<p>';
+        if ($toc->currsubtitle == '&nbsp;') {
+            echo '<p class="book_chapter_title">'.$toc->currtitle.'<p>';
         } else {
-            echo '<p class="book_chapter_title">'.$currtitle.'<br />'.$currsubtitle.'</p>';
+            echo '<p class="book_chapter_title">'.$toc->currtitle.'<br />'.$toc->currsubtitle.'</p>';
         }
     }
     $chaptertext = file_rewrite_pluginfile_urls($chapter->content, 'pluginfile.php', $context->id, 'mod_book', 'chapter', $chapter->id);
@@ -146,8 +146,8 @@ if ($chapter) {
 
     <?php
     $print = 1;
-    require('toc.php');
-    echo $toc;
+    $toc = book_get_toc($cm, $book, $chapters, $chapter, $edit);
+    echo $toc->content;
     // chapters
     $link1 = $CFG->wwwroot.'/mod/book/view.php?id='.$course->id.'&chapterid=';
     $link2 = $CFG->wwwroot.'/mod/book/view.php?id='.$course->id;

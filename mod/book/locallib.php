@@ -299,3 +299,225 @@ function book_relink($id, $bookid, $courseid) {
         }
     }
 }
+
+/**
+ * Generate the table of contents for the book.
+ */
+function book_get_toc($cm, $book, $chapters, $chapter=null, $edit=false) {
+    if (!isset($print)) {
+        $print = 0;
+    }
+
+    if ($print) {
+        $toc = book_get_toc_printing($cm, $book, $chapters, $chapter, $edit);
+    } else if ($edit) {
+        $toc = book_get_toc_editing($cm, $book, $chapters, $chapter, $edit);
+    } else {
+        $toc = book_get_toc_vanilla($cm, $book, $chapters, $chapter, $edit);
+    }
+
+    switch ($book->numbering) {
+      case BOOK_NUM_NONE:
+          $toc->content = '<div class="book_toc_none">'.$toc->content;
+          break;
+      case BOOK_NUM_NUMBERS:
+          $toc->content = '<div class="book_toc_numbered">'.$toc->content;
+          break;
+      case BOOK_NUM_BULLETS:
+          $toc->content = '<div class="book_toc_bullets">'.$toc->content;
+          break;
+      case BOOK_NUM_INDENTED:
+          $toc->content = '<div class="book_toc_indented">'.$toc->content;
+          break;
+    }
+
+    $toc->content .= '</div>';
+    $toc->content = str_replace('<ul></ul>', '', $toc->content); // clean up empty structures
+    return $toc;
+}
+
+/**
+ * Generate the table of contents for printing.
+ */
+function book_get_toc_printing($cm, $book, $chapters, $chapter, $edit) {
+    $nch = 0; // chapter number
+    $ns = 0;  // subchapter number
+    $first = true;
+
+    $toc = '<a name="toc"></a>';
+    if ($book->customtitles) {
+        $toc .= '<h1>'.get_string('toc', 'book').'</h1>';
+    } else {
+        $toc .= '<p class="book_chapter_title">'.get_string('toc', 'book').'</p>';
+    }
+    $titles = array();
+    $toc .= '<ul>';
+    foreach($chapters as $ch) {
+        $title = trim(strip_tags(format_text($ch->title)));
+        if (!$ch->hidden) {
+            if (!$ch->subchapter) {
+                $nch++;
+                $ns = 0;
+                $toc .= ($first) ? '<li>' : '</ul></li><li>';
+                if ($book->numbering == BOOK_NUM_NUMBERS) {
+                    $title = "<span class=\"book_chapter_number\">$nch</span> $title";
+                }
+            } else {
+                $ns++;
+                $toc .= ($first) ? '<li><ul><li>' : '<li>';
+                if ($book->numbering == BOOK_NUM_NUMBERS) {
+                    $title = "<span class=\"book_subchapter_number\">$nch.$ns</span> $title";
+                }
+            }
+            $titles[$ch->id] = $title;
+            $toc .= '<a title="'.s(strip_tags($title)).'" href="#ch'.$ch->id.'">'.$title.'</a>';
+            $toc .= (!$ch->subchapter) ? '<ul>' : '</li>';
+            $toc .= "\n";
+            $first = false;
+        }
+    }
+    $toc .= '</ul></li></ul>';
+    $toc .= "\n";
+    return (object)array('content'=>$toc);
+}
+
+/**
+ * Generate the table of contents for an editing user (e.g. a teacher or admin).
+ */
+function book_get_toc_editing($cm, $book, $chapters, $chapter, $edit) {
+    global $CFG;
+    global $USER;
+    global $OUTPUT;
+
+    $prevtitle = '&nbsp;';
+    $currtitle = '';    // active chapter title (plain text)
+    $currsubtitle = ''; // active subchapter if any
+
+    $nch = 0;           // chapter number
+    $ns = 0;            // subchapter number
+    $first = true;
+
+    $toc = '<ul>';
+    $i = 0;
+    foreach($chapters as $ch) {
+        $i++;
+        $title = trim(strip_tags(format_text($ch->title)));
+        if (!$ch->subchapter) {
+            $toc .= ($first) ? "\n<li>" : "</ul></li>\n<li>";
+            if (!$ch->hidden) {
+                $nch++;
+                $ns = 0;
+                if ($book->numbering == BOOK_NUM_NUMBERS) {
+                    $title = "<span class=\"book_chapter_number\">$nch</span> $title";
+                }
+            } else {
+                if ($book->numbering == BOOK_NUM_NUMBERS) {
+                    $title = "<span class=\"book_chapter_number\">x</span> $title";
+                }
+                $title = '<span class="dimmed_text">'.$title.'</span>';
+            }
+            $prevtitle = $title;
+        } else {
+            $toc .= ($first) ? "\n<li><ul>\n<li>" : "\n<li>";
+            if (!$ch->hidden) {
+                $ns++;
+                if ($book->numbering == BOOK_NUM_NUMBERS) {
+                    $title = "<span class=\"book_subchapter_number\">$nch.$ns</span> $title";
+                }
+            } else {
+                if ($book->numbering == BOOK_NUM_NUMBERS) {
+                    $title = "<span class=\"book_subchapter_number\">x.x</span> $title";
+                }
+                $title = '<span class="dimmed_text">'.$title.'</span>';
+            }
+        }
+
+        if ($ch->id == $chapter->id) {
+            $toc .= '<span class="book_toc_current">'.$title.'</span>';
+            if ($ch->subchapter) {
+                $currtitle = $prevtitle;
+                $currsubtitle = $title;
+            } else {
+                $currtitle = $title;
+                $currsubtitle = '&nbsp;';
+            }
+        } else {
+            $toc .= '<a title="'.s(strip_tags($title)).'" href="view.php?id='.$cm->id.'&amp;chapterid='.$ch->id.'">'.$title.'</a>';
+        }
+        $toc .=  '&nbsp;&nbsp;';
+
+        // add editing buttons
+        if ($i != 1) {
+            $toc .=  ' <a title="'.get_string('up').'" href="move.php?id='.$cm->id.'&amp;chapterid='.$ch->id.'&amp;up=1&amp;sesskey='.$USER->sesskey.'"><img src="'.$OUTPUT->pix_url('t/up').'" height="11" class="iconsmall" alt="'.get_string('up').'" /></a>';
+        }
+        if ($i != count($chapters)) {
+            $toc .=  ' <a title="'.get_string('down').'" href="move.php?id='.$cm->id.'&amp;chapterid='.$ch->id.'&amp;up=0&amp;sesskey='.$USER->sesskey.'"><img src="'.$OUTPUT->pix_url('/t/down').'" height="11" class="iconsmall" alt="'.get_string('down').'" /></a>';
+        }
+        $toc .=  ' <a title="'.get_string('edit').'" href="edit.php?cmid='.$cm->id.'&amp;id='.$ch->id.'"><img src="'.$OUTPUT->pix_url('t/edit').'" height="11" class="iconsmall" alt="'.get_string('edit').'" /></a>';
+        $toc .=  ' <a title="'.get_string('delete').'" href="delete.php?id='.$cm->id.'&amp;chapterid='.$ch->id.'&amp;sesskey='.$USER->sesskey.'"><img src="'.$OUTPUT->pix_url('t/delete').'" height="11" class="iconsmall" alt="'.get_string('delete').'" /></a>';
+        if ($ch->hidden) {
+            $toc .= ' <a title="'.get_string('show').'" href="show.php?id='.$cm->id.'&amp;chapterid='.$ch->id.'&amp;sesskey='.$USER->sesskey.'"><img src="'.$OUTPUT->pix_url('t/show').'" height="11" class="iconsmall" alt="'.get_string('show').'" /></a>';
+        } else {
+            $toc .= ' <a title="'.get_string('hide').'" href="show.php?id='.$cm->id.'&amp;chapterid='.$ch->id.'&amp;sesskey='.$USER->sesskey.'"><img src="'.$OUTPUT->pix_url('t/hide').'" height="11" class="iconsmall" alt="'.get_string('hide').'" /></a>';
+        }
+        $toc .= ' <a title="'.get_string('addafter', 'book').'" href="edit.php?cmid='.$cm->id.'&amp;pagenum='.$ch->pagenum.'&amp;subchapter='.$ch->subchapter.'"><img src="'.$OUTPUT->pix_url('add', 'mod_book').'" height="11" class="iconsmall" alt="'.get_string('addafter', 'book').'" /></a>';
+
+        // cast off chapter item
+        $toc .= (!$ch->subchapter) ? "\n<ul>" : "</li>";
+        $first = false;
+    }
+    $toc .= "</ul></li></ul>\n";
+    return (object)array('content'=>$toc, 'currtitle'=>$currtitle, 'currsubtitle'=>$currsubtitle);
+}
+
+/**
+ * Generate the table of contents for an unprivileged user (e.g. a student).
+ */
+function book_get_toc_vanilla($cm, $book, $chapters, $chapter, $edit) {
+    $prevtitle = '&nbsp;';
+    $currtitle = '';    // active chapter title (plain text)
+    $currsubtitle = ''; // active subchapter if any
+
+    $nch = 0;           // chapter number
+    $ns = 0;            // subchapter number
+    $first = true;
+
+    $toc = '<ul>';
+    foreach($chapters as $ch) {
+        $title = trim(strip_tags(format_text($ch->title)));
+        if (!$ch->hidden) {
+            if (!$ch->subchapter) {
+                $nch++;
+                $ns = 0;
+                $toc .= ($first) ? "\n<li>" : "</ul></li>\n<li>";
+                if ($book->numbering == BOOK_NUM_NUMBERS) {
+                      $title = "<span class=\"book_chapter_number\">$nch</span> $title";
+                }
+            $prevtitle = $title;
+            } else {
+                $ns++;
+                $toc .= ($first) ? "\n<li><ul><li>" : "\n<li>";
+                if ($book->numbering == BOOK_NUM_NUMBERS) {
+                      $title = "<span class=\"book_subchapter_number\">$nch.$ns</span> $title";
+                }
+            }
+            if ($ch->id == $chapter->id) {
+                $toc .= '<span class="book_toc_current">'.$title.'</span>';
+                if ($ch->subchapter) {
+                    $currtitle = $prevtitle;
+                    $currsubtitle = $title;
+                } else {
+                    $currtitle = $title;
+                    $currsubtitle = '&nbsp;';
+                }
+            } else {
+                $toc .= '<a title="'.s(strip_tags($title)).'" href="view.php?id='.$cm->id.'&amp;chapterid='.$ch->id.'">'.$title.'</a>';
+            }
+            $toc .= (!$ch->subchapter) ? "\n<ul>" : "</li>";
+            $first = false;
+        }
+    }
+    $toc .= "</ul></li></ul>\n";
+
+    return (object)array('content'=>$toc, 'currtitle'=>$currtitle, 'currsubtitle'=>$currsubtitle);
+}
