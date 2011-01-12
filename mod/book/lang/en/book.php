@@ -8,7 +8,7 @@ $string['pluginadministration'] = 'Book administration';
 
 $string['toc'] = 'Table of Contents';
 $string['tocwidth'] = 'Select width of the Table of Contents for all books.';
-$string['book_tocwidth'] = 'Table of Contents width';
+$string['book/tocwidth'] = 'Table of Contents width';
 $string['faq'] = 'Book FAQ';
 $string['faq_help'] = '
 *Why only two levels?*

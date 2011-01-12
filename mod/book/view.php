@@ -178,10 +178,9 @@ if (!$allowprint) {
 $print = 0;
 include('toc.php');
 
+$tocwidth = get_config('tocwidth', 'book');
 if ($edit) {
-    $tocwidth = $CFG->book_tocwidth + 80;
-} else {
-    $tocwidth = $CFG->book_tocwidth;
+    $tocwidth += 80;
 }
 
 //$doimport = ($allowimport and $edit) ? '<div>(<a href="import.php?id='.$cm->id.'">'.get_string('doimport', 'book').'</a>)</div>' : '';

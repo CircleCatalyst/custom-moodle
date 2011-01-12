@@ -46,6 +46,6 @@ $string['book:import'] = 'Uvozi poglavja';
 $string['book:print'] = 'Natisni knjigo';
 $string['book:read'] = 'Beri knjigo';
 $string['book:viewhiddenchapters'] = 'Poglej skrita poglavja';
-$string['book_tocwidth'] = 'Širina kazala vsebine';
+$string['book/tocwidth'] = 'Širina kazala vsebine';
 $string['generateimscp'] = 'Generiraj IMS vsebinski paket';
 ?>
