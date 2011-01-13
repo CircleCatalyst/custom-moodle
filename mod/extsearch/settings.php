@@ -21,6 +21,7 @@
  * @package    mod
  * @subpackage extsearch
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -47,10 +48,6 @@ if ($ADMIN->fulltree) {
         get_string('framesize', 'extsearch'), get_string('configframesize', 'extsearch'), 130, PARAM_INT));
     $settings->add(new admin_setting_configcheckbox('extsearch/requiremodintro',
         get_string('requiremodintro', 'admin'), get_string('configrequiremodintro', 'admin'), 1));
-    $settings->add(new admin_setting_configpasswordunmask('extsearch/secretphrase', get_string('password'),
-        get_string('configsecretphrase', 'extsearch'), ''));
-    $settings->add(new admin_setting_configcheckbox('extsearch/rolesinparams',
-        get_string('rolesinparams', 'extsearch'), get_string('configrolesinparams', 'extsearch'), false));
     $settings->add(new admin_setting_configmultiselect('extsearch/displayoptions',
         get_string('displayoptions', 'extsearch'), get_string('configdisplayoptions', 'extsearch'),
         $defaultdisplayoptions, $displayoptions));

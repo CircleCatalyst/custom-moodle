@@ -21,6 +21,7 @@
  * @package    mod
  * @subpackage extsearch
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,10 +32,22 @@ require_once($CFG->dirroot.'/mod/extsearch/locallib.php');
 
 class mod_extsearch_mod_form extends moodleform_mod {
     function definition() {
-        global $CFG, $DB;
+        global $CFG, $DB, $COURSE;
         $mform = $this->_form;
 
         $config = get_config('extsearch');
+
+        // this hack is needed for different settings of each subtype
+        if (!empty($this->_instance)) {
+            if($rec = $DB->get_record('extsearch', array('id'=>$this->_instance))) {
+                $type = $rec->searchprovider;
+            } else {
+                print_error('invalidsearchprovider', 'extsearch');
+            }
+        } else {
+            $type = required_param('type', PARAM_ALPHA);
+        }
+        $mform->addElement('hidden', 'type', $type);
 
         //-------------------------------------------------------
         $mform->addElement('header', 'general', get_string('general', 'form'));
@@ -49,7 +62,27 @@ class mod_extsearch_mod_form extends moodleform_mod {
 
         //-------------------------------------------------------
         $mform->addElement('header', 'content', get_string('contentheader', 'extsearch'));
-        $mform->addElement('url', 'externalurl', get_string('externalurl', 'extsearch'), array('size'=>'60'), array('usefilepicker'=>true));
+//        $mform->addElement('url', 'externalurl', get_string('externalurl', 'extsearch'), array('size'=>'60'), array('usefilepicker'=>true));
+//        $mform->addElement('url', 'externalurl', get_string('externalurl', 'extsearch'), array('size'=>'60'));
+        $courseid = $COURSE->id;
+
+        // Resource URL picker
+        if (file_exists("$CFG->dirroot/blocks/extsearch/search.php")) {
+            // Lookup the ID of the first Digital NZ search block in this course
+            $pickeroptions = array('url' => "/blocks/extsearch/search.php?type={$type}&courseid={$courseid}&choose=",
+                               'buttoncaption' => get_string("search{$type}", 'extsearch'));
+
+            MoodleQuickForm::registerElementType('externalpicker',
+                                                 "$CFG->dirroot/mod/extsearch/externalpicker.php",
+                                                 'MoodleQuickForm_externalpicker');
+
+            $mform->addElement('externalpicker', 'externalurl', get_string("{$type}url", 'extsearch'), $pickeroptions);
+        } else {
+            // The External Search block is not installed, cannot enable the picker
+            $mform->addElement('text', 'externalurl', get_string("{$type}url", 'extsearch'), array('size' => 48));
+        }
+//        $mform->setHelpButton('reference', array('sourceurl', get_string('digitalnz', 'extsearch'), 'extsearch'));
+
         //-------------------------------------------------------
         $mform->addElement('header', 'optionssection', get_string('optionsheader', 'extsearch'));
 

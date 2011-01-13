@@ -41,6 +41,7 @@
  * @package    mod
  * @subpackage extsearch
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -50,7 +51,6 @@ function xmldb_extsearch_upgrade($oldversion) {
     global $CFG, $DB;
 
     $dbman = $DB->get_manager();
-
 
     return true;
 }

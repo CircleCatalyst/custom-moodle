@@ -21,6 +21,7 @@
  * @package    mod
  * @subpackage extsearch
  * @copyright  2010 onwards Andrew Davis
+ * @copyright  2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -37,7 +38,7 @@ class backup_extsearch_activity_structure_step extends backup_activity_structure
 
         // Define each element separated
         $extsearch = new backup_nested_element('extsearch', array('id'), array(
-            'course','name', 'intro', 'introformat', 'externalurl',
+            'course','name', 'intro', 'introformat', 'searchprovider', 'externalurl',
             'display', 'displayoptions', 'timemodified'));
 
 

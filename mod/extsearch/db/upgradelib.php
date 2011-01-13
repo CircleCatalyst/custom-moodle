@@ -21,6 +21,7 @@
  * @package    mod
  * @subpackage extsearch
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -55,21 +56,16 @@ function extsearch_20_migrate() {
     }
 
     foreach ($candidates as $candidate) {
-        $path = $candidate->reference;
+        $externalurl = $candidate->reference;
         $siteid = get_site()->id;
 
-        if (strpos($path, 'LOCALPATH') === 0) {
-            // ignore not maintained local files - sorry
-            continue;
-        } else if (!strpos($path, '://')) {
-            // not extsearch
-            continue;
-        } else if (preg_match("|$CFG->wwwroot/file.php(\?file=)?/$siteid(/[^\s'\"&\?#]+)|", $path, $matches)) {
-            // handled by resource module
-            continue;
-        } else if (preg_match("|$CFG->wwwroot/file.php(\?file=)?/$candidate->course(/[^\s'\"&\?#]+)|", $path, $matches)) {
-            // handled by resource module
-            continue;
+        // Figure out if it's a DigitalNZ or EDNA result, based on the URL
+        if (substr($externalurl, 0, 30) == 'http://api.digitalnz.org/edna/'){
+            $type = 'edna';
+        } elseif (substr($externalurl, 0, 33) == 'http://api.digitalnz.org/records/'){
+            $type = 'digitalnz';
+        } else {
+            $type = 'google';
         }
 
         upgrade_set_timeout();
@@ -87,7 +83,8 @@ function extsearch_20_migrate() {
         $extsearch->name         = $candidate->name;
         $extsearch->intro        = $intro;
         $extsearch->introformat  = $introformat;
-        $extsearch->externalurl  = $path;
+        $extsearch->externalurl  = $externalurl;
+        $extsearch->searchprovider = $type;
         $extsearch->timemodified = time();
 
         $options    = array('printheading'=>0, 'printintro'=>1);

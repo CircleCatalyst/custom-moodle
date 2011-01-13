@@ -21,6 +21,7 @@
  * @package    mod
  * @subpackage extsearch
  * @copyright  2010 Petr Skoda (http://skodak.org)
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

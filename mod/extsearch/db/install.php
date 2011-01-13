@@ -26,6 +26,7 @@
  * @package    mod
  * @subpackage extsearch
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -33,12 +34,6 @@ defined('MOODLE_INTERNAL') || die;
 
 function xmldb_extsearch_install() {
     global $CFG;
-
-    // migrate settings if present
-    if (!empty($CFG->resource_secretphrase)) {
-        set_config('secretphrase', $CFG->resource_secretphrase, 'extsearch');
-    }
-    unset_config('resource_secretphrase');
 
     // Upgrade from old resource module type if needed
     require_once("$CFG->dirroot/mod/extsearch/db/upgradelib.php");

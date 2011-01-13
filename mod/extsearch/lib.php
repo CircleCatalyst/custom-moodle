@@ -21,6 +21,7 @@
  * @package    mod
  * @subpackage extsearch
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -30,6 +31,7 @@ function extsearch_get_types() {
     global $CFG;
     $types = array();
 
+    // The "External Search Result" group header label
     $type = new stdClass();
     $type->modclass = MOD_CLASS_RESOURCE;
     $type->type = "extsearch_group_start";
@@ -38,15 +40,24 @@ function extsearch_get_types() {
 
     $type = new stdClass();
     $type->modclass = MOD_CLASS_RESOURCE;
-    $type->type = "extsearch&amp;type=digitalnz";
-    $type->typestr = get_string('digitalnz', 'extsearch');
+    $type->type = "extsearch&amp;type=google";
+    $type->typestr = get_string('google', 'extsearch');
     $types[] = $type;
 
-    $type = new stdClass();
-    $type->modclass = MOD_CLASS_RESOURCE;
-    $type->type = "extsearch&amp;type=edna";
-    $type->typestr = get_string('edna', 'extsearch');
-    $types[] = $type;
+    if ( get_config(NULL, 'block_extsearch_digitalnz_api_key') ){
+
+        $type = new stdClass();
+        $type->modclass = MOD_CLASS_RESOURCE;
+        $type->type = "extsearch&amp;type=digitalnz";
+        $type->typestr = get_string('digitalnz', 'extsearch');
+        $types[] = $type;
+
+        $type = new stdClass();
+        $type->modclass = MOD_CLASS_RESOURCE;
+        $type->type = "extsearch&amp;type=edna";
+        $type->typestr = get_string('edna', 'extsearch');
+        $types[] = $type;
+    }
 
     return $types;
 }
@@ -130,6 +141,7 @@ function extsearch_add_instance($data, $mform) {
     }
 
     $data->timemodified = time();
+    $data->searchprovider = $data->type;
     $data->id = $DB->insert_record('extsearch', $data);
 
     return $data->id;
@@ -161,6 +173,7 @@ function extsearch_update_instance($data, $mform) {
 
     $data->timemodified = time();
     $data->id           = $data->instance;
+    $data->searchprovider = $data->type;
 
     $DB->update_record('extsearch', $data);
 

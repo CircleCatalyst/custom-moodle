@@ -14,15 +14,25 @@ You should have received a copy of the GNU General Public License
 along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 copyright 2009 Petr Skoda (http://skodak.org)
+copyright 2011 Aaron Wells (http://www.catalyst.net.nz)
 license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
 
 
-URL module
+External Search Result activity module
 =============
 
-URL module is one of the successors to original 'file' type plugin of Resource module.
+The External Search Result activity module is a successor to the Moodle 1.9
+"Digital NZ" resource type. It allows you to access external search engines,
+and store their search results as resources in your course.
 
+This version of the module is heavily based on the Moodle "url" module, the
+primary difference being that it uses the search page from the External Search
+block to pick the URL, rather than using the Moodle Repository API.
+
+This module requires the External Search block (blocks/extsearch) to be installed,
+although it is not necessary to set up any instances of the block. To search
+DigitalNZ or EDNA, you must also provide a DigitalNZ API key.
 
 TODO:
- * implement portfolio support (MDL-20084)
- * new backup/restore and old restore transformation (MDL-20085)
+ * Change this into a repository plugin (though the repository API will have
+to change substantially before that is feasible)
