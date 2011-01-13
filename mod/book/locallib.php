@@ -30,6 +30,10 @@ define('BOOK_NUM_NUMBERS',  '1');
 define('BOOK_NUM_BULLETS',  '2');
 define('BOOK_NUM_INDENTED', '3');
 
+define('BOOK_TOC_VANILLA',  '0');
+define('BOOK_TOC_EDITING',  '1');
+define('BOOK_TOC_PRINTING', '2');
+
 require_once($CFG->dirroot.'/mod/book/lib.php');
 require_once($CFG->libdir.'/filelib.php');
 
@@ -303,17 +307,18 @@ function book_relink($id, $bookid, $courseid) {
 /**
  * Generate the table of contents for the book.
  */
-function book_get_toc($cm, $book, $chapters, $chapter=null, $edit=false) {
-    if (!isset($print)) {
-        $print = 0;
-    }
-
-    if ($print) {
-        $toc = book_get_toc_printing($cm, $book, $chapters, $chapter, $edit);
-    } else if ($edit) {
-        $toc = book_get_toc_editing($cm, $book, $chapters, $chapter, $edit);
-    } else {
-        $toc = book_get_toc_vanilla($cm, $book, $chapters, $chapter, $edit);
+function book_get_toc($cm, $book, $chapters, $chapter=null, $type=BOOK_TOC_VANILLA) {
+    switch ($type) {
+      case BOOK_TOC_PRINTING:
+        $toc = book_get_toc_printing($cm, $book, $chapters, $chapter);
+        break;
+      case BOOK_TOC_EDITING:
+        $toc = book_get_toc_editing($cm, $book, $chapters, $chapter);
+        break;
+      case BOOK_TOC_VANILLA:
+      default:
+        $toc = book_get_toc_vanilla($cm, $book, $chapters, $chapter);
+        break;
     }
 
     switch ($book->numbering) {
@@ -339,7 +344,7 @@ function book_get_toc($cm, $book, $chapters, $chapter=null, $edit=false) {
 /**
  * Generate the table of contents for printing.
  */
-function book_get_toc_printing($cm, $book, $chapters, $chapter, $edit) {
+function book_get_toc_printing($cm, $book, $chapters, $chapter) {
     $nch = 0; // chapter number
     $ns = 0;  // subchapter number
     $first = true;
@@ -350,7 +355,6 @@ function book_get_toc_printing($cm, $book, $chapters, $chapter, $edit) {
     } else {
         $toc .= '<p class="book_chapter_title">'.get_string('toc', 'book').'</p>';
     }
-    $titles = array();
     $toc .= '<ul>';
     foreach($chapters as $ch) {
         $title = trim(strip_tags(format_text($ch->title)));
@@ -369,7 +373,6 @@ function book_get_toc_printing($cm, $book, $chapters, $chapter, $edit) {
                     $title = "<span class=\"book_subchapter_number\">$nch.$ns</span> $title";
                 }
             }
-            $titles[$ch->id] = $title;
             $toc .= '<a title="'.s(strip_tags($title)).'" href="#ch'.$ch->id.'">'.$title.'</a>';
             $toc .= (!$ch->subchapter) ? '<ul>' : '</li>';
             $toc .= "\n";
@@ -384,7 +387,7 @@ function book_get_toc_printing($cm, $book, $chapters, $chapter, $edit) {
 /**
  * Generate the table of contents for an editing user (e.g. a teacher or admin).
  */
-function book_get_toc_editing($cm, $book, $chapters, $chapter, $edit) {
+function book_get_toc_editing($cm, $book, $chapters, $chapter) {
     global $CFG;
     global $USER;
     global $OUTPUT;
@@ -432,7 +435,7 @@ function book_get_toc_editing($cm, $book, $chapters, $chapter, $edit) {
             }
         }
 
-        if ($ch->id == $chapter->id) {
+        if (!empty($chapter) and $ch->id == $chapter->id) {
             $toc .= '<span class="book_toc_current">'.$title.'</span>';
             if ($ch->subchapter) {
                 $currtitle = $prevtitle;
@@ -473,7 +476,7 @@ function book_get_toc_editing($cm, $book, $chapters, $chapter, $edit) {
 /**
  * Generate the table of contents for an unprivileged user (e.g. a student).
  */
-function book_get_toc_vanilla($cm, $book, $chapters, $chapter, $edit) {
+function book_get_toc_vanilla($cm, $book, $chapters, $chapter) {
     $prevtitle = '&nbsp;';
     $currtitle = '';    // active chapter title (plain text)
     $currsubtitle = ''; // active subchapter if any
@@ -501,7 +504,7 @@ function book_get_toc_vanilla($cm, $book, $chapters, $chapter, $edit) {
                       $title = "<span class=\"book_subchapter_number\">$nch.$ns</span> $title";
                 }
             }
-            if ($ch->id == $chapter->id) {
+            if (!empty($chapter) and $ch->id == $chapter->id) {
                 $toc .= '<span class="book_toc_current">'.$title.'</span>';
                 if ($ch->subchapter) {
                     $currtitle = $prevtitle;

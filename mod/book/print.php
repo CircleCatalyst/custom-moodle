@@ -75,10 +75,7 @@ if ($chapter) {
     add_to_log($course->id, 'book', 'print', 'print.php?id='.$cm->id.'&chapterid='.$chapter->id, $book->id, $cm->id);
 
     $chapters = $DB->get_records('book_chapters', array('bookid'=>$book->id, 'hidden'=>0), 'pagenum, title');
-
-    $print = 0;
-    $edit = 0;
-    $toc = book_get_toc($cm, $book, $chapters, $chapter, $edit);
+    $toc = book_get_toc($cm, $book, $chapters, $chapter, BOOK_TOC_VANILLA);
 
     /// page header
     ?>
@@ -116,8 +113,8 @@ if ($chapter) {
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
     <html>
     <head>
-      <title><?php echo format_string(name) ?></title>
-      <meta http-equiv="Content-Type" content="text/html; charset=<?php echo $encoding ?>" />
+      <title><?php echo format_string($book->name) ?></title>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
       <meta name="description" content="<?php echo s(format_string($book->name)) ?>" />
       <link rel="stylesheet" type="text/css" href="book_print.css" />
     </head>
@@ -145,8 +142,7 @@ if ($chapter) {
     </table></div>
 
     <?php
-    $print = 1;
-    $toc = book_get_toc($cm, $book, $chapters, $chapter, $edit);
+    $toc = book_get_toc($cm, $book, $chapters, null, BOOK_TOC_PRINTING);
     echo $toc->content;
     // chapters
     $link1 = $CFG->wwwroot.'/mod/book/view.php?id='.$course->id.'&chapterid=';
@@ -154,7 +150,7 @@ if ($chapter) {
     foreach ($chapters as $ch) {
         echo '<div class="book_chapter"><a name="ch'.$ch->id.'"></a>';
         if (!$book->customtitles) {
-            echo '<p class="book_chapter_title">'.$titles[$ch->id].'</p>';
+            echo '<p class="book_chapter_title">'.$ch->title.'</p>';
         }
         $content = str_replace($link1, '#ch', $ch->content);
         $content = str_replace($link2, '#top', $content);
