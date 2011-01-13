@@ -188,8 +188,7 @@ if ($edit) {
 $doimport = ''; //TODO: after new file handling
 
 /// Enable the IMS CP button
-//$generateimscp = ($allowexport) ? '<a title="'.get_string('generateimscp', 'book').'" href="generateimscp.php?id='.$cm->id.'"><img class="bigicon" src="'.$OUTPUT->pix_url('generateimscp', 'mod_book').'" alt="'.get_string('generateimscp', 'book').'"></img></a>' : '';
-$generateimscp = ''; //TODO after new file handling
+$generateimscp = ($allowexport) ? '<a title="'.get_string('generateimscp', 'book').'" href="generateimscp.php?id='.$cm->id.'"><img class="bigicon" src="'.$OUTPUT->pix_url('generateimscp', 'mod_book').'" alt="'.get_string('generateimscp', 'book').'"></img></a>' : '';
 
 
 // =====================================================

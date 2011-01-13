@@ -29,17 +29,10 @@ require_once($CFG->dirroot.'/mod/book/locallib.php');
 require_once($CFG->dirroot.'/backup/lib.php');
 require_once($CFG->libdir.'/filelib.php');
 
-$id = required_param('id', PARAM_INT);           // Course Module ID
-
-die('Not converted to 2.0 yet, sorry');
-
-if (!$cm = get_coursemodule_from_id('book', $id)) {
-    error('Course Module ID was incorrect');
-}
-
-if (!$course = get_record('course', 'id', $cm->course)) {
-    error('Course is misconfigured');
-}
+$id = required_param('id', PARAM_INT);
+$cm = get_coursemodule_from_id('book', $id, 0, false, MUST_EXIST);
+$course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
+$book = $DB->get_record('book', array('id'=>$cm->instance), '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 
@@ -47,41 +40,37 @@ $context = get_context_instance(CONTEXT_MODULE, $cm->id);
 require_capability('mod/book:read', $context);
 require_capability('mod/book:exportimscp', $context);
 
-if (!$book = get_record('book', 'id', $cm->instance)) {
-    error('Course module is incorrect');
-}
-
-$strbooks = get_string('modulenameplural', 'book');
-$strbook  = get_string('modulename', 'book');
-$strtop  = get_string('top', 'book');
-
 add_to_log($course->id, 'book', 'generateimscp', 'generateimscp.php?id='.$cm->id, $book->id, $cm->id);
 
 /// Get all the chapters
-    $chapters = get_records('book_chapters', 'bookid', $book->id, 'pagenum');
+$chapters = $DB->get_records('book_chapters', array('bookid'=>$book->id), 'pagenum');
 
 /// Generate the manifest and all the contents
-    chapters2imsmanifest($chapters, $book, $cm);
+chapters2imsmanifest($chapters, $book, $cm);
 
 /// Now zip everything
-    make_upload_directory('temp');
-    $zipfile = $CFG->dataroot . "/temp/". time() . '.zip';
-    $files = get_directory_list($CFG->dataroot . "/$cm->course/moddata/book/$book->id", basename($zipfile), false, true, true);
-    foreach ($files as $key => $value) {
-        $files[$key] = $CFG->dataroot . "/$cm->course/moddata/book/$book->id/" . $value;
-    }
-    zip_files($files, $zipfile);
+make_upload_directory('temp');
+$zipfile = $CFG->dataroot . "/temp/". time() . '.zip';
+$files = get_directory_list($CFG->dataroot . "/temp/$cm->course/moddata/book/$book->id", basename($zipfile), false, true, true);
+foreach ($files as $key => $value) {
+    $files[$key] = $CFG->dataroot . "/temp/$cm->course/moddata/book/$book->id/" . $value;
+}
+
+$zip = new zip_packer();
+$zip->archive_to_pathname($files, $zipfile);
 /// Now delete all the temp dirs
-    delete_dir_contents($CFG->dataroot . "/$cm->course/moddata/book/$book->id");
+delete_dir_contents($CFG->dataroot . "/temp/$cm->course/moddata/book/$book->id");
 /// Now serve the file
-    send_temp_file($zipfile, clean_filename($book->name) . '.zip');
+send_temp_file($zipfile, clean_filename($book->name).'.zip');
+
+
 
 /**
  * This function will create the default imsmanifest plus contents for the book chapters passed as array
  * Everything will be created under the book moddata file area *
  */
-function chapters2imsmanifest ($chapters, $book, $cm) {
-
+function chapters2imsmanifest($chapters, $book, $cm) {
+    global $DB;
     global $CFG;
 
 /// Init imsmanifest and others
@@ -92,7 +81,7 @@ function chapters2imsmanifest ($chapters, $book, $cm) {
 /// Moodle and Book version
     $moodle_release = $CFG->release;
     $moodle_version = $CFG->version;
-    $book_version   = get_field('modules', 'version', 'name', 'book');
+    $book_version   = $DB->get_field('modules', 'version', array('name'=>'book'));
 
 /// Load manifest header
     $imsmanifest .= '<?xml version="1.0" encoding="UTF-8"?>
@@ -104,7 +93,7 @@ function chapters2imsmanifest ($chapters, $book, $cm) {
       <title>' . htmlspecialchars($book->name) . '</title>';
 
 /// Create the temp directory
-    $moddir = "$cm->course/moddata/book/$book->id";
+    $moddir = "temp/$cm->course/moddata/book/$book->id";
     make_upload_directory($moddir);
 
 /// For each chapter, create the corresponding directory and save contents there
@@ -235,8 +224,8 @@ function chapter2html($chapter, $courseid, $bookid) {
             $localfiles['<#'. $key . '#>'] = $value;
             $basefiles['<#'. $key . '#>'] = basename($value);
         /// Copy files to current chapter directory
-            if (file_exists($CFG->dataroot . '/' . $courseid . '/' . $value)) {
-                copy($CFG->dataroot . '/' . $courseid . '/' . $value, $CFG->dataroot . '/' . $courseid . '/moddata/book/' . $bookid . '/' . $chapter->pagenum . '/' . basename ($value));
+            if (file_exists($CFG->dataroot . '/temp/' . $courseid . '/' . $value)) {
+                copy($CFG->dataroot . '/temp/' . $courseid . '/' . $value, $CFG->dataroot . '/' . $courseid . '/moddata/book/' . $bookid . '/' . $chapter->pagenum . '/' . basename ($value));
             }
         }
     /// Replace contents by keys
