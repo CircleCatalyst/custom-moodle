@@ -108,15 +108,21 @@ class SearchEngine
     /**
      * Print paged search results
      *
-     * @param integer $blockid  ID of the block
+     * @param integer $blockid  ID of the block (or 0 if not tied to a specific block)
      * @param integer $courseid ID of the course where the block is
      * @param string  $choose   HTML ID of the parent element to set (picker mode)
      */
-    function print_results($blockid, $courseid, $choose='')
+    function print_results($blockid=0, $courseid, $choose='')
     {
         global $CFG;
 
-        $this->results->baseurl = $CFG->wwwroot.'/blocks/extsearch/search.php?id='.$blockid."&amp;courseid=$courseid";
+        $this->results->baseurl = $CFG->wwwroot.'/blocks/extsearch/search.php?';
+        if ( $id ){
+            $this->results->baseurl .= 'id='.$blockid;
+        } else {
+            $this->results->baseurl .= 'type='.$this->searchprovidername;
+        }
+        $this->results->baseurl .= "&amp;courseid=$courseid";
         $this->results->baseurl .= '&amp;query='.urlencode(stripslashes($this->query)).'&amp;';
         if (!empty($choose)) {
             $this->results->baseurl .= 'choose='.urlencode(stripslashes($choose)).'&amp;';

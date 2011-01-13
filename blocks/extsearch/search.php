@@ -3,7 +3,14 @@ require_once '../../config.php';
 
 require_login();
 
-$id       = required_param('id', PARAM_INT); // extsearch block instance ID
+$id       = optional_param('id', 0, PARAM_INT); // extsearch block instance ID
+$type     = optional_param('type', '', PARAM_ALPHA); // Which search provider to use
+
+// ID or Type must be provided
+if ( !$id && !$type ){
+    print_error('mustprovideidortype', 'block_extsearch');
+}
+
 $query    = stripslashes(optional_param('query', '', PARAM_NOTAGS)); // search query
 $page     = optional_param('page', 0, PARAM_INT); // page number to display
 $searchid = optional_param('searchid', 0, PARAM_INT); // resultset token
@@ -31,27 +38,36 @@ if ($page < 0) {
     $page = 0;
 }
 
-if (!$blockinstance = $DB->get_record('block_instances', array('id'=>$id))) {
-    if (empty($choose)) {
-        print_error('error:incorrectblockid', 'block_extsearch', $courselink);
+if ( $id ){
+    if (!$blockinstance = $DB->get_record('block_instances', array('id'=>$id))) {
+        if (empty($choose)) {
+            print_error('error:incorrectblockid', 'block_extsearch', $courselink);
+        }
+        else {
+            print_error('error:incorrectblockidpicker', 'block_extsearch', $courselink);
+        }
     }
-    else {
-        print_error('error:incorrectblockidpicker', 'block_extsearch', $courselink);
-    }
-}
-$blockconfig = unserialize(base64_decode($blockinstance->configdata));
+    $blockconfig = unserialize(base64_decode($blockinstance->configdata));
 
-$searchprovider = '';
-$searchprovidername = get_string('pluginname', 'block_extsearch');
-if (!empty($blockconfig->search_provider)) {
-    $searchprovider = clean_param($blockconfig->search_provider, PARAM_ALPHANUM);
-    $searchprovidername = get_string($blockconfig->search_provider, 'block_extsearch');
+    $searchprovider = '';
+    $searchprovidername = get_string('pluginname', 'block_extsearch');
+    if (!empty($blockconfig->search_provider)) {
+        $searchprovider = clean_param($blockconfig->search_provider, PARAM_ALPHANUM);
+    }
+} else {
+    // If it's not tied to a particular block, then make sure the user is an admin
+    $context = get_context_instance(CONTEXT_COURSE, $courseid);
+    require_capability('moodle/course:manageactivities', $context);
+
+    $searchprovider = $type;
+    $blockconfig = new stdClass();
 }
 
 $searchengineclassname = "SearchEngine_$searchprovider";
 if (!file_exists("$searchengineclassname.php")) {
     print_error('error:unsupportedsearchprovider', 'block_extsearch', $courselink);
 }
+$searchprovidername = get_string($searchprovider, 'block_extsearch');
 
 // Page header
 $pagetitle = $searchprovidername;
@@ -86,7 +102,12 @@ else {
 
 // Print a search box at the top of the page
 print '<form action="'.$CFG->wwwroot.'/blocks/extsearch/search.php" method="get">';
-print '<p><input type="hidden" name="id" value="'.$id.'" />';
+print '<p>';
+if ( $id ){
+    print '<input type="hidden" name="id" value="'.$id.'" />';
+} else {
+    print '<input type="hidden" name="type" value="'.$type.'" />';
+}
 print '<input type="hidden" name="courseid" value="'.$courseid.'" />';
 print '<input type="hidden" name="choose" value="'.$choose.'" />';
 print '<input type="hidden" name="pinned" value="'.$pinned.'" />';
