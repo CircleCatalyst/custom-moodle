@@ -51,7 +51,7 @@ function extsearch_20_migrate() {
         return;
     }
 
-    if (!$candidates = $DB->get_recordset('resource_old', array('type'=>'file', 'migrated'=>0))) {
+    if (!$candidates = $DB->get_recordset('resource_old', array('type'=>'digitalnz', 'migrated'=>0))) {
         return;
     }
 
