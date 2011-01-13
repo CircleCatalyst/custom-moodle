@@ -177,8 +177,7 @@ if (!$allowprint) {
 }
 
 // prepare $toc and $currtitle, $currsubtitle
-$print = 0;
-$toc = book_get_toc($cm, $book, $chapters, $chapter, $edit);
+$toc = book_get_toc($cm, $book, $chapters, $chapter, ($edit ? BOOK_TOC_EDITING : BOOK_TOC_VANILLA));
 
 $tocwidth = get_config('tocwidth', 'book');
 if ($edit) {
