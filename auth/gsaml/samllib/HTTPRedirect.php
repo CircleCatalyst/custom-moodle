@@ -25,21 +25,14 @@ class SimpleSAML_Bindings_SAML20_HTTPRedirect {
 	public function signQuery($query, $md) {
 
 		/* Check if signing of HTTP-Redirect messages is enabled. */
-		
-		if (!array_key_exists('request.signing', $md) || !$md['request.signing']){ 
+
+		if (empty($md['request.signing'])) { 
 			return $query;
 		}
 
-		if (!array_key_exists('privatekey', $md)) {
-			throw new Exception('If you set request.signing to be true in the metadata, you also have to add the privatekey parameter.');
-		}
-		
-
 		/* Load the private key. */
-
-		$privatekey = $this->configuration->getPathValue('certdir') . $md['privatekey'];
-		if (!file_exists($privatekey)) {
-			throw new Exception('Could not find private key file [' . $privatekey . '] which is needed to sign the request.');
+		if (empty($md['privatekey'])) {
+			throw new Exception('SAML: If you set request.signing to be true in the metadata, you also have to add the privatekey parameter.');
 		}
 
 		/* Sign the query string. According to the specification, the string which should be
@@ -64,7 +57,7 @@ class SimpleSAML_Bindings_SAML20_HTTPRedirect {
 			$xmlseckey->passphrase = $md['privatekey_pass'];
 		}
 
-		$xmlseckey->loadKey($privatekey,TRUE);
+		$xmlseckey->loadKey($md['privatekey']);
         $signature = $xmlseckey->signData($query);
                 
 		$query = $query . "&" . "Signature=" . urlencode(base64_encode($signature));
@@ -113,14 +106,8 @@ class SimpleSAML_Bindings_SAML20_HTTPRedirect {
 				
 				
 
-		if (!array_key_exists('certificate', $md)) {
-			throw new Exception('If you set request.signing to be true in the metadata, you also have to add the certificate parameter.');
-		}
-
-		// check if public key of sp exists
-		$publickey = $this->configuration->getPathValue('certdir') . $md['certificate'];
-		if (!is_file($publickey)) {
-			throw new Exception('Could not find certificate file [' . $publickey . '] which is needed to verify the request.');
+		if (empty($md['certificate'])) {
+			throw new Exception('SAML: If you set request.signing to be true in the metadata, you also have to add the certificate parameter.');
 		}
 
 		// getting signature from get arguments
@@ -131,7 +118,7 @@ class SimpleSAML_Bindings_SAML20_HTTPRedirect {
 
 		// verify signature using xmlseclibs
 		$xmlseckey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA1, array('type'=>'public'));
-		$xmlseckey->loadKey($publickey,TRUE);
+		$xmlseckey->loadKey($publickey);
 
 		if (!$xmlseckey->verifySignature($query,$signature)) {
 			throw new Exception("Unable to validate Signature");
@@ -333,4 +320,3 @@ class SimpleSAML_Bindings_SAML20_HTTPRedirect {
 	
 }
 
-?>

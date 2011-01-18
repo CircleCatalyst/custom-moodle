@@ -198,14 +198,10 @@ class SimpleSAML_XML_SAML20_AuthnResponse extends SimpleSAML_XML_AuthnResponse {
 				if ($objKeyInfo = $objenc->locateKeyInfo($objKey)) {
 					if ($objKeyInfo->isEncrypted) {
 						$objencKey = $objKeyInfo->encryptedCtx;
-						if (!isset($spmd['privatekey'])) {
-							throw new Exception("Private key for decrypting assertion needed, but not specified for saml20-sp-hosted id: " . $spid);
+						if (empty($spmd['privatekey'])) {
+							throw new Exception("SAML: RSA private key not configured. This is required to decrypt the response. saml20-sp-hosted: $spid");
 						}
-						$privatekey = @file_get_contents($this->configuration->getPathValue('certdir') . $spmd['privatekey']);
-						if ($privatekey === FALSE) {
-							throw new Exception("Private key for decrypting assertion specified but not found for saml20-sp-hosted id: " . $spid . " Filename: " . $spmd['privatekey']);
-						}
-						$objKeyInfo->loadKey($privatekey);
+						$objKeyInfo->loadKey($spmd['privatekey']);
 						$key = $objencKey->decryptKey($objKeyInfo);
 					} else {
 						$idpmd = $this->metadata->getMetaData($this->issuer, 'saml20-idp-remote');
@@ -249,9 +245,9 @@ class SimpleSAML_XML_SAML20_AuthnResponse extends SimpleSAML_XML_AuthnResponse {
 
 		$publickey = FALSE;
 		if (isset($md['certificate'])) {
-			$publickey = @file_get_contents($this->configuration->getPathValue('certdir') . $md['certificate']);
-			if (!$publickey) {
-				throw new Exception("Saml20-idp-remote id: " . $this-issuer . " 'certificate' set to ': " . $md['certificate'] . "', but no certificate found");			
+			$publickey = $md['certificate'];
+			if (empty($publickey)) {
+				throw new Exception("Saml20-idp-remote id: " . $this->issuer . " 'certificate' set to ': " . $md['certificate'] . "', but no certificate found.");
 			}
 		}
 		/* Validate the signature. */
@@ -403,7 +399,7 @@ class SimpleSAML_XML_SAML20_AuthnResponse extends SimpleSAML_XML_AuthnResponse {
 
 			if ($base64) {
 				
-				if ($name != 'jpegPhoto') {				
+				if ($name != 'jpegPhoto') {
 					foreach(explode('_', $value) AS $v) {
 	
 							$this->attributes[$name][] = base64_decode($v);
@@ -512,8 +508,8 @@ class SimpleSAML_XML_SAML20_AuthnResponse extends SimpleSAML_XML_AuthnResponse {
 			$session->setSessionIndex($this->sessionIndex);
 			$session->setIdP($this->issuer);
 		} elseif ($status == 'urn:oasis:names:tc:SAML:2.0:status:NoPassive') {
-			/* 	Do not process the authResponse when NoPassive is sent - we continue with an empty set of attributes.
-		   		Some day we will be able to tell the application what happened */
+			/* Do not process the authResponse when NoPassive is sent - we continue with an empty set of attributes.
+				Some day we will be able to tell the application what happened */
 			$session = SimpleSAML_Session::getInstance();
 			$session->doLogin('saml2');
 			$session->setAttributes(array());
@@ -549,8 +545,7 @@ class SimpleSAML_XML_SAML20_AuthnResponse extends SimpleSAML_XML_AuthnResponse {
 		}
 
 		return $result;
-	}		
-			
+	}
 
 	/**
 	 * This function generates an AuthenticationResponse
@@ -744,8 +739,6 @@ class SimpleSAML_XML_SAML20_AuthnResponse extends SimpleSAML_XML_AuthnResponse {
 
 		return $ret;
 	}
-	
-	
+
 }
 
-?>

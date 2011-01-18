@@ -1,8 +1,6 @@
 <?php
 
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
-}
+defined('MOODLE_INTERNAL') or die();
 
 /**
  * Implementation of the SAML 2.0 HTTP-POST binding.
@@ -65,26 +63,18 @@ class SimpleSAML_Bindings_SAML20_HTTPPost {
 
 		$idpmd = $this->metadata->getMetaData($idmetaindex, 'saml20-idp-hosted');
 		$spmd = $this->metadata->getMetaData($spentityid, 'saml20-sp-remote');
-		
 		$destination = $spmd['AssertionConsumerService'];
-	
-		$privatekey = $this->configuration->getPathValue('certdir') . $idpmd['privatekey'];
-		$publiccert = $this->configuration->getPathValue('certdir') . $idpmd['certificate'];
 
-		if (!file_exists($privatekey))
-			throw new Exception('Could not find private key file [' . $privatekey . '] which is needed to sign the authentication response');
+		if (empty($idpmd['privatekey']))
+			throw new Exception('SAML: RSA private key not configured. This is required to sign the authentication response.');
 
-		if (!file_exists($publiccert)) 
-			throw new Exception('Could not find certificate [' . $publiccert . '] to attach to the authentication resposne');
+		if (empty($idpmd['certificate']))
+			throw new Exception('SAML: X.509 certificate not configured. This is required to attach to the authentication response.');
 
-		
-		/*
-		 * XMLDSig. Sign the complete request with the key stored in cert/server.pem
-		 */
+		// XMLDSig. Sign the complete request with the key stored in cert/server.pem
 		$objXMLSecDSig = new XMLSecurityDSig();
 		$objXMLSecDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
-	
-	
+
 		try {
 			$responsedom = new DOMDocument();
 			$responsedom->loadXML(str_replace("\n", "", str_replace ("\r", "", $response)));
@@ -94,7 +84,6 @@ class SimpleSAML_Bindings_SAML20_HTTPPost {
 
 		$responseroot = $responsedom->getElementsByTagName('Response')->item(0);
 		$firstassertionroot = $responsedom->getElementsByTagName('Assertion')->item(0);
-
 
 		/* Determine what we should sign - either the Response element or the Assertion. The default
 		 * is to sign the Assertion, but that can be overridden by the 'signresponse' option in the
@@ -112,37 +101,26 @@ class SimpleSAML_Bindings_SAML20_HTTPPost {
 		}
 
 		if($signResponse) {
-			/* Sign the response. */
-
+			// Sign the response.
 			$objXMLSecDSig->addReferenceList(array($responseroot), XMLSecurityDSig::SHA1,
 				array('http://www.w3.org/2000/09/xmldsig#enveloped-signature', XMLSecurityDSig::EXC_C14N),
 				array('id_name' => 'ID'));
 		} else {
-			/* Sign the assertion. */
-
+			// Sign the assertion.
 			$objXMLSecDSig->addReferenceList(array($firstassertionroot), XMLSecurityDSig::SHA1,
 				array('http://www.w3.org/2000/09/xmldsig#enveloped-signature', XMLSecurityDSig::EXC_C14N),
 				array('id_name' => 'ID'));
 		}
 		
 		
-		/* create new XMLSecKey using RSA-SHA-1 and type is private key */
 		$objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA1, array('type'=>'private'));
-		
-		/* Set the passphrase which should be used to open the key, if this attribute is
-		 * set in the metadata.
-		 */
 		if(array_key_exists('privatekey_pass', $idpmd)) {
 			$objKey->passphrase = $idpmd['privatekey_pass'];
 		}
 
-		/* load the private key from file - last arg is bool if key in file (TRUE) or is string (FALSE) */
-		$objKey->loadKey($privatekey,TRUE);
-				
+		$objKey->loadKey($idpmd['privatekey']);
 		$objXMLSecDSig->sign($objKey);
-		
-		$public_cert = file_get_contents($publiccert);
-		$objXMLSecDSig->add509Cert($public_cert, true);
+		$objXMLSecDSig->add509Cert($idpmd['certificate'], true);
 
 		if($signResponse) {
 			$objXMLSecDSig->appendSignature($responseroot, true, false);
@@ -168,19 +146,13 @@ class SimpleSAML_Bindings_SAML20_HTTPPost {
 				$key = $objKey->generateSessionKey();
 				$objKey->loadKey($key);
 
-				if (!isset($spmd['certificate'])) {
+				if (empty($spmd['certificate'])) {
 					throw new Exception("Public key for encrypting assertion needed, but not specified for saml20-sp-remote id: " . $spentityid);
 				}
 
-				$sp_publiccert = @file_get_contents($this->configuration->getPathValue('certdir') . $spmd['certificate']);
-
-				if ($sp_publiccert === FALSE) {
-					throw new Exception("Public key for encrypting assertion specified but not found for saml20-sp-remote id: " . $spentityid . " Filename: " . $spmd['certificate']);
-				}
-				
 				$keyKey = new XMLSecurityKey(XMLSecurityKey::RSA_1_5, array('type'=>'public'));
 				
-				$keyKey->loadKey($sp_publiccert);
+				$keyKey->loadKey($spmd['certificate']);
 				
 				$enc->encryptKey($keyKey, $objKey);
 			}
@@ -259,4 +231,3 @@ class SimpleSAML_Bindings_SAML20_HTTPPost {
 	
 }
 
-?>

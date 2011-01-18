@@ -32,31 +32,16 @@
  *
  */
 
-
-require_once('../config.php');
-$svars = get_config('auth/gsaml');
- 
+require_once dirname(__FILE__).'/../../../config.php';
+$auth = get_auth_plugin('gsaml');
  
 $metadata = array( 
 
-	/*
-	 * Example simpleSAMLphp SAML 2.0 SP
-	 */
-	//'saml2sp.example.org' => array(
- 	//	'AssertionConsumerService' => 'https://saml2sp.example.org/simplesaml/saml2/sp/AssertionConsumerService.php', 
- 	//	'SingleLogoutService'      => 'https://saml2sp.example.org/simplesaml/saml2/sp/SingleLogoutService.php'
-	//),
-	
 	'google.com' => array(
- 		'AssertionConsumerService'		=>	'https://www.google.com/a/'.$svars->domainname.'/acs',
+ 		'AssertionConsumerService'		=>	'https://www.google.com/a/'.$auth->config->domainname.'/acs',
 		'NameIDFormat'					=>	'urn:oasis:names:tc:SAML:2.0:nameid-format:email',
 		'simplesaml.nameidattribute'	=>	'useridemail', // this key is placed in the attributes of the login script
 		'simplesaml.attributes'			=>	false
 	)
-	
-		
-
 );
 
-
-?>

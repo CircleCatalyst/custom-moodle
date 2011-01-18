@@ -5,6 +5,8 @@
  * $Id: config.php 451 2008-03-27 15:33:34Z olavmrk $
  */
 
+defined('MOODLE_INTERNAL') or die();
+
 $config = array (
 
 	/*
@@ -64,5 +66,3 @@ $config = array (
 	'auth.auto.delay_login' => 0,
 );
 
-
-?>

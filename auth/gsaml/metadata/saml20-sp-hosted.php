@@ -24,16 +24,12 @@
  
 $metadata = array( 
 
-	/*
-	 * Example of a hosted SP 
-	 */
+	// Example of a hosted SP 
 	'__DYNAMIC:1__' => array(
 		'host'  => '__DEFAULT__'
 	)
 	
-	// needs an internal authority to handle the login process, maybe
+// needs an internal authority to handle the login process, maybe
 
 );
 
-
-?>

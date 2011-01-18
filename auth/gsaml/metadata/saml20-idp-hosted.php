@@ -25,6 +25,8 @@
  *
  */
 
+require_once dirname(__FILE__).'/../../../config.php';
+$auth = get_auth_plugin('gsaml');
 
 $metadata = array( 
 
@@ -35,11 +37,8 @@ $metadata = array(
 		// TODO:
 		// names of the files uploaded need to appear here.
 		// TODO: ARGH! I could have changed made 3 changes and left the other samllibs alone! dang it.
-		'privatekey'		=>	'googleappsidp.pem', 
-		'certificate'		=>	'googleappsidp.crt', 
-		
-        'privatekey'		=>	basename(get_config('auth/gsaml','privatekey')),
-		'certificate'		=>	basename(get_config('auth/gsaml','certificate')),
+		'privatekey'		=>	$auth->config->privatekey,
+		'certificate'		=>	$auth->config->certificate,
 		'auth'				=>	'../../../../login/index.php', // To GoTo Moodle's Login page
 		//'auth'				=>	'auth/login-auto.php',        //  Goto regular login page
 		'authority'         =>  'login',
@@ -49,4 +48,3 @@ $metadata = array(
 
 );
 
-?>

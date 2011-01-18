@@ -8,22 +8,7 @@
  * 
  */
 
-
-global $CFG; 	
-require_once($CFG->dirroot.'/config.php');
-//if (!$samlvars = get_config('auth/gsaml')) {
-//    $msg ='Google SAML configuration has not yet been set';
-//    debugging($msg, DEBUG_DEVELOPER);
-//    redirect($CFG->wwwroot);
-//}
-//
-//   	
-//// blaw this can be shortend later    
-//if($samlvars->debugsamlmsg === '1') {
-//    $samldebug = true;
-//} else {
-//    $samldebug = false;
-//}
+defined('MOODLE_INTERNAL') or die();
 
 $config = array (
 
@@ -36,7 +21,6 @@ $config = array (
 	 *  'basedir' => '/var/simplesamlphp/',
 	 */
 	 'basedir' => $CFG->dirroot.'/auth/gsaml/', 
-	 
 
 	/**
 	 * Setup the following parameters to match the directory of your installation.
@@ -46,17 +30,11 @@ $config = array (
 	'templatedir'           => 'templates/',
 	'metadatadir'           => 'metadata/',
 	'attributenamemapdir'   => 'attributemap/',
-
-	//'certdir'               => 'cert/', 
-	// TODO: make sure this directory exists
-	// May replace with tempdir files
-	'certdir'               => $CFG->dataroot.'/samlkeys/',
 	'dictionarydir'         => 'dictionaries/',
 	'loggingdir'            => 'log/',
-	
-	
+
 	'version'				=>	'trunk',
-	
+
 	/**
 	 * If you set the debug parameter to true, all SAML messages will be visible in the
 	 * browser, and require the user to click the submit button. If debug is set to false,
@@ -455,5 +433,3 @@ $config = array (
 
 );
 
-
-?>
