@@ -29,11 +29,12 @@
  * @package block_gdata
  **/
 
+$string['pluginname'] = 'Google User Sync';
+
 $string['addusers'] = 'Add users to sync';
 $string['alloweventssetting'] = 'Enable events';
 $string['alloweventssettingdesc'] = 'If this setting is enabled, then a Moodle user\'s account will be instantly updated in Google Apps when the user edits his/her account in Moodle\'s standard edit profile interface.  Also, if a Moodle user\'s account is deleted, then the associated Google Apps account will also be instantly deleted.  This only applies to Moodle accounts that are currently being synchronized to Google Apps.  This feature is \"best attempt\" only, so failures will fallback to the cron to perform the synchronization.';
 $string['authfailed'] = 'Authentication with Google Apps failed.  Please check your credentials.';
-$string['blockname'] = 'Google User Sync';
 $string['checkstatus'] = 'Check status';
 $string['confirmaddusers'] = 'Are you sure you want to add all $a users in your search set?';
 $string['confirmusers'] = 'Are you sure you want to remove all $a users from the sync list?';
@@ -81,4 +82,27 @@ $string['usernamesetting'] = 'Google Apps username';
 $string['usernamesettingdesc'] = 'This is the username (without domain) used to administer your Google Apps account. For example, if you login to Google Apps as \'foo@bar.com\', your username is \'foo\'.';
 $string['userssynced'] = 'Users being synced';
 
-?>
+$string['gapps'] = 'Google Apps';
+$string['gapps_help'] = 'This help file provides brief overview of the different features of the Google Apps block.
+
+*Google Apps Status*
+
+* The <em>Status</em> tab provides feedback on whether or not Moodle can connect to Google Apps using the credentials provided in <em>Site Administration &gt; Modules &gt; Blocks &gt; Google Apps</em>. The credentials are the values entered for username, password and domain.
+
+*Users being synced*
+
+* The <em>Users being synced</em> tab provides an interface to view all the users that are currently being synchronized to Google Apps.  Here, you can also review the last time an account was synchronized to Google Apps and the status of the account synchronization.  Synchronization takes place according to the cron settings found in <em>Site Administration &gt; Modules &gt; Blocks &gt; Google Apps</em>.
+
+*Synchronization rules*
+
+* If a user has been deleted in Moodle or has been removed from the synchronization process, then delete the user\'s account in Google Apps.
+* If a user has had their username renamed in Moodle then delete the old account using the old username from Google Apps and create a new account in Google Apps with the new Moodle username.
+* If a user does not have an account in Google Apps with their Moodle username, then create it.
+* Do not allow duplicate usernames to be used for users in Google Apps and in Moodle.
+* If the Moodle user has an account in Google Apps then check first name, last name and password for changes in Moodle, then update Google Apps if necessary.
+* The password shared by Moodle and Google Apps must be at least 6 characters in length.  Please use <em>Site Administration > Security > Site policies</em> to turn on Password Policy and set Password Length to 6 or more characters.
+
+*Add users to sync*
+* The <em>Add users to sync</em> tab provides an interface to bulk add users to the Moodle to Google Apps synchronization.
+';
+

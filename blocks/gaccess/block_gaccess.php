@@ -36,7 +36,7 @@ class block_gaccess extends block_list {
 
 
     function init() {
-        $this->title   = get_string('blockname', 'block_gaccess');
+        $this->title   = get_string('pluginname', 'block_gaccess');
         $this->version = 2008102402;
     }
 

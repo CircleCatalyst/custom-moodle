@@ -20,10 +20,9 @@
 * @author Chris Stones
 */
  
-$string['blockname'] = 'Gmail';
+$string['pluginname'] = 'Gmail';
+
 $string['gmail'] = 'gmail';
-
-
 $string['oauthsecretstr'] = 'OAuth Consumer Secret';
 $string['oauthsecretinfo'] = 'This is the same value you find on Google\'s Manage OAuth Access page under Advanced tools.';
 $string['msgnumberunread'] = "Unread Message Count";
@@ -46,4 +45,3 @@ $string['newwinlinkinfo'] = 'If selected links will open in new window.';
 $string['mustusegoogleauthenticaion'] = 'You must be using Google SSO Authentication for this block to work.';
 $string['missingoauthkey'] = 'Missing OAuth Key';
 
-?>

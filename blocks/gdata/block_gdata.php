@@ -54,7 +54,7 @@ class block_gdata extends block_list {
      * @return void
      **/
     function init() {
-        $this->title   = get_string('blockname', 'block_gdata');
+        $this->title   = get_string('pluginname', 'block_gdata');
         $this->version = 2008072901;
     }
 
@@ -295,7 +295,7 @@ class block_gdata extends block_list {
     function print_header() {
         global $CFG;
 
-        $title = get_string('blockname', 'block_gdata');
+        $title = get_string('pluginname', 'block_gdata');
 
         print_header_simple($title, $title, build_navigation($title));
         print_heading_with_help($title, 'gapps', 'block_gdata');

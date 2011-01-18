@@ -72,7 +72,7 @@ class block_gmail extends block_list {
     var $msgnumber;
     
     function init() {
-        $this->title = get_string('blockname', 'block_gmail');
+        $this->title = get_string('pluginname', 'block_gmail');
         $this->version = 2008101200;
     }
     

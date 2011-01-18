@@ -20,8 +20,6 @@
 * @author Chris Stones
 */
  
-$string['blockname'] = 'Google Apps';
-
+$string['pluginname'] = 'Google Apps';
 $string['nodomainyet'] = 'No domain configured yet.';
 
-?>
