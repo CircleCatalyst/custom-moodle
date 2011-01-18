@@ -22,4 +22,6 @@
  
 $string['pluginname'] = 'Google Apps';
 $string['nodomainyet'] = 'No domain configured yet.';
+$string['newwinlink'] = 'New Window Links';
+$string['newwinlink_desc'] = 'If selected links will open in new window.';
 

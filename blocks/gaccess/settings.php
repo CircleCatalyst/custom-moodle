@@ -29,10 +29,12 @@
  * @package block_gmail
  **/
 
-require_once($CFG->dirroot.'/lib/adminlib.php');
+defined('MOODLE_INTERNAL') or die();
+
+require_once "$CFG->libdir/adminlib.php";
 
 $configs   = array();
-$configs[] = new admin_setting_configcheckbox('newwinlink', "New Window Links", "If selected links will open in new window.", '1');
+$configs[] = new admin_setting_configcheckbox('newwinlink', get_string('newwinlink', 'block_gaccess'), get_string('newwinlink_desc', 'block_gaccess'), '1');
 
 // Define the config plugin so it is saved to
 // the config_plugin table then add to the settings page
@@ -41,4 +43,3 @@ foreach ($configs as $config) {
     $settings->add($config);
 }
 
-?>
