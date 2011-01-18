@@ -20,34 +20,29 @@
 * @author Chris Stones
 */
  
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.');    ///  It must be included from a Moodle page
-}
+defined('MOODLE_INTERNAL') or die();
 
-require_once($CFG->libdir.'/authlib.php');
-require_once($CFG->libdir.'/weblib.php');
+require_once $CFG->libdir.'/authlib.php';
+require_once $CFG->libdir.'/weblib.php';
 
 // include SAML for gsaml_send_auth_response
-require_once($CFG->dirroot.'/auth/gsaml/samllib.php');
+require_once $CFG->dirroot.'/auth/gsaml/samllib.php';
 
 
 /**
  * SAML Authentication Plugin
  */
 class auth_plugin_gsaml extends auth_plugin_base {
-    
-     
+
     /**
      * Constructor.
      */
-    function auth_plugin_gsaml() {
+    function __construct() {
          $this->authtype = 'gsaml';
          $this->loggedin = false;
          $this->config   = get_config('auth/gsaml');
     }
 
-    // =============================================================
-    
     /**
      * Post authentication hook.
      * This method is called from authenticate_user_login() for all enabled auth plugins.
@@ -78,7 +73,7 @@ class auth_plugin_gsaml extends auth_plugin_base {
         	debugging('gdata block is not installed');
         	
         } else {
-        	require_once($CFG->dirroot.'/blocks/gdata/gapps.php');
+        	require_once $CFG->dirroot.'/blocks/gdata/gapps.php';
         	
         	try {
 	        	$g = new blocks_gdata_gapps();
@@ -446,7 +441,8 @@ class auth_plugin_gsaml extends auth_plugin_base {
      * @param array $page An object containing all the data for this page.
      */
     function config_form($config, $err, $user_fields) {
-        include 'settings.php';
+        // This will cause a section error - uses authsettinggsaml admin section instead
+        return null;
     }
 
 
@@ -488,4 +484,3 @@ class auth_plugin_gsaml extends auth_plugin_base {
     }
 }
 
-?>
