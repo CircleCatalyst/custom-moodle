@@ -49,9 +49,9 @@ echo $OUTPUT->doctype() ?>
 					echo html_writer::end_tag('');;
 				} ?> 				
 				<?php
-            		echo $OUTPUT->login_info();
-					echo html_writer::tag('br');					
-					echo $OUTPUT->lang_menu();					
+                                echo $OUTPUT->login_info();
+                                echo html_writer::empty_tag('br');
+                                echo $OUTPUT->lang_menu();
 			    ?>
 				</div>
 			
