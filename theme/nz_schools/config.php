@@ -16,16 +16,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Configuration for Moodle's standard theme.
- *
- * This theme is the default theme within Moodle 2.0, it builds upon the base theme
- * adding only CSS to create the simple look and feel Moodlers have come to recognise.
+ * Configuration for NZ Schools theme.
  *
  * For full information about creating Moodle themes, see:
  *  http://docs.moodle.org/en/Development:Themes_2.0
  *
  * @package   moodlecore
  * @copyright 2010 Sam Hemelryk
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -150,3 +148,4 @@ $THEME->editor_sheets = array('editor');
 ////////////////////////////////////////////////////
 // Controls the colours for the MP3 player
 ////////////////////////////////////////////////////
+$THEME->csspostprocess = 'nz_schools_process_css';

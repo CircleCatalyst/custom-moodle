@@ -20,9 +20,16 @@
  *
  * @package   theme_nz_schools
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
+ * @copyright 2011 Aaron Wells {@link http://www.catalyst.net.nz}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 $string['pluginname'] = 'NZ Schools';
+$string['backgroundcolourlabel'] = 'Background Colour';
+$string['navigationcolourlabel'] = 'Navigation Colour';
+$string['blocktitlecolourlabel'] = 'Block Title Colour';
+$string['schoollogolabel'] = 'School Logo';
+$string['schoollogoinstructions'] = '(Max Size: 2MB)';
+$string['logosolidlabel'] = 'Logo Has Solid Background Colour';
 $string['backgroundcolor'] = 'Blocks background colour';
 $string['backgroundcolordesc'] = 'This sets the blocks background colour for the theme.';
 $string['configtitle'] = 'NZ Schools settings';

@@ -7,15 +7,15 @@
 
 /* Primary Colour */  
 #page, html, body {
-	background: #555454;
+	background: [[setting:colour1]];
 }
 
 /* Secondary Colour */
 .navbar, .navbar-home {
-  background: #a1a1a1; 
+  background: [[setting:colour2]];
 }
 
 /* Tertiary Colour */
 .block .header {
-	background: #a1a1a1;	
+	background: [[setting:colour3]];
 }
