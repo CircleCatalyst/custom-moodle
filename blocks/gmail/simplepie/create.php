@@ -1,6 +1,6 @@
 <?php
 
-require_once 'simplepie.inc';
+require_once dirname(__FILE__).'/simplepie.php';
 
 function normalize_character_set($charset)
 {
@@ -160,4 +160,3 @@ if (php_sapi_name() === 'cli' && realpath($_SERVER['argv'][0]) === __FILE__)
 	echo build_function();
 }
 
-?>

@@ -29,9 +29,10 @@
  * @package block_gmail
  **/
 
-require_once($CFG->dirroot.'/lib/adminlib.php');
+defined('MOODLE_INTERNAL') or die();
+require_once "{$CFG->libdir}/adminlib.php";
 
-$configs   = array();
+$configs = array();
 
 $configs[] = new admin_setting_configpasswordunmask('oauthsecret', get_string('oauthsecretstr', 'block_gmail'), get_string('oauthsecretinfo', 'block_gmail'), '');
 
@@ -56,4 +57,3 @@ foreach ($configs as $config) {
     $settings->add($config);
 }
 
-?>
