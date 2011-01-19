@@ -273,7 +273,8 @@ class blocks_gdata_gapps {
      * @throws blocks_gdata_exception
      **/
     public function rename_user($moodleuser, $gappsuser) {
-        if (record_exists('block_gdata_gapps', 'username', $moodleuser->username)) {
+        global $DB;
+        if ($DB->record_exists('block_gdata_gapps', array('username' => $moodleuser->username))) {
             // Username conflict - keep old data and update status
             $this->moodle_set_status($moodleuser->id, self::STATUS_USERNAME_CONFLICT);
 
@@ -427,11 +428,12 @@ class blocks_gdata_gapps {
      * @throws blocks_gdata_exception
      **/
     public function moodle_create_user($user) {
+        global $DB;
         // Check for existing record first
-        if ($record = get_record('block_gdata_gapps', 'userid', $user->id)) {
+        if ($record = $DB->get_record('block_gdata_gapps', array('userid' => $user->id))) {
             if ($record->remove == 1) {
                 // Was set to be removed... enable it and leave other fields unchanged
-                if (!set_field('block_gdata_gapps', 'remove', 0, 'id', $record->id)) {
+                if (!$DB->set_field('block_gdata_gapps', 'remove', 0, array('id' => $record->id))) {
                     throw new blocks_gdata_exception('setfieldfailed');
                 }
             } else {
@@ -440,7 +442,7 @@ class blocks_gdata_gapps {
             }
         } else {
             // Inserting new - don't allow duplicate usernames as Gapps will not allow it anyways
-            if (record_exists('block_gdata_gapps', 'username', $user->username)) {
+            if ($DB->record_exists('block_gdata_gapps', array('username' => $user->username))) {
                 throw new blocks_gdata_exception('usernamealreadyexists', 'block_gdata', $user->username);
             }
 
@@ -452,9 +454,7 @@ class blocks_gdata_gapps {
             $record->lastsync = 0;
             $record->status   = self::STATUS_NEVER;
 
-            if (!insert_record('block_gdata_gapps', $record)) {
-                throw new blocks_gdata_exception('insertfailed');
-            }
+            $DB->insert_record('block_gdata_gapps', $record);
         }
     }
 
@@ -469,6 +469,8 @@ class blocks_gdata_gapps {
      * @throws blocks_gdata_exception
      **/
     public function moodle_update_user($moodleuser, $status = self::STATUS_OK) {
+        global $DB;
+
         $record           = new stdClass;
         $record->id       = $moodleuser->id;
         $record->username = $moodleuser->username;
@@ -476,15 +478,13 @@ class blocks_gdata_gapps {
         $record->lastsync = time();
         $record->status   = $status;
 
-        if (!update_record('block_gdata_gapps', $record)) {
-            throw new blocks_gdata_exception('failedtoupdatesyncrecord', 'block_gdata', $record->id);
-        }
+        $DB->update_record('block_gdata_gapps', $record);
 
         if ($this->config->usedomainemail) {
             $domainemail = "$moodleuser->username@{$this->config->domain}";
 
             if ($moodleuser->email != $domainemail) {
-                if (!set_field('user', 'email', $domainemail, 'id', $moodleuser->userid)) {
+                if (!$DB->set_field('user', 'email', $domainemail, array('id' => $moodleuser->userid))) {
                     throw new blocks_gdata_exception('failedtoupdateemail');
                 }
             }
@@ -499,8 +499,10 @@ class blocks_gdata_gapps {
      * @throws blocks_gdata_exception
      **/
     public function moodle_remove_user($userid) {
-        if ($id = get_field('block_gdata_gapps', 'id', 'userid', $userid)) {
-            if (!set_field('block_gdata_gapps', 'remove', 1, 'id', $id)) {
+        global $DB;
+
+        if ($id = $DB->get_field('block_gdata_gapps', 'id', array('userid' => $userid))) {
+            if (!$DB->set_field('block_gdata_gapps', 'remove', 1, array('id' => $id))) {
                 throw new blocks_gdata_exception('setfieldfailed');
             }
         } else {
@@ -515,9 +517,8 @@ class blocks_gdata_gapps {
      * @return void
      **/
     public function moodle_delete_user($id) {
-        if (!delete_records('block_gdata_gapps', 'id', $id)) {
-            throw new blocks_gdata_exception('failedtodeletesyncrecord', 'block_gdata', $id);
-        }
+        $global $DB;
+        $DB->delete_records('block_gdata_gapps', array('id' => $id)));
     }
 
     /**
@@ -530,17 +531,17 @@ class blocks_gdata_gapps {
      **/
     public function moodle_get_user($userid) {
         global $CFG;
+        global $DB;
 
-        $as = sql_as();
-
-        $moodleuser = get_record_sql("SELECT g.username $as oldusername, g.id, g.userid,
-                                             g.password $as oldpassword, g.remove, g.lastsync,
+        $moodleuser = $DB->get_record_sql("SELECT g.username AS oldusername, g.id, g.userid,
+                                             g.password AS oldpassword, g.remove, g.lastsync,
                                              g.status, u.username, u.password, u.firstname,
                                              u.lastname, u.email, u.deleted
-                                        FROM {$CFG->prefix}user u,
-                                             {$CFG->prefix}block_gdata_gapps g
-                                       WHERE u.id = g.userid
-                                         AND g.userid = $userid");
+                                        FROM {user} u
+                                        JOIN {block_gdata_gapps} g
+                                          ON u.id = g.userid
+                                       WHERE g.userid = ?",
+                                         array($userid));
 
         if ($moodleuser === false) {
             throw new blocks_gdata_exception('nouserfound');
@@ -558,19 +559,18 @@ class blocks_gdata_gapps {
     public function moodle_get_users() {
         global $CFG;
 
-        $as = sql_as();
-
         // Only grab those who are out of date according to our cron interval
         $timetocheck = time() - ($this->config->croninterval * MINSECS);
 
-        $rs = get_recordset_sql("SELECT g.username $as oldusername, g.id, g.userid,
-                                        g.password $as oldpassword, g.remove, g.lastsync,
+        $rs = $DB->get_recordset_sql("SELECT g.username AS oldusername, g.id, g.userid,
+                                        g.password AS oldpassword, g.remove, g.lastsync,
                                         g.status, u.username, u.password, u.firstname,
                                         u.lastname, u.email, u.deleted
-                                   FROM {$CFG->prefix}user u,
-                                        {$CFG->prefix}block_gdata_gapps g
+                                   FROM {user} u,
+                                        {block_gdata_gapps} g
                                   WHERE u.id = g.userid
-                                   AND g.lastsync < $timetocheck");
+                                   AND g.lastsync < ?",
+                                   array($timetocheck));
 
         if ($rs === false) {
             throw new blocks_gdata_exception('nousersfound');
@@ -585,7 +585,8 @@ class blocks_gdata_gapps {
      * @param string $status User's sync status, please use one of the STATUS constants defined in this class
      **/
     public function moodle_set_status($id, $status) {
-        if (!set_field('block_gdata_gapps', 'status', $status, 'id', $id)) {
+        global $DB;
+        if (!$DB->set_field('block_gdata_gapps', 'status', $status, array('id' => $id))) {
             throw new blocks_gdata_exception('setfieldfailed');
         }
     }
@@ -668,7 +669,7 @@ class blocks_gdata_gapps {
 
         // Loop through our users from Moodle
         $rs = $this->moodle_get_users();
-        while ($moodleuser = rs_fetch_next_record($rs)) {
+        foreach ($rs as $moodleuser) {
             // Check expire time first
             if (!empty($expire) and time() > $expire) {
                 $expired = true;
@@ -686,7 +687,7 @@ class blocks_gdata_gapps {
                 $this->process_clients($clients, $feedback);
             }
         }
-        rs_close($rs);
+        $rs->close();
 
         // Process any left overs if we have time
         if (!$expired and !empty($clients)) {
@@ -841,4 +842,3 @@ class blocks_gdata_gapps {
     }
 } // END class blocks_gdata_gapps
 
-?>

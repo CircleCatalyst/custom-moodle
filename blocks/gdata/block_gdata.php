@@ -128,7 +128,8 @@ class block_gdata extends block_list {
      * @return boolean
      **/
     function before_delete() {
-        return delete_records('config_plugins', 'plugin', 'blocks/gdata');
+        global $DB;
+        return $DB->delete_records('config_plugins', array('plugin' => 'blocks/gdata'));
     }
 
     /**
@@ -372,6 +373,7 @@ class block_gdata extends block_list {
      **/
     function users_process() {
         global $CFG;
+        global $DB;
 
         require_once($CFG->dirroot.'/blocks/gdata/gapps.php');
 
@@ -385,11 +387,11 @@ class block_gdata extends block_list {
                 list($select, $from, $where) = $this->get_sql('users');
 
                 // Bulk processing
-                if ($rs = get_recordset_sql("$select $from $where")) {
-                    while ($user = rs_fetch_next_record($rs)) {
+                if ($rs = $DB->get_recordset_sql("$select $from $where")) {
+                    foreach ($rs as $user) {
                         $gapps->moodle_remove_user($user->id);
                     }
-                    rs_close($rs);
+                    $rs->close();
                 } else {
                     throw new blocks_gdata_exception('invalidparameter');
                 }
@@ -422,6 +424,7 @@ class block_gdata extends block_list {
      **/
     function addusers_process() {
         global $CFG;
+        global $DB;
 
         require_once($CFG->dirroot.'/blocks/gdata/gapps.php');
 
@@ -435,18 +438,18 @@ class block_gdata extends block_list {
                 list($select, $from, $where) = $this->get_sql('addusers');
 
                 // Bulk processing
-                if ($rs = get_recordset_sql("$select $from $where")) {
-                    while ($user = rs_fetch_next_record($rs)) {
+                if ($rs = $DB->get_recordset_sql("$select $from $where")) {
+                    foreach ($rs as $user) {
                         $gapps->moodle_create_user($user);
                     }
-                    rs_close($rs);
+                    $rs->close();
                 } else {
                     throw new blocks_gdata_exception('invalidparameter');
                 }
             } else {
                 // Process user IDs
                 foreach ($userids as $userid) {
-                    if ($user = get_record('user', 'id', $userid, '', '', '', '', 'id, username, password')) {
+                    if ($user = $DB->get_record('user', array('id' => $userid), 'id, username, password')) {
                         $gapps->moodle_create_user($user);
                     } else {
                         throw new blocks_gdata_exception('invalidparameter');
@@ -479,6 +482,7 @@ class block_gdata extends block_list {
      **/
     function display_user_table($hook) {
         global $CFG;
+        global $DB;
 
         require_once($CFG->libdir.'/tablelib.php');
 
@@ -510,11 +514,11 @@ class block_gdata extends block_list {
 
         list($select, $from, $where) = $this->get_sql($hook, $filter);
 
-        $total = count_records_sql("SELECT COUNT(*) $from $where");
+        $total = $DB->count_records_sql("SELECT COUNT(*) $from $where");
 
         $table->pagesize($pagesize, $total);
 
-        if ($users = get_records_sql("$select $from $where ORDER BY ".$table->get_sql_sort(), $table->get_page_start(), $table->get_page_size())) {
+        if ($users = $DB->get_records_sql("$select $from $where ORDER BY ".$table->get_sql_sort(), array(), $table->get_page_start(), $table->get_page_size())) {
             foreach ($users as $user) {
                 $username = print_checkbox("userids[]", $user->id, false, s($user->username), s($user->username), '', true);
 
@@ -610,12 +614,12 @@ class block_gdata extends block_list {
             case 'users':
                 // Get all users that are not in our sync table (block_gdata_gapps) that are not scheduled to be deleted
                 $select = "SELECT u.id, u.username, u.password, u.firstname, u.lastname, u.email, g.lastsync, g.status";
-                $from   = "FROM {$CFG->prefix}user u, {$CFG->prefix}block_gdata_gapps g";
+                $from   = "FROM {user} u, {block_gdata_gapps} g";
                 $where  = "WHERE u.id = g.userid AND g.remove = 0 AND u.deleted = 0";
 
                 // SQL gets a little weird here because the filtersql doesn't do field aliases
                 if ($filtersql = $filter->get_sql_filter()) {
-                    $where .= " AND u.id IN (SELECT id FROM {$CFG->prefix}user WHERE $filtersql)";
+                    $where .= " AND u.id IN (SELECT id FROM {user} WHERE $filtersql)";
                 }
                 break;
 
@@ -623,8 +627,8 @@ class block_gdata extends block_list {
                 // Get all users that are not in our sync table (block_gdata_gapps) or
                 // users that are in our sync table but are scheduled to be deleted
                 $select = "SELECT id, username, password, firstname, lastname, email";
-                $from   = "FROM {$CFG->prefix}user";
-                $where  = "WHERE id NOT IN (SELECT userid FROM {$CFG->prefix}block_gdata_gapps WHERE remove = 0) AND deleted = 0 AND username != 'guest'";
+                $from   = "FROM {user}";
+                $where  = "WHERE id NOT IN (SELECT userid FROM {block_gdata_gapps} WHERE remove = 0) AND deleted = 0 AND username != 'guest'";
 
                 if ($filtersql = $filter->get_sql_filter()) {
                     $where .= " AND $filtersql";
@@ -636,4 +640,3 @@ class block_gdata extends block_list {
     }
 }
 
-?>

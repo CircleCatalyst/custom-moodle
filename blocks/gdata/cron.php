@@ -41,9 +41,9 @@ set_time_limit(0);
 $starttime = microtime();
 $timenow   = time();
 
-if ($block = get_record_select("block", "cron > 0 AND (($timenow - lastcron) > cron) AND visible = 1 AND name = 'gdata'")) {
+if ($block = $DB->get_record_select("block", "cron > 0 AND ((? - lastcron) > cron) AND visible = 1 AND name = 'gdata'", array($timenow))) {
     if (block_method_result('gdata', 'cron_alt')) {
-        if (!set_field('block', 'lastcron', $timenow, 'id', $block->id)) {
+        if (!$DB->set_field('block', 'lastcron', $timenow, array('id' => $block->id))) {
             mtrace('Error: could not update timestamp for '.$block->name);
         }
     }

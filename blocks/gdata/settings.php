@@ -53,7 +53,7 @@ if (!class_exists('admin_setting_special_croninterval')) {
             } else {
                 $cron = $value * MINSECS;
             }
-            if (set_field('block', 'cron', $cron, 'name', 'gdata')) {
+            if ($DB->set_field('block', 'cron', $cron, array('name' => 'gdata'))) {
                 return parent::config_write($name, $value);
             }
             return false;
@@ -77,4 +77,3 @@ foreach ($configs as $config) {
     $settings->add($config);
 }
 
-?>
