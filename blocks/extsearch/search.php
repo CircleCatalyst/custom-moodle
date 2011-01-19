@@ -28,6 +28,7 @@ if ($courseid && ($courseid <> SITEID)){
     $PAGE->set_context(get_context_instance(CONTEXT_SYSTEM));
 }
 $PAGE->set_url(qualified_me());
+$PAGE->requires->css('/blocks/extsearch/styles.css');
 
 if (!$course = $DB->get_record('course', array('id'=>$courseid))) {
     print_error('error:incorrectcourseid', 'block_extsearch');
