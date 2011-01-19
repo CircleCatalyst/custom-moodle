@@ -40,7 +40,7 @@ echo $OUTPUT->doctype() ?>
     <div id="header-wrap">
 		<div id="header-container">
 			<div id="header">		
-				<div class="school-logo"><img class="unitPng" src="<?php echo $OUTPUT->pix_url('logo', 'theme');?>" alt="" id="logoimage" /></div>
+				<div class="school-logo"><img class="unitPng" src="<?php echo $CFG->wwwroot?>/local/nzschools/logo.php" alt="" id="logoimage" /></div>
                 <h1 class="headermain"><?php echo $PAGE->heading ?></h1>
 				<div id="headermenu">
                 <?php if (isloggedin()) {

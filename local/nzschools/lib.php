@@ -1,38 +1,37 @@
 <?php
 
 /**
- * Resize and save path to logo used in theme
- *
- * @param string Path to image file
- *
- * @global $CFG
- * @return New filename of image
+ * Resize and save logo used in theme
+ * @param $tempfilepath Path to temp file of image
+ * @return string name of final file
  */
-function process_logo($filename) {
+function process_logo($tempfilepath) {
     global $CFG;
 
-    $filename = resize_image($CFG->dataroot.'/theme/'.$filename, $CFG->dataroot.'/theme/logo', 400, 75);
-    $filename = basename($filename);;
+    $filename = resize_image($tempfilepath, 'logo', get_context_instance(CONTEXT_SYSTEM), 'local_nzschools', 'logo', 0, '/', 400, 75);
+    $filename = basename($filename);
     set_config('logofile', $filename);
 
     return($filename);
 }
 
-
-
 /**
- * Resize an image to fit within the given rectange, maintaing aspect ratio
- *
- * @param string Path to image
- * @param string Destination file - without file extention
- * @param int Width to resize to
- * @param int Height to resize to
- * @param string Force image to this format
+ * Resize an image to fit within the given rectangle, maintaining aspect ratio
+ * @param $originalfile Path to the original file (as a temp file)
+ * @param $destname Filename to use for final file
+ * @param $context Context to save file in
+ * @param $component Component to save file in
+ * @param $filearea Filearea to save file in
+ * @param $itemid ID to save file with
+ * @param $filepath Path to save file at
+ * @param int $newwidth Width to resize to
+ * @param int $newheight Height to resize to
+ * @param string $forcetype If provided, force conversion to this format (should be png or jpeg)
  *
  * @global $CFG
- * @return string Path to new file else false
+ * @return string Final filename
  */
-function resize_image($originalfile, $destination, $newwidth, $newheight, $forcetype = false) {
+function resize_image($originalfile, $destname, $context, $component, $filearea, $itemid, $filepath, $newwidth, $newheight, $forcetype = false) {
     global $CFG;
 
     require_once($CFG->libdir.'/gdlib.php');
@@ -100,8 +99,6 @@ function resize_image($originalfile, $destination, $newwidth, $newheight, $force
         $outputformat = $forcetype;
     }
 
-    $destname = $destination.'.'.$outputformat;
-
     if (function_exists('ImageCreateTrueColor') and $CFG->gdversion >= 2) {
         $im1 = ImageCreateTrueColor($newwidth,$newheight);
     } else {
@@ -123,16 +120,47 @@ function resize_image($originalfile, $destination, $newwidth, $newheight, $force
     }
     ImageCopyBicubic($im1, $im, 0, 0, 0, 0, $newwidth, $newheight, $image->width, $image->height);
 
+    $fs = get_file_storage();
+
+    $logo = array('contextid'=>$context->id, 'component'=>$component, 'filearea'=>$filearea, 'itemid'=>$itemid, 'filepath'=>'/');
+
     switch($outputformat) {
-        case 'jpeg':
-           imagejpeg($im1, $destname, 90);
-           break;
         case 'png':
-           imagepng($im1, $destname, 9);
-           break;
+            if ( function_exists('ImagePng') ){
+                $imagefnc = 'ImagePng';
+                $imageext = '.png';
+                $filters = PNG_NO_FILTER;
+                $quality = 1;
+            } else {
+                debugging('PNG not supported on this server, please fix server configuration.');
+            }
+            break;
+        case 'jpeg':
+            if ( function_exists('ImageJpeg') ){
+                $imagefnc = 'ImageJpeg';
+                $imageext = '.jpg';
+                $filters = null;
+                $quality = 90;
+            } else {
+                debugging( 'JPEG not supported on this server, please fix server configuration.');
+            }
+            break;
         default:
             return false;
     }
+
+    ob_start();
+    if (!$imagefnc($im1, null, $quality, $filters)){
+        ob_end_clean();
+        return false;
+    }
+    $data = ob_get_clean();
+    ImageDestroy($im1);
+    $destname .= $imageext;
+    $logo['filename'] = $destname;
+    $fs->delete_area_files($context->id, $component, $filearea);
+    $fs->create_file_from_string($logo, $data);
+
     return $destname;
 }
 

@@ -12,7 +12,6 @@ class nzschoolssettings_form extends moodleform {
          // the upload manager is used directly in post precessing, moodleform::save_files() is not used yet
          //todo: replace this with Moodle 2 equivalent
 //        $this->set_upload_manager(new upload_manager('logo', true, false, null, false, null, true, true));
-        //$mform->addElement('url', 'logo', get_string('externalurl', 'extsearch'), array('size'=>'60'), array('usefilepicker'=>true));
 
         $mform->addElement('header', 'schooldetails', get_string('schooldetails', 'local_nzschools'));
 
@@ -41,23 +40,27 @@ class nzschoolssettings_form extends moodleform {
         $mform->setDefault('toyear', 12);
         $mform->addRule('yeargroup', get_string('required'), 'required', null, 'client');
 
+        // Logo customisation
+        $mform->addElement('header', 'logoheader', get_string('logocustomisation', 'local_nzschools'));
+
+        $mform->addElement('static', 'currentpicture', get_string('currentlogo','local_nzschools'));
+        $mform->addElement('checkbox', 'deletepicture', get_string('removelogo','local_nzschools'), get_string('removelogohelp', 'local_nzschools'));
+        $mform->setDefault('deletepicture', 0);
+
+        $filemanager_options = array();
+        // 3 == FILE_EXTERNAL & FILE_INTERNAL
+        // These two constant names are defined in repository/lib.php
+        $filemanager_options['return_types'] = 3;
+        $filemanager_options['accepted_types'] = 'web_image';
+        $filemanager_options['maxbytes'] = get_max_upload_file_size($CFG->maxbytes);
+        $mform->addElement('filepicker', 'logo', get_string('logo', 'local_nzschools'), null, $filemanager_options);
+//        $mform->addElement('checkbox', 'plainbg', get_string('themeplainbg', 'local_nzschools'), get_string('themeplainbghelp', 'local_nzschools'), array('id' => 'plainbg'));
 
         // Theme customisation
-        $mform->addElement('header', 'colours', get_string('themecustomisation', 'local_nzschools'));
-        // todo: This is apparently deprecated in Moodle 2.0
-//        $mform->addElement('file', 'logo', get_string('logo', 'local_nzschools'));
-
-        $mform->addElement('checkbox', 'plainbg', get_string('themeplainbg', 'local_nzschools'), get_string('themeplainbghelp', 'local_nzschools'), array('id' => 'plainbg'));
-
-//        $mform->addElement('text', 'colour1', get_string('colour1', 'local_nzschools'), 'size="6"');
-//        $mform->addRule('colour1', get_string('maximumchars', '', 6), 'maxlength', 6, 'client');
-//
-//        $mform->addElement('text', 'colour2', get_string('colour2', 'local_nzschools'), 'size="6"');
-//        $mform->addRule('colour2', get_string('maximumchars', '', 6), 'maxlength', 6, 'client');
-//
-//        $mform->addElement('text', 'colour3', get_string('colour3', 'local_nzschools'), 'size="6"');
-//        $mform->addRule('colour3', get_string('maximumchars', '', 6), 'maxlength', 6, 'client');
-
+        $mform->addElement('header', 'themeheader', get_string('themecustomisation', 'local_nzschools'));
+        $themelink = new moodle_url('/admin/settings.php', array('section'=>'themesettingnz_schools'));
+        $mform->addElement('static', 'themelink', '', get_string('themesettingslink', 'local_nzschools', $themelink->out()));
+        
         // Options
         $mform->addElement('header', 'options', get_string('options', 'local_nzschools'));
 
@@ -66,6 +69,23 @@ class nzschoolssettings_form extends moodleform {
 
 
         $this->add_action_buttons();
+    }
 
+    function definition_after_data(){
+		global $CFG;
+        $mform =& $this->_form;
+		$image_el =& $mform->getElement('currentpicture');
+        $context = get_context_instance(CONTEXT_SYSTEM);
+        $fs = get_file_storage();
+		$files = $fs->get_area_files($context->id, 'local_nzschools', 'logo', 0);
+		if (count($files)){
+			$image_el->setValue("<img src=\"{$CFG->wwwroot}/local/nzschools/logo.php?force=1\" />");
+			$logo_el =& $mform->getElement('logo');
+			if (false) $logo_el = new MoodleQuickForm_filepicker();
+			$logo_el->setLabel(get_string('replacelogo','local_nzschools'));
+		} else {
+			$mform->removeElement('currentpicture');
+			$mform->removeElement('deletepicture');
+		}
     }
 }

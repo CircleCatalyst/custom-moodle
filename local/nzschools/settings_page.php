@@ -3,11 +3,6 @@ require_once(dirname(__FILE__) . '/../../config.php');
 //require_once(dirname(__FILE__).'/settings_form.php');
 require_once($CFG->dirroot.'/local/nzschools/settings_form.php');
 require_once($CFG->dirroot.'/local/nzschools/lib.php');
-if (false) {
-    $DB = new moodle_database();
-    $OUTPUT = new core_renderer(null, null);
-    $PAGE = new moodle_page();
-}
 
 $site = get_site();
 if (!$site) {
@@ -32,9 +27,6 @@ if ($data = $mform->get_data()) {
 
     $DB->update_record('course', $site);
 
-    // Save theme info
-    set_config('theme_plainbg', !empty($data->plainbg));
-
     // Save install profile type
     set_config('installprofile', $data->installprofile);
 
@@ -45,21 +37,19 @@ if ($data = $mform->get_data()) {
     // Auto create cats
     set_config('createcats', !empty($data->createcats));
 
-    // Handle logo
-//    $um = new upload_manager('logo',true,false,null,false,0,true,true);
-
-    $dir = $CFG->dataroot.'/theme';
-
-    if (!is_dir($dir)) {
-        mkdir($dir);
+    // Handle request to delete existing logo
+    if ( $data->deletepicture ){
+    	$fs = get_file_storage();
+    	$fs->delete_area_files($context->id, 'local_nzschools', 'logo', 0);
+    }
+    
+    // Handle new logo
+    $tempfilepath = $mform->save_temp_file('logo');
+    if ( $tempfilepath ){
+        process_logo( $tempfilepath );
+        @unlink($tempfilepath);
     }
 
-//    if ($um->process_file_uploads($dir)) {
-//        $message  = $um->get_errors();
-//        if($filename = $um->get_new_filename()) {
-//            $newfilename = process_logo($filename);
-//        }
-//    }
     // todo: redirect back to this same settings page with a "Settings Saved" message
     redirect($CFG->wwwroot.'/admin/index.php');
 } else {
@@ -97,7 +87,7 @@ if ($data = $mform->get_data()) {
     $mform->set_data(array('colour1'        => @$CFG->theme_colour1,
                            'colour2'        => @$CFG->theme_colour2,
                            'colour3'        => @$CFG->theme_colour3,
-                           'plainbg'        => @$CFG->theme_plainbg,
+                           'plainbg'        => get_config('theme_nz_schools','plainbg'),
                            'sitename'       => $site->fullname,
                            'shortname'      => $site->shortname,
                            'installprofile' => @$CFG->installprofile,
