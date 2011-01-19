@@ -55,7 +55,6 @@ class block_gdata extends block_list {
      **/
     function init() {
         $this->title   = get_string('pluginname', 'block_gdata');
-        $this->version = 2008072901;
     }
 
     function has_config() {
