@@ -165,7 +165,7 @@ class block_gmail extends block_list {
             $this->content->items[] = $inboxlink.' '.$composelink.' '.$unreadmsgsstr.'<br/>';
 
             // Main Mail Icon
-            $this->content->icons[] = "<img src=\"$CFG->wwwroot/blocks/gmail/imgs/gmail.png\" alt=\"message\" />";          
+            $this->content->icons[] = '<img src="'.$OUTPUT->pix_url('gmail', 'block_gmail').'" alt="message" />';
 		    // Only show as many messages as specified in config
 		    $countmsg = true;
 		    if( !$msgnumber = get_config('blocks/gmail','msgnumber')) {
