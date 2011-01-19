@@ -36,9 +36,9 @@ function nz_schools_process_css($css, $theme) {
 
 	// Set whether the logo has a transparent background
 	if (isset($theme->settings->plainbg) && $theme->settings->plainbg ){
-		$replacement = '.page_effect {background:none;}';
+		$replacement = '#page .page_effect {background:none;}';
 	} else {
-		$replacement = '.page-effect {background:url(';
+		$replacement = '#page .page-effect {background:url(';
 		$imageurl = $theme->pix_url('pgbg-grad-dark', 'theme')->out(false);
 		$imageurl = str_replace("$CFG->httpswwwroot/theme/", '', $imageurl);
 		$replacement .= $imageurl;
