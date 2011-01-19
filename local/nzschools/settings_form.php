@@ -25,11 +25,11 @@ class nzschoolssettings_form extends moodleform {
         $mform->addRule('shortname', get_string('required'), 'required', null, 'client');
         $mform->addRule('shortname', get_string('maximumchars', '', 20), 'maxlength', 20, 'client');
 
-        $installprofiles = array('primary'      => get_string('primary', 'local_nzschools'),
+        $nzschoolsprofile = array('primary'      => get_string('primary', 'local_nzschools'),
                                  'secondary'    => get_string('secondary', 'local_nzschools'));
 
-        $mform->addElement('select', 'installprofile', get_string('installprofile', 'local_nzschools'), $installprofiles);
-        $mform->addRule('installprofile', get_string('required'), 'required', null, 'client');
+        $mform->addElement('select', 'nzschoolsprofile', get_string('nzschoolsprofile', 'local_nzschools'), $nzschoolsprofile);
+        $mform->addRule('nzschoolsprofile', get_string('required'), 'required', null, 'client');
 
         $years = range(1, 13);
         $yeargroup = array();
@@ -86,6 +86,11 @@ class nzschoolssettings_form extends moodleform {
 		} else {
 			$mform->removeElement('currentpicture');
 			$mform->removeElement('deletepicture');
+		}
+
+		$init = optional_param('init', 0, PARAM_BOOL);
+		if ( $init ){
+		    $mform->addElement('hidden','init','1');
 		}
     }
 }

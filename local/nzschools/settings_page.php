@@ -4,6 +4,12 @@ require_once(dirname(__FILE__) . '/../../config.php');
 require_once($CFG->dirroot.'/local/nzschools/settings_form.php');
 require_once($CFG->dirroot.'/local/nzschools/lib.php');
 
+// Whether or not this is being called during Moodle's initial setup
+// (If it is, then we want to redirect to admin/index.php after submit,
+// otherwise, we want to redirect back to this page.)
+$init = optional_param('init', false, PARAM_BOOL);
+$statusmsg = false;
+
 $site = get_site();
 if (!$site) {
     redirect($CFG->wwwroot.'/admin/index.php');
@@ -28,7 +34,7 @@ if ($data = $mform->get_data()) {
     $DB->update_record('course', $site);
 
     // Save install profile type
-    set_config('installprofile', $data->installprofile);
+    set_config('nzschoolsprofile', $data->nzschoolsprofile);
 
     // Save years
     set_config('fromyear', $data->fromyear+1);
@@ -50,13 +56,16 @@ if ($data = $mform->get_data()) {
         @unlink($tempfilepath);
     }
 
-    // todo: redirect back to this same settings page with a "Settings Saved" message
-    redirect($CFG->wwwroot.'/admin/index.php');
-} else {
+    if ( $init ){
+        redirect($CFG->wwwroot.'/admin/index.php');
+        die();
+    } else {
+        $statusmsg = get_string('changessaved');
+    }
+}
 
-
-    // Display
-    $strnzschoolssettings = get_string('nzschoolssettings', 'local_nzschools');
+// Display
+$strnzschoolssettings = get_string('nzschoolssettings', 'local_nzschools');
 //    $navigation  = build_navigation(array(array('name' => $strnzschoolssettings, 'link' => null, 'type' => 'misc')));
 //    $PAGE->requires->yui2_lib(array('yui_yahoo',
 //                'yui_event',
@@ -71,7 +80,7 @@ if ($data = $mform->get_data()) {
 //                'yui_colorpicker'));
 
 //    echo "<script type=\"text/javascript\" src=\"/schools/local/nzschools/settings.js\" />";
-    $PAGE->requires->js('/local/nzschools/settings.js');
+$PAGE->requires->js('/local/nzschools/settings.js');
 
     // Temporarily set CSS files to be loaded for this page
 //    $CFG->stylesheets[] = $CFG->wwwroot.'/lib/yui/colorpicker/assets/skins/sam/colorpicker.css';
@@ -80,38 +89,40 @@ if ($data = $mform->get_data()) {
 
 
 //    print_header($strnzschoolssettings, $strnzschoolssettings, $navigation, '', '', false, '&nbsp;', '&nbsp;');
-    echo $OUTPUT->header();
+echo $OUTPUT->header();
 //    print_heading($strnzschoolssettings);
-    echo $OUTPUT->heading($strnzschoolssettings);
+echo $OUTPUT->heading($strnzschoolssettings);
+if ($statusmsg) {
+    echo $OUTPUT->notification($statusmsg, 'notifysuccess');
+}
 
-    $mform->set_data(array('colour1'        => @$CFG->theme_colour1,
-                           'colour2'        => @$CFG->theme_colour2,
-                           'colour3'        => @$CFG->theme_colour3,
-                           'plainbg'        => get_config('theme_nz_schools','plainbg'),
-                           'sitename'       => $site->fullname,
-                           'shortname'      => $site->shortname,
-                           'installprofile' => @$CFG->installprofile,
-                           'fromyear'       => empty($CFG->fromyear) ? 0 : $CFG->fromyear-1,
-                           'toyear'         => empty($CFG->toyear) ? 12 : $CFG->toyear-1,
-                           'createcats'     => isset($CFG->createcats) ? $CFG->createcats : 1
-                           ));
-    // Print path to dynamic css file for use in JS
-    echo '<script type="text/javascript">var dynamic_css = "'.$CFG->wwwroot.'/theme/'.current_theme().'/dynamic_css.php";</script>';
+$mform->set_data(array('colour1'        => @$CFG->theme_colour1,
+                       'colour2'        => @$CFG->theme_colour2,
+                       'colour3'        => @$CFG->theme_colour3,
+                       'plainbg'        => get_config('theme_nz_schools','plainbg'),
+                       'sitename'       => $site->fullname,
+                       'shortname'      => $site->shortname,
+                       'nzschoolsprofile' => @$CFG->nzschoolsprofile,
+                       'fromyear'       => empty($CFG->fromyear) ? 0 : $CFG->fromyear-1,
+                       'toyear'         => empty($CFG->toyear) ? 12 : $CFG->toyear-1,
+                       'createcats'     => isset($CFG->createcats) ? $CFG->createcats : 1
+                       ));
+// Print path to dynamic css file for use in JS
+echo '<script type="text/javascript">var dynamic_css = "'.$CFG->wwwroot.'/theme/'.current_theme().'/dynamic_css.php";</script>';
 
-    // Print page body
-    echo '<table width="100%"><tr><td width="80%">';
+// Print page body
+echo '<table width="100%"><tr><td width="80%">';
 
-    $mform->display();
+$mform->display();
 
-    echo '</td><td valign="top">';
+echo '</td><td valign="top">';
 
-    // Print a block to assist with styling
+// Print a block to assist with styling
 //    print_side_block('<h2>'.get_string('themetips', 'local_nzschools').'</h2>', get_string('themetipsdetail', 'local_nzschools'));
 
-    echo '</td></tr></table>';
+echo '</td></tr></table>';
 
-    echo $OUTPUT->footer();
+echo $OUTPUT->footer();
 //    print_footer('none');
-}
 
 ?>

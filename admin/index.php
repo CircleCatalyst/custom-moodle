@@ -343,6 +343,15 @@ require_login(0, false);
 $context = get_context_instance(CONTEXT_SYSTEM);
 require_capability('moodle/site:config', $context);
 
+/// nzschools setup
+if (empty($CFG->nzschoolsprofile)) {
+    redirect($CFG->wwwroot.'/local/nzschools/settings_page.php');
+    exit;
+}
+require($CFG->dirroot.'/local/nzschools/profiles.php');
+nzschoolsprofile_upgrade();
+/// end nzschools
+
 // check that site is properly customized
 $site = get_site();
 if (empty($site->shortname)) {

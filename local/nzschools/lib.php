@@ -173,6 +173,7 @@ function resize_image($originalfile, $destname, $context, $component, $filearea,
  * @return bool
  */
 function local_createcats($fromyear, $toyear) {
+    global $DB;
 
     $cats = array(array('name'      => 'courses',
                         'visible'   => 1),
@@ -184,12 +185,13 @@ function local_createcats($fromyear, $toyear) {
 
     $newcategory = new stdClass();
     $newcategory->description = '';
+    $newcategory->theme = '';
     $newcategory->parent = 0;
 
     // Delete the default cat moodle creates if it's empty
-    if ($misccat = get_record('course_categories', 'name', 'Miscellaneous')) {
-        if(!record_exists('course', 'category', $misccat->id)) {
-            delete_records('course_categories', 'id', $misccat->id);
+    if ($misccat = $DB->get_record('course_categories', array('name'=>'Miscellaneous'))) {
+        if(!$DB->record_exists('course', array('category'=>$misccat->id))) {
+            $DB->delete_records('course_categories', array('id'=>$misccat->id));
         }
     }
 
@@ -199,24 +201,24 @@ function local_createcats($fromyear, $toyear) {
         $newcategory->visible = $cat['visible'];
         $sortorder = $i++;
 
-        if (!record_exists('course_categories', 'name', $newcategory->name)) {
-            if (!$newcategory->id = insert_record('course_categories', $newcategory)) {
+        if (!$DB->record_exists('course_categories', array('name'=>$newcategory->name))) {
+            if (!$newcategory->id = $DB->insert_record('course_categories', $newcategory)) {
                 error("Could not insert the new category '$newcategory->name' ");
             }
             $newcategory->context = get_context_instance(CONTEXT_COURSECAT, $newcategory->id);
             mark_context_dirty($newcategory->context->path);
 
-            if ($name = 'templates') {
+            if ($cat['name'] == 'templates') {
                 set_config('templatecat', $newcategory->id);
             }
         }
 
     }
 
-    $coursecatid = get_field('course_categories', 'id', 'name', get_string('courses', 'local_nzschools'));
+    $coursecatid = $DB->get_field('course_categories', 'id', array('name'=>get_string('courses', 'local_nzschools')));
 
 
-    for($year = $fromyear;$year <= $toyear;$year++) {
+    for ( $year=$fromyear; $year<=$toyear; $year++ ){
         $name = get_string('catyear', 'local_nzschools', $year);
         $newcategory->name = $name;
         $newcategory->sortorder = $i++;
@@ -224,8 +226,8 @@ function local_createcats($fromyear, $toyear) {
         $newcategory->visible = 1;
         $newcategory->icon = 'year'.$year.'.png';
 
-        if (!record_exists('course_categories', 'name', $name)) {
-            if (!$newcategory->id = insert_record('course_categories', $newcategory)) {
+        if (!$DB->record_exists('course_categories', array('name'=>$name))) {
+            if (!$newcategory->id = $DB->insert_record('course_categories', $newcategory)) {
                 error("Could not insert the new category '$newcategory->name' ");
             }
             $newcategory->context = get_context_instance(CONTEXT_COURSECAT, $newcategory->id);
@@ -246,15 +248,15 @@ function local_createcats($fromyear, $toyear) {
  * @global $SESSION
  */
 function local_restoretemplates($dir) {
-    global $CFG, $SESSION;
+    global $CFG, $SESSION, $DB;
 
     require_once($CFG->dirroot.'/backup/restorelib.php');
     if (!is_dir($dir)) {
-        print_error('templatedirnotfound', 'local_nzschools');
+        print_error('templatedirnotfound', 'local_nzschools', $dir);
     }
 
-    if (!record_exists('course_categories', 'id', $CFG->templatecat)) {
-        print_error('templatecatnotfound', 'local_nzschools');
+    if (!$DB->record_exists('course_categories', array('id'=>$CFG->templatecat))) {
+        print_error('templatecatnotfound', 'local_nzschools', $CFG->templatecat);
     }
 
     $d = dir($dir);
@@ -274,22 +276,25 @@ function local_restoretemplates($dir) {
             $origdebug = $CFG->debug;
             $CFG->debug = DEBUG_MINIMAL;
             error_reporting($CFG->debug);
-            import_backup_file_silently($dir.'/'.$entry, $destcourse->id, true, true);
+            // Oops, this function no longer exists in Moodle 2!
+            // todo: reimplement it. Check out /backup/restore.php to see how it's done.
+            // possibly /backup/moodle2/restore_course_task.class.php
+            //import_backup_file_silently($dir.'/'.$entry, $destcourse->id, true, true);
             error_reporting($origdebug);
             $CFG->debug = $origdebug;
         }
 
         // Sync the course to the backup file
         // HACK - peek at the info moodle backup restore keeps in the session
+        // todo: This won't work until the import_backup_file_silently() is fixed
+//        $course = $destcourse;
+//        $course->fullname       = $SESSION->course_header->course_fullname;
+//        $course->summary        = $SESSION->course_header->course_summary;
+//        $course->shortname      = $SESSION->course_header->course_shortname;
+//        $course->numsections    = $SESSION->course_header->course_numsections;
+//        $course->format         = $SESSION->course_header->course_format;
 
-        $course = $destcourse;
-        $course->fullname       = $SESSION->course_header->course_fullname;
-        $course->summary        = $SESSION->course_header->course_summary;
-        $course->shortname      = $SESSION->course_header->course_shortname;
-        $course->numsections    = $SESSION->course_header->course_numsections;
-        $course->format         = $SESSION->course_header->course_format;
-
-        update_course(addslashes_object($course));
+        $DB->update_course(addslashes_object($course));
     }
 }
 

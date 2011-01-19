@@ -14,7 +14,7 @@ $string['presetupinfo'] = '<p><strong>Before you begin installing Moodle it is r
 $string['schooldetails'] = 'School information';
 $string['sitename'] = 'School Name';
 $string['shortname'] = 'School\'s Initials';
-$string['installprofile'] = 'School Level';
+$string['nzschoolsprofile'] = 'School Level';
 $string['primary'] = 'Primary';
 $string['secondary'] = 'Secondary';
 $string['intermediate'] = 'Intermediate';
@@ -65,5 +65,12 @@ $string['themeplainbg'] = 'Logo Has Solid Background Colour';
 $string['themeplainbghelp'] = '';
 $string['principal'] = 'Principal';
 $string['principaldescription'] = '';
+
+// Error messages
+$string['errornoprofileselected'] = 'No install profile selected';
+$string['errorprofileversionmissing'] = 'Profile version missing';
+$string['errorupgradeprofilemissing'] = 'Upgrade profile missing';
+$string['templatecatnotfound'] = 'Template category with ID {$a} not found';
+$string['templatedirnotfound'] = 'Template directory {$a} not found, or not valid';
 
 ?>
