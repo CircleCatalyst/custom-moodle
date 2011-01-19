@@ -48,6 +48,7 @@ if (!class_exists('admin_setting_special_croninterval')) {
          * @return boolean
          **/
         function config_write($name, $value) {
+            global $DB;
             if (empty($value)) {
                 $cron = 0;
             } else {

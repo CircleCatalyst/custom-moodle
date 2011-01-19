@@ -49,4 +49,3 @@ $handlers = array(
     )
 );
 
-?>
