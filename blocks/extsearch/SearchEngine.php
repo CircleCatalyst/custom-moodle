@@ -117,7 +117,7 @@ class SearchEngine
         global $CFG;
 
         $this->results->baseurl = $CFG->wwwroot.'/blocks/extsearch/search.php?';
-        if ( $id ){
+        if ( $blockid ){
             $this->results->baseurl .= 'id='.$blockid;
         } else {
             $this->results->baseurl .= 'type='.$this->searchprovidername;
