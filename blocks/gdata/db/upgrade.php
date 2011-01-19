@@ -29,11 +29,12 @@
  *
  */
 function xmldb_block_gdata_upgrade($oldversion=0) {
-    $result = true;
+    global $CFG, $DB;
+
+    $dbman = $DB->get_manager();
 
     // Upgrade Process
 
-    return $result;
+    return true;
 }
 
-?>
