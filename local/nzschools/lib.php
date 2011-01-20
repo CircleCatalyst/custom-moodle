@@ -272,6 +272,7 @@ function local_restoretemplates($dir) {
         $course->format = 'weeks';
         $course->numsections = 20;
 
+        require_once($CFG->dirroot.'/course/lib.php');
         if ($destcourse = create_course($course)) {
             $origdebug = $CFG->debug;
             $CFG->debug = DEBUG_MINIMAL;
@@ -294,7 +295,7 @@ function local_restoretemplates($dir) {
 //        $course->numsections    = $SESSION->course_header->course_numsections;
 //        $course->format         = $SESSION->course_header->course_format;
 
-        $DB->update_course(addslashes_object($course));
+        update_course(addslashes_object($course));
     }
 }
 
