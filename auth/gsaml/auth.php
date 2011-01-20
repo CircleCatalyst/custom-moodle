@@ -53,9 +53,10 @@ class auth_plugin_gsaml extends auth_plugin_base {
      */
     function user_authenticated_hook(&$user, $username, $password) {
     	
-       global $SESSION,$CFG,$_REQUEST;
-       
-       
+       global $SESSION;
+       global $CFG;
+       global $DB;
+
        // Shouldn't need due to Gmail using OAuth 
        //
 	   // TODO: IMPORTANT user_auth hook gets called for all plugins so
@@ -63,11 +64,7 @@ class auth_plugin_gsaml extends auth_plugin_base {
 	   //       auth_gsaml still needs to run the update password code somehow.
 	   //       if there was another way to test for it.... as compare if password is diff
 	   //       and then set the google user to the new password. :/
-	   //
-//	   if( !set_field('user', 'auth', $this->authtype, 'id', $user->id)) {
-//			error("could not set auth to gsaml");
-//	   }
-									
+
 	   // Verify that user has a google account. If not create one for them.
        if (!file_exists($CFG->dirroot.'/blocks/gdata/gapps.php')) {
         	debugging('gdata block is not installed');
@@ -109,37 +106,11 @@ class auth_plugin_gsaml extends auth_plugin_base {
                 // print $e->getMessage();
                 
                 // TODO: catch and inform of this Error
-                //if (stripos($e->getMessage(),'Error 1100: UserDeletedRecently') ) {
-                //    notice('Error 1100: UserDeletedRecently.<br/> Google does not allow a user to be created after deletion until at least 5 days have passed.');
-                //}
                 
 				debugging($e, DEBUG_DEVELOPER);
     		}
         }
-        
-        // No longer necessary due to new OAuth Support!!!
-        // 
-       	// Obtain and Store GMail feed while we have the password available
-       	// Later we may store the password in a revertible encrypted format for
-       	// GMail Block updating.
-//       	if (!file_exists($CFG->dirroot.'/blocks/gmail/gmailfeedlib.php')) {
-//			// TODO: Check gmailnotinstalled somewhere            
-//			$SESSION->gmailnotinstalled = true;	
-//            debugging('gmail block not installed', DEBUG_DEVELOPER);
-//            
-//       	} else {
-//       	    //require_once($CFG->dirroot.'/blocks/gmail/gmailfeedlib.php');
-//        	//set_gmail_feed($username,$this->config->domainname,$password); 
-//       	}
 
-        	 		
-        // Debugging info added to moodle logs
-//        if (debugging('', DEBUG_DEVELOPER)) {
-//        	 	$module = "auth_saml"; // where were you
-//        	 	$error = "sample error message";
-//        	 	add_to_log(SITEID, $module, $error, '',$user->id, 0, $user->id);
-//        }
-     
            // We are Succesfully logged in and we have a SAML Request
            // So we want to process the rest of the log in and redirect
            // to the Service that the SAML Request is asking for.
@@ -150,7 +121,7 @@ class auth_plugin_gsaml extends auth_plugin_base {
 	       	
 	       		$SESSION->samlrequest = false;
 				
-		        if (!$user = get_record('user', 'username', $username, 'mnethostid', $CFG->mnet_localhost_id)) {
+		        if (!$user = $DB->get_record('user', array('username' => $username, 'mnethostid' => $CFG->mnet_localhost_id))) {
                    // User could not be logged in
                    error(get_string('errusernotloggedin','auth_gsaml'));
 		        }
@@ -334,8 +305,9 @@ class auth_plugin_gsaml extends auth_plugin_base {
      */
     function user_login($username, $password) { // therefore leave this code as is
         global $CFG;
+        global $DB;
         // TODO: might set user->auth to gsaml here :/
-        if ($user = get_record('user', 'username', $username, 'mnethostid', $CFG->mnet_localhost_id)) {
+        if ($user = $DB->get_record('user', array('username' => $username, 'mnethostid' => $CFG->mnet_localhost_id))) {
             return validate_internal_user_password($user, $password);
         }
         return false;
@@ -453,19 +425,20 @@ class auth_plugin_gsaml extends auth_plugin_base {
      * before the user is confirmed.
      */
     function user_confirm($username, $confirmsecret = null) { 
-    	
+        global $DB;
+
     	// TODO: Check for google account too??
-    	       
+
         $user = get_complete_user_data('username', $username);
 
         if (!empty($user)) {
             if ($user->confirmed) {
                 return AUTH_CONFIRM_ALREADY;
             } else { 
-                if (!set_field("user", "confirmed", 1, "id", $user->id)) {
+                if (!$DB->set_field("user", "confirmed", 1, array("id" => $user->id))) {
                     return AUTH_CONFIRM_FAIL;
                 }
-                if (!set_field("user", "firstaccess", time(), "id", $user->id)) {
+                if (!$DB->set_field("user", "firstaccess", time(), array("id" => $user->id))) {
                     return AUTH_CONFIRM_FAIL;
                 }
                 return AUTH_CONFIRM_OK;
