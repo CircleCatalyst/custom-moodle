@@ -52,8 +52,8 @@ if (strpos($includepath, $zendlibpath) === false) {
 
 require_once dirname(__FILE__).'/http.php';
 require_once dirname(__FILE__).'/exception.php';
-require_once $CFG->libdir.'/Zend/Gdata/Gapps.php';
-require_once $CFG->libdir.'/Zend/Gdata/ClientLogin.php';
+require_once $CFG->libdir.'/zend/Zend/Gdata/Gapps.php';
+require_once $CFG->libdir.'/zend/Zend/Gdata/ClientLogin.php';
 
 /**
  * Zend_Gdata_Gapps wrapper and wrapper for
