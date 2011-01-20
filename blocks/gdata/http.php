@@ -32,8 +32,8 @@
 /**
  * Dependencies
  **/
-require_once($CFG->dirroot.'/blocks/gdata/gapps.php');
-require_once($CFG->dirroot.'/blocks/gdata/Zend/Http/Client.php');
+require_once $CFG->dirroot.'/blocks/gdata/gapps.php';
+require_once $CFG->libdir.'zend/Zend/Http/Client.php';
 
 /**
  * Extends Zend_Http_Client and splits
@@ -108,4 +108,3 @@ class blocks_gdata_http extends Zend_Http_Client {
     }
 }
 
-?>

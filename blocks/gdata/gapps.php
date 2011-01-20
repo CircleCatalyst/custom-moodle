@@ -40,7 +40,7 @@
  * Set include path so Zend Library functions properly
  **/
 
-$zendlibpath = $CFG->dirroot.'/blocks/gdata';
+$zendlibpath = $CFG->libdir.'/zend';
 $includepath = get_include_path();
 if (strpos($includepath, $zendlibpath) === false) {
     set_include_path($includepath.PATH_SEPARATOR.$zendlibpath);
@@ -50,10 +50,10 @@ if (strpos($includepath, $zendlibpath) === false) {
  * Dependencies
  **/
 
-require_once($CFG->dirroot.'/blocks/gdata/http.php');
-require_once($CFG->dirroot.'/blocks/gdata/exception.php');
-require_once($CFG->dirroot.'/blocks/gdata/Zend/Gdata/Gapps.php');
-require_once($CFG->dirroot.'/blocks/gdata/Zend/Gdata/ClientLogin.php');
+require_once dirname(__FILE__).'/http.php';
+require_once dirname(__FILE__).'/exception.php';
+require_once $CFG->libdir.'/Zend/Gdata/Gapps.php';
+require_once $CFG->libdir.'/Zend/Gdata/ClientLogin.php';
 
 /**
  * Zend_Gdata_Gapps wrapper and wrapper for
@@ -517,8 +517,8 @@ class blocks_gdata_gapps {
      * @return void
      **/
     public function moodle_delete_user($id) {
-        $global $DB;
-        $DB->delete_records('block_gdata_gapps', array('id' => $id)));
+        global $DB;
+        $DB->delete_records('block_gdata_gapps', array('id' => $id));
     }
 
     /**
