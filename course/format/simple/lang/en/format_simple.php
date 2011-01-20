@@ -4,4 +4,8 @@ $string['pluginname']='Simple topics format';
 
 $string['hideblocks'] = 'Hide Blocks';
 $string['showblocks'] = 'Show Blocks';
+$string['weekhide'] = 'Hide this week';
+$string['weekshow'] = 'Show this week';
+$string['moveback'] = 'Move back';
+$string['moveforward'] = 'Move forward';
 ?>

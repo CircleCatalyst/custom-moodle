@@ -21,11 +21,10 @@
     $editing         = $PAGE->user_is_editing();
 
     if ($editing) {
-        $strstudents = moodle_strtolower($course->students);
-        $strweekhide = get_string('weekhide', '', $strstudents);
-        $strweekshow = get_string('weekshow', '', $strstudents);
-        $strmoveback   = get_string('moveback');
-        $strmoveforward = get_string('moveforward');
+        $strweekhide = get_string('weekhide','format_simple');
+        $strweekshow = get_string('weekshow','format_simple');
+        $strmoveback   = get_string('moveback','format_simple');
+        $strmoveforward = get_string('moveforward','format_simple');
     }
 
     $context = get_context_instance(CONTEXT_COURSE, $course->id);
@@ -89,7 +88,7 @@
         $stractivityclipboard = strip_tags(get_string('activityclipboard', '', addslashes($USER->activitycopyname)));
         $strcancel= get_string('cancel');
         echo '<li class="clipboard">';
-        echo $stractivityclipboard.'&nbsp;&nbsp;(<a href="mod.php?cancelcopy=true&amp;sesskey='.$USER->sesskey.'">'.$strcancel.'</a>)';
+        echo $stractivityclipboard.'&nbsp;&nbsp;(<a href="mod.php?cancelcopy=true&amp;sesskey='.sesskey().'">'.$strcancel.'</a>)';
         echo "</li>\n";
     }
 
@@ -139,20 +138,20 @@
 
             if ($PAGE->user_is_editing($course->id) && $thissection->section != 0 && has_capability('moodle/course:update', get_context_instance(CONTEXT_COURSE, $course->id))) {
                 if ($thissection->visible) {        // Show the hide/show eye
-                    echo '<a href="view.php?id='.$course->id.'&amp;hide='.$section.'&amp;sesskey='.$USER->sesskey.'#section-'.$section.'" title="'.$strweekhide.'">'.
-                         '<img src="'.$CFG->pixpath.'/i/hide.gif" class="icon hide" alt="'.$strweekhide.'" /></a><br />';
+                    echo '<a href="view.php?id='.$course->id.'&amp;hide='.$section.'&amp;sesskey='.sesskey().'#section-'.$section.'" title="'.$strweekhide.'">'.
+                         '<img src="'.$OUTPUT->pix_url('i/hide').'" class="icon hide" alt="'.$strweekhide.'" /></a><br />';
                 } else {
-                    echo '<a href="view.php?id='.$course->id.'&amp;show='.$section.'&amp;sesskey='.$USER->sesskey.'#section-'.$section.'" title="'.$strweekshow.'">'.
-                         '<img src="'.$CFG->pixpath.'/i/show.gif" class="icon hide" alt="'.$strweekshow.'" /></a><br />';
+                    echo '<a href="view.php?id='.$course->id.'&amp;show='.$section.'&amp;sesskey='.sesskey().'#section-'.$section.'" title="'.$strweekshow.'">'.
+                         '<img src="'.$OUTPUT->pix_url('i/show').'" class="icon hide" alt="'.$strweekshow.'" /></a><br />';
                 }
                 if ($section > 1) {                       // Add a arrow to move section up
-                    echo '<a href="view.php?id='.$course->id.'&amp;random='.rand(1,10000).'&amp;section='.$section.'&amp;move=-1&amp;sesskey='.$USER->sesskey.'#section-'.($section-1).'" title="'.$strmoveback.'">'.
-                         '<img src="'.$CFG->pixpath.'/t/left.gif" class="icon up" alt="'.$strmoveback.'" /></a><br />';
+                    echo '<a href="view.php?id='.$course->id.'&amp;random='.rand(1,10000).'&amp;section='.$section.'&amp;move=-1&amp;sesskey='.sesskey().'#section-'.($section-1).'" title="'.$strmoveback.'">'.
+                         '<img src="'.$OUTPUT->pix_url('t/left').'" class="icon up" alt="'.$strmoveback.'" /></a><br />';
                 }
 
                 if ($section+1 < $course->numsections) {    // Add a arrow to move section down
-                    echo '<a href="view.php?id='.$course->id.'&amp;random='.rand(1,10000).'&amp;section='.$section.'&amp;move=1&amp;sesskey='.$USER->sesskey.'#section-'.($section+1).'" title="'.$strmoveforward.'">'.
-                         '<img src="'.$CFG->pixpath.'/t/right.gif" class="icon down" alt="'.$strmoveforward.'" /></a><br />';
+                    echo '<a href="view.php?id='.$course->id.'&amp;random='.rand(1,10000).'&amp;section='.$section.'&amp;move=1&amp;sesskey='.sesskey().'#section-'.($section+1).'" title="'.$strmoveforward.'">'.
+                         '<img src="'.$OUTPUT->pix_url('t/right').'$" class="icon down" alt="'.$strmoveforward.'" /></a><br />';
                 }
             }
             echo '</div>';
@@ -171,7 +170,7 @@
 
                 if ($PAGE->user_is_editing($course->id) && has_capability('moodle/course:update', get_context_instance(CONTEXT_COURSE, $course->id))) {
                     echo ' <a title="'.$streditsummary.'" href="editsection.php?id='.$thissection->id.'">'.
-                         '<img src="'.$CFG->pixpath.'/t/edit.gif" class="icon edit" alt="'.$streditsummary.'" /></a><br /><br />';
+                         '<img src="'.$OUTPUT->pix_url('t/edit').'" class="icon edit" alt="'.$streditsummary.'" /></a><br /><br />';
                 }
                 echo '</div>';
 

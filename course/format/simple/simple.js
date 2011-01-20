@@ -175,9 +175,9 @@ YAHOO.moodle.simpleformat =  function() {
         },
 
         hideblocks: function() {
-            var leftcol = document.getElementById('left-column');
-            var rightcol = document.getElementById('right-column');
-            var middlecol = document.getElementById('middle-column');
+//            var leftcol = document.getElementById('left-column');
+//            var rightcol = document.getElementById('right-column');
+//            var middlecol = document.getElementById('middle-column');
             var showhide = document.getElementById('showhideblocks');
 
             showhide.value = 'Show Blocks';
@@ -185,20 +185,22 @@ YAHOO.moodle.simpleformat =  function() {
             YAHOO.util.Event.addListener(showhide, 'click', YAHOO.moodle.simpleformat.showblocks);
             YAHOO.util.Cookie.setSub('simpleformat-blocks', courseid.toString(), 0);
 
-            if (leftcol) {
-                leftcol.style.display = 'none';
-            }
-            if (rightcol) {
-                rightcol.style.display = 'none';
-            }
-            middlecol.style.margin = '0 1em';
-
+//            if (leftcol) {
+//                leftcol.style.display = 'none';
+//            }
+//            if (rightcol) {
+//                rightcol.style.display = 'none';
+//            }
+//            middlecol.style.margin = '0 1em';
+            YUI().use('node', function (Y){
+                Y.all('.block-region').setStyle('display','none');
+            });
         },
 
         showblocks: function() {
-            var leftcol = document.getElementById('left-column');
-            var rightcol = document.getElementById('right-column');
-            var middlecol = document.getElementById('middle-column');
+//            var leftcol = document.getElementById('left-column');
+//            var rightcol = document.getElementById('right-column');
+//            var middlecol = document.getElementById('middle-column');
             var showhide = document.getElementById('showhideblocks');
 
             showhide.value = strhideblocks;
@@ -206,13 +208,16 @@ YAHOO.moodle.simpleformat =  function() {
             YAHOO.util.Event.addListener(showhide, 'click', YAHOO.moodle.simpleformat.hideblocks);
             YAHOO.util.Cookie.setSub('simpleformat-blocks', courseid.toString(), 1);
 
-            if (leftcol) {
-                leftcol.style.display = 'block';
-            }
-            if (rightcol) {
-                rightcol.style.display = 'block';
-            }
-            middlecol.style.margin = '0 16em';
+//            if (leftcol) {
+//                leftcol.style.display = 'block';
+//            }
+//            if (rightcol) {
+//                rightcol.style.display = 'block';
+//            }
+//            middlecol.style.margin = '0 16em';
+            YUI().use('node', function (Y){
+                Y.all('.block-region').setStyle('display','block');
+            });
         }
 
     }

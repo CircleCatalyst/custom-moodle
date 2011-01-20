@@ -119,7 +119,7 @@
 .simplecss-format #middle-column {
   margin: 0 16em 0 16em;
 }
-.simplecss-format #left-column,
+/*.simplecss-format #left-column,
 .simplecss-format #right-column {
   width: 15em;
 }
@@ -128,7 +128,7 @@
 }
 .simplecss-format #right-column {
   float: right;
-}
+}*/
 .simplecss li.section {
   margin-bottom: 0.5em;
   border-style:solid;
