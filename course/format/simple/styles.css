@@ -160,3 +160,44 @@
 #wrapper {
     _position: relative;
 }
+
+.course-content .simplecss-format {
+	min-width:200px;
+	border:1px solid #DDDDDD;
+
+}
+.course-content .simplecss-format ul.simplecss,
+.course-content .simplecss-format #middle-column,
+.course-content .simplecss-format ul.simplecss .section{
+		margin:0;
+}
+.course-content .simplecss-format ul.simplecss li {
+	list-style:none;
+}
+.course-content .simplecss-format .simplebackbutton {
+	margin: 20px 0 0 10px;
+}
+.course-content .simplecss-format .simpleforwardbutton {
+	margin: 20px 10px 0 0;
+}
+.course-content .simplecss-format .simplebutton-left,
+.course-content .simplecss-format .simplebutton-right {
+	height:20px;
+}
+.course-content .simplecss-format .simplebutton-title-left,
+.course-content .simplecss-format .simplebutton-title-right {
+	height:20px;
+	font-size: 12px;
+	font-weight:bold;
+	line-height:20px;
+}
+.course-content .simplecss-format .simplebutton-title-left a {
+	padding-right:17px;
+}
+.course-content .simplecss-format .simplebutton-title-right a {
+	padding-left:17px;
+}
+.course-content img.icon {
+	width:auto;
+	height:auto;
+}
