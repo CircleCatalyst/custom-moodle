@@ -132,3 +132,40 @@ img.bigicon {
     margin-top: 0px;
     list-style: none;
 }
+
+/* Book
+------------------*/
+
+.booktable img.bigicon {
+	width:auto;
+	height:auto;
+}
+.booktable .booknav {
+	width:80%;
+	padding-top:11px;
+}
+.booktable .bookexport {
+    float: right;
+    padding: 5px 0;
+    text-align: right;
+	-moz-border-radius: 5px;
+    background: #F0F0F0;
+
+}
+.booktable .bookexport a {
+	margin: 0 3px;
+}
+.booktable .book_toc_none {
+	font-size:0.9em;
+}
+
+.book_toc_none ul {
+	margin:0;
+
+}
+.booktable .book_toc_none li {
+	margin:0;
+	padding: 3px 0;
+
+	border-bottom:1px dotted #DDD;
+}
