@@ -6,7 +6,8 @@
 
 body {
     font-family: arial, verdana, sans-serif;
-    font-size: 0.75em;    
+    font-size: 0.75em;
+
 	line-height: 1.3em;
     color: #666;
 	margin:0;
@@ -14,14 +15,16 @@ body {
 }
 a {
 	color:#0066CC;
-	text-decoration: none;	
+	text-decoration: none;
+
 }
 a:hover {
     color: #0099FF;
 }
 p, ul, ol, th, td {
     color: #666;
-	line-height: 1.3em;	
+	line-height: 1.3em;
+
 	border-color: #D3D3D3;
 }
 hr {
@@ -29,7 +32,7 @@ hr {
 	background-color:#D3D3D3;
 	height:1px;
 	border:none;
-	margin:0;
+	margin:5px 0;
 	padding:0;
 }
 .clearer {
@@ -39,7 +42,22 @@ hr {
 }
 input, textarea, select {
 	margin-left: 2px;
-	margin-right: 2px;	
+	margin-right: 3px;
+
+}
+input[type=text] {
+	padding:2px;
+	margin-right: 3px;
+
+}
+input.text {
+	padding:2px;
+	margin-right: 3px;
+
+}
+.helplink img {
+	width:14px;
+	height:14px;
 }
 #page {
 	min-width:960px;
@@ -49,9 +67,13 @@ input, textarea, select {
     margin: 0 0 10px;
     padding: 18px 6px 30px;
 }
+#page .page-effect {
+	padding:0 10px;
+    background: url([[pix:theme|pgbg-grad-dark]]) repeat-x scroll left top transparent;
+}
 #page-content #region-main .region-content {
 	padding-top:15px;
-	padding-left:0;
+	padding-left:5px;
 }
 
 h1,h2,h3,h4,h5,h6 {
@@ -100,7 +122,6 @@ fieldset#general legend {
 	margin:0.8em 0;
 }
 
-
 /* Layout
 ----------------------------*/
 
@@ -120,7 +141,8 @@ fieldset#general legend {
 #page-content #region-main {
 	padding:0 10px;
 	margin-left: 420px;
-}	
+}
+
 #page-content #region-main .region-content {
 	padding:0 0 0 0;
 }
@@ -134,8 +156,9 @@ fieldset#general legend {
 	margin-left:-210px;
 }
 .content-only #page-content #region-main {
-	padding:0;
-} 
+	padding:0 3px;
+}
+
 .pagelayout-course #page-content #region-main {
 	margin-left: 360px;
 }
@@ -165,7 +188,8 @@ fieldset#general legend {
 }
 .content-only.pagelayout-course #page-content #region-main {
 	padding:0;
-	margin-left:0;	
+	margin-left:0;
+
 }
 .content-only.pagelayout-course #page-content #region-post-box {
 	margin-left:0;
@@ -183,7 +207,8 @@ fieldset#general legend {
 #headermenu {
   float:right;
   margin-top: 12px;
-  text-align: right; 
+  text-align: right;
+
 }
 #headermenu .logininfo {
 	color:#FFF;
@@ -205,19 +230,22 @@ fieldset#general legend {
 	border: 1px solid #FFF;
     height: 68px;
     width: 68px;
-}	
+}
+
 #headermenu .langmenu {
 }
 #headermenu .langmenu select {
 	margin-top:3px;
-}	
+}
+
 #page-header h1 {
     float: left;
     margin: 13px 10px;
     color: #FFFFFF;
 	font-size:2em;
     padding-top: 25px;
-	line-height: 1.5em;		
+	line-height: 1.5em;
+
 }
 #page-header h1.inside {
     color: #666;
@@ -246,8 +274,10 @@ fieldset#general legend {
     border-width: 2px 2px 0;
 	height: 30px;
     line-height: 20px;
-    margin: 0;	
-	width:auto;	
+    margin: 0;
+
+	width:auto;
+
 }
 .navbar .nav-effect,
 .navbar.blank .nav-effect {
@@ -294,7 +324,8 @@ body.path-login .navbar.blank  {
 	margin:0;
 }
 .block .header .hide-show-image {
-	padding:3px 5px;	
+	padding:3px 5px;
+
 }
 .block .content {
 	border-style:solid;
@@ -311,7 +342,8 @@ body.path-login .navbar.blank  {
 	font-size: 1em;
 	padding:5px 0 5px;
 	margin:0;
-	border:none;	
+	border:none;
+
 }
 .block .header .block_action {
 	margin:4px 2px;
@@ -369,7 +401,8 @@ body.path-login .navbar.blank  {
 }
 .block .minicalendar th, .block .minicalendar td {
 	border:none;
-	font-size: 1em;	
+	font-size: 1em;
+
 }
 .block .minicalendar td.today {
     border: 1px solid #0066CC;
@@ -382,7 +415,8 @@ body.path-login .navbar.blank  {
 }
 .maincalendar  .header {
     background: #EAEAEA;
-	padding: 5px;	
+	padding: 5px;
+
 }
 .maincalendar h1 {
 	margin:0;
@@ -417,14 +451,17 @@ body.path-login .navbar.blank  {
 #dockeditempanel .dockeditempanel_hd h2 {
 	font-size:1.1em !important;
 }
-#dockeditempanel .minicalendar th, 
+#dockeditempanel .minicalendar th,
+
 #dockeditempanel .minicalendar td {
 	border:none;
 	font-size: 0.8em;
 }
-#dockeditempanel .minicalendar th, 
+#dockeditempanel .minicalendar th,
+
 #dockeditempanel .minicalendar td,
-.path-course .minicalendar th, 
+.path-course .minicalendar th,
+
 .path-course .minicalendar td {
 	padding:1px;
 }
@@ -439,7 +476,8 @@ body.path-login .navbar.blank  {
 	font-size: 0.9em;
 }
 
-/* Courses 
+/* Courses
+
 ----------------------------*/
 
 h2.main,
@@ -452,7 +490,14 @@ h2.headingblock {
     padding: 8px 5px;
 	background:#fbfbfb;
 }
+h2.main img {
+	margin-right: 3px;
 
+}
+h2.main span.helplink{
+	margin-left: 5px;
+
+}
 .coursebox {
 	width:auto;
     border:1px solid #D3D3D3
@@ -486,7 +531,8 @@ h2.headingblock {
 }
 .course-content .weeks .section.main .content,
 .course-content .topics .section.main .content {
-    margin-left: 0px;    
+    margin-left: 0px;
+
 	padding-left: 10px;
 	float:left;
 }
@@ -525,7 +571,12 @@ h2.headingblock {
 .path-course-view .headingblock {
 	margin-bottom:1px;
 }
-/* Forum 
+.course_category_tree div {
+	margin:5px 0;
+}
+
+/* Forum
+
 --------------------------*/
 
 .forumpost .topic {
@@ -554,7 +605,8 @@ h2.headingblock {
     padding: 5px 10px 10px;
 }
 
-/* Dock 
+/* Dock
+
 --------------------------*/
 
 #dock {
