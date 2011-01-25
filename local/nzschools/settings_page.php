@@ -89,6 +89,14 @@ $PAGE->requires->js('/local/nzschools/settings.js');
 
 
 //    print_header($strnzschoolssettings, $strnzschoolssettings, $navigation, '', '', false, '&nbsp;', '&nbsp;');
+require_once($CFG->dirroot.'/lib/adminlib.php');
+$adminroot = admin_get_root(); // need all settings
+$settingspage = $adminroot->locate('nzschoolssettings', true);
+$title = $settingspage->visiblename;
+$PAGE->set_title($title);
+$PAGE->set_heading($title);
+//$PAGE->set_title('NZ Schools Moodle Settings');
+//$PAGE->set_heading('NZ Schools Moodle Settings');
 echo $OUTPUT->header();
 //    print_heading($strnzschoolssettings);
 echo $OUTPUT->heading($strnzschoolssettings);
