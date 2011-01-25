@@ -59,7 +59,11 @@ class nzschoolssettings_form extends moodleform {
         // Theme customisation
         $mform->addElement('header', 'themeheader', get_string('themecustomisation', 'local_nzschools'));
         $themelink = new moodle_url('/admin/settings.php', array('section'=>'themesettingnz_schools'));
-        $mform->addElement('static', 'themelink', '', get_string('themesettingslink', 'local_nzschools', $themelink->out()));
+        $purgelink = new moodle_url('/admin/purgecaches.php');
+        $a = new stdClass();
+        $a->themeurl = $themelink->out();
+        $a->purgeurl = $purgelink->out();
+        $mform->addElement('static', 'themelink', '', get_string('themesettingslink', 'local_nzschools', $a));
         
         // Options
         $mform->addElement('header', 'options', get_string('options', 'local_nzschools'));

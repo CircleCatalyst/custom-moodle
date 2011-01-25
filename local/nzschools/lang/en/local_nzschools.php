@@ -21,7 +21,7 @@ $string['intermediate'] = 'Intermediate';
 $string['years'] = 'Years';
 $string['logocustomisation'] = 'School logo';
 $string['themecustomisation'] = 'Theme settings';
-$string['themesettingslink'] = 'Visit the NZ Schools <a href="{$a}">theme settings page</a> for additional theme-related settings';
+$string['themesettingslink'] = 'Visit the NZ Schools <a href="{$a->themeurl}">theme settings page</a> for additional theme-related settings. (If you change the theme, you may have to <a href="{$a->purgeurl}">purge Moodle\'s server-side CSS cache</a> before the changes will take effect.)';
 $string['currentlogo'] = 'Current logo';
 $string['removelogo'] = 'Remove logo';
 $string['removelogohelp'] = '(will use default Moodle logo)';
