@@ -10,7 +10,7 @@
 function local_courseicon_course_form_definition($mform, $course){
     global $CFG, $PAGE;
     $mform->addElement('header','',get_string('courseicon','local_courseicon'));
-    $mform->addElement('static','currenticon',get_string('currenticon','local_courseicon'), local_courseicon_course_icon_tag());
+    $mform->addElement('static','currenticon',get_string('currenticon','local_courseicon'), local_courseicon_course_icon_tag($course));
     $mform->addElement('select','icon',get_string('icon','local_courseicon'), local_courseicon_get_stock_icons('course'));
 
 // todo: Javascript to make the icon on the form update automatically so the user can preview it
@@ -76,10 +76,12 @@ function local_courseicon_course_icon_tag($course=null, $size='large') {
         $course = $COURSE;
     }
     // Get the course icon if it's not set
-    if (!isset($course->icon) && isset($course->id)){
-        $course->icon = $DB->get_field('course','icon',array('id'=>$course->id));
-    } else {
-        $course->icon = '';
+    if (!isset($course->icon)) {
+        if (isset($course->id)){
+            $course->icon = $DB->get_field('course','icon',array('id'=>$course->id));
+        } else {
+            $course->icon = '';
+        }
     }
     return '<img id="iconpreview" src="'.$CFG->wwwroot.'/local/courseicon/icon.php?id='.$course->id.'&amp;icon='.$course->icon.'&amp;size='.$size.'&type=course" alt="'.$course->shortname.'" class="class_icon" />';
 }
