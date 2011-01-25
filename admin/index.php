@@ -345,7 +345,7 @@ require_capability('moodle/site:config', $context);
 
 /// nzschools setup
 if (empty($CFG->nzschoolsprofile)) {
-    redirect($CFG->wwwroot.'/local/nzschools/settings_page.php');
+    redirect($CFG->wwwroot.'/local/nzschools/settings_page.php?init=1');
     exit;
 }
 require($CFG->dirroot.'/local/nzschools/profiles.php');

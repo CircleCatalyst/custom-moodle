@@ -295,7 +295,7 @@ function local_restoretemplates($dir) {
 //        $course->numsections    = $SESSION->course_header->course_numsections;
 //        $course->format         = $SESSION->course_header->course_format;
 
-        update_course(addslashes_object($course));
+//        update_course($course);
     }
 }
 
