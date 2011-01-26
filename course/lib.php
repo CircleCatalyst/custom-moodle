@@ -2265,7 +2265,7 @@ function print_category_info($category, $depth=0, $showcourses = false) {
                     }
                 }
 
-                $coursecontent = html_writer::tag('div', $courseicon.$courselink, array('class'=>'name'));
+                $coursecontent = html_writer::tag('div', $courselink.$courseicon, array('class'=>'name'));
 
                 if ($course->summary) {
                     $link = new moodle_url('/course/info.php?id='.$course->id);

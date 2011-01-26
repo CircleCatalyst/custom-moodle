@@ -755,3 +755,6 @@ border-top: 1px solid;
     margin-left: 12%;
     margin-right: 12%;
 }
+
+/* Icons */
+.course_category_tree .category .courses .course_link {background-image:none;}
