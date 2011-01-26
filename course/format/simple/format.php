@@ -101,7 +101,7 @@
         $newsection->summary = '';
         $newsection->name = '';
         $newsection->visible = 1;
-        if (!$newsection->id = insert_record('course_sections', $newsection)) {
+        if (!$newsection->id = $DB->insert_record('course_sections', $newsection)) {
             notify('Error inserting new topic!');
         }
         $sections[$i] = $newsection;
