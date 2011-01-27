@@ -15,7 +15,7 @@ function local_courseicon_form_definition($mform, $course, $type){
     $mform->addElement('select','icon',get_string('icon','local_courseicon'), local_courseicon_get_stock_icons($type));
 
     $iconel = $mform->getElement('icon');
-    $iconel->updateAttributes(array('onchange'=>'previewCourseIcon('.$course->id.',\''.$type.'\'); '));
+    $iconel->updateAttributes(array('onchange'=>'previewCourseIcon('.(isset($course->id)?$course->id:'\'\'').',\''.$type.'\'); '));
     $PAGE->requires->js('/local/courseicon/icons.js.php');
 
     $filemanager_options = array();
@@ -70,7 +70,10 @@ function local_courseicon_icon_tag($record=null, $type, $size, $tagid=false, $ad
     if ( $tagid ){
         $ret .= 'id="'.$tagid.'" ';
     }
-    $ret .= 'src="'.$CFG->wwwroot.'/local/courseicon/icon.php?id='.$record->id.'&amp;icon='.$record->icon.'&amp;size='.$size.'&amp;type='.$type;
+    $ret .= 'src="'.$CFG->wwwroot.'/local/courseicon/icon.php?icon='.$record->icon.'&amp;size='.$size.'&amp;type='.$type;
+    if (isset($record->id)){
+        $ret .= '&amp;id='.$record->id;
+    }
     if ( $addrev ){
         $ret .= '&amp;rev=' . time();
     }
@@ -143,7 +146,7 @@ function local_courseicon_send_icon($courseid, $courseicon, $type, $size) {
     $iconname = 'default.png';
     $icon = $icondir.'/'.$size.'/default.png';
 
-    if ($courseicon == 'custom') {
+    if ($courseicon == 'custom' && $courseid) {
         // They've specified a custom icon, so see if one is in file storage
         $fs = get_file_storage();
         switch( $type ){
@@ -181,7 +184,7 @@ function local_courseicon_send_icon($courseid, $courseicon, $type, $size) {
  * @param object $course Course object
  * @param string $type 'course' or 'coursecategory'
  * @param object $data Formslib form data
- * @param MoodleQuickForm $mform Moodle form
+ * @param moodleform $mform Moodle form
  * @global $CFG
  */
 function local_courseicon_update_icon($course, $type, $data, &$mform) {
