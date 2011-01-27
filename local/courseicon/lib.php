@@ -85,8 +85,10 @@ function local_courseicon_icon_tag($record=null, $type, $size, $tagid=false, $ad
  */
 function local_courseicon_get_stock_icons($type) {
     global $CFG;
-    $icons = array('custom' => get_string('customicon', 'local_courseicon'),
-                   'none' => get_string('noicons', 'local_courseicon'));
+    $icons = array(
+		'none' => get_string('noicons', 'local_courseicon'),
+		'custom' => get_string('customicon', 'local_courseicon'),
+    );
 
     if ($path = local_courseicon_get_stock_icon_dir($type)) {
         $d = dir($path.'/large');
