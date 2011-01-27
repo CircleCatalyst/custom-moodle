@@ -144,6 +144,10 @@ img.bigicon {
 	width:80%;
 	padding-top:11px;
 }
+.booktable .chapter_nav {
+	margin-right:15px;
+
+}
 .booktable .bookexport {
     float: right;
     padding: 5px 0;
