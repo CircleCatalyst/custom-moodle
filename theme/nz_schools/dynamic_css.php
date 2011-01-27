@@ -21,26 +21,26 @@ $plainbg = optional_param('plainbg', empty($CFG->theme_plainbg) ? 'false' : 'tru
 
 #header h1, #header-home h1 {
   padding-top: 25px;
-  color: #<?php echo fg_colour($colour1) ?>;
+  color: #<?php echo local_nzschools_fg_colour($colour1) ?>;
 }
 
 #footer {
-  color: #<?php echo  fg_colour($colour1) ?>;
+  color: #<?php echo  local_nzschools_fg_colour($colour1) ?>;
 }
 
 .logininfo a, #footer p.helplink a {
-  color:#<?php echo  fg_colour($colour1, 'CCCCCC', '0077FF') ?>;
+  color:#<?php echo  local_nzschools_fg_colour($colour1, 'CCCCCC', '0077FF') ?>;
 }
 
 /* Secondary Colour */
 .navbar, .navbar-home {
   background: #<?php echo  $colour2 ?>;
-  color: #<?php echo  fg_colour($colour2) ?>;
+  color: #<?php echo  local_nzschools_fg_colour($colour2) ?>;
 }
 
 
 .navbar .breadcrumb a, .navbar .breadcrumb {
-  color: #<?php echo  fg_colour($colour2) ?>;
+  color: #<?php echo  local_nzschools_fg_colour($colour2) ?>;
 }
 
 
@@ -50,7 +50,7 @@ $plainbg = optional_param('plainbg', empty($CFG->theme_plainbg) ? 'false' : 'tru
 }
 
 .sideblock h2 {
-  color: #<?php echo  fg_colour($colour3) ?>;
+  color: #<?php echo  local_nzschools_fg_colour($colour3) ?>;
 }
 
 .simplebutton {

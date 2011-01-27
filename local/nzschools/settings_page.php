@@ -52,7 +52,7 @@ if ($data = $mform->get_data()) {
     // Handle new logo
     $tempfilepath = $mform->save_temp_file('logo');
     if ( $tempfilepath ){
-        process_logo( $tempfilepath );
+        local_nzschools_process_logo( $tempfilepath );
         @unlink($tempfilepath);
     }
 

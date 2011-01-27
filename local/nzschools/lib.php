@@ -5,10 +5,10 @@
  * @param $tempfilepath Path to temp file of image
  * @return string name of final file
  */
-function process_logo($tempfilepath) {
+function local_nzschools_process_logo($tempfilepath) {
     global $CFG;
 
-    $filename = resize_image($tempfilepath, 'logo', get_context_instance(CONTEXT_SYSTEM), 'local_nzschools', 'logo', 0, '/', 400, 75);
+    $filename = local_nzschools_resize_image($tempfilepath, 'logo', get_context_instance(CONTEXT_SYSTEM), 'local_nzschools', 'logo', 0, '/', 400, 75);
     $filename = basename($filename);
     set_config('logofile', $filename);
 
@@ -31,7 +31,7 @@ function process_logo($tempfilepath) {
  * @global $CFG
  * @return string Final filename
  */
-function resize_image($originalfile, $destname, $context, $component, $filearea, $itemid, $filepath, $newwidth, $newheight, $forcetype = false) {
+function local_nzschools_resize_image($originalfile, $destname, $context, $component, $filearea, $itemid, $filepath, $newwidth, $newheight, $forcetype = false) {
     global $CFG;
 
     require_once($CFG->libdir.'/gdlib.php');
@@ -172,7 +172,7 @@ function resize_image($originalfile, $destname, $context, $component, $filearea,
  * @param int $toyear   ending year of school
  * @return bool
  */
-function local_createcats($fromyear, $toyear) {
+function local_nzschools_createcats($fromyear, $toyear) {
     global $DB;
 
     $cats = array(array('name'      => 'courses',
@@ -247,7 +247,7 @@ function local_createcats($fromyear, $toyear) {
  * @global $CFG
  * @global $SESSION
  */
-function local_restoretemplates($dir) {
+function local_nzschools_restoretemplates($dir) {
     global $CFG, $SESSION, $DB;
 
     require_once($CFG->dirroot.'/backup/restorelib.php');
@@ -301,30 +301,6 @@ function local_restoretemplates($dir) {
 
 
 /**
- * Get list of stock course icons
- *
- * @return array
- */
-function local_get_stock_icons($type) {
-    global $CFG;
-    $icons = array('custom' => get_string('customicon', 'local_nzschools'),
-                   'none' => get_string('none', 'local_nzschools'));
-
-    if ($path = local_get_stock_icon_dir($type)) {
-        $d = dir($path.'/large');
-        while(($icon = $d->read()) !== false) {
-            if (is_file($path.'/large/'.$icon)) {
-
-                $icons[$icon] = ucwords(strtr($icon, array('_' => ' ', '-' => ' ', '.png' => '')));
-            }
-        }
-        $d->close();
-    }
-    return($icons);
-}
-
-
-/**
  * Select a forground colour based on the background colour
  *
  * @param string $bg background colour
@@ -332,7 +308,7 @@ function local_get_stock_icons($type) {
  * @param string $dark_option colour to return if background is light
  * @return string forground colour
  */
-function fg_colour($bg, $light_option = 'FFFFFF', $dark_option = '333333') {
+function local_nzschools_fg_colour($bg, $light_option = 'FFFFFF', $dark_option = '333333') {
     $bg = hexdec($bg);
 
     //rgb conversion
@@ -349,22 +325,3 @@ function fg_colour($bg, $light_option = 'FFFFFF', $dark_option = '333333') {
     }
 
 }
-
-
-/**
- * Return a URL to the site logo
- *
- * @return string logo url
- */
- function local_logo_url() {
-    global $CFG;
-
-    // Add a timestamp to prevent caching when logo changes
-    if (isset($CFG->logofile) && is_file($CFG->dataroot.'/theme/'.$CFG->logofile)) {
-        $timestamp = filemtime($CFG->dataroot.'/theme/'.$CFG->logofile);
-    } else {
-       $timestamp = 0;
-    }
-
-    return $CFG->wwwroot.'/local/logo.php?timestamp='.$timestamp;
- }
