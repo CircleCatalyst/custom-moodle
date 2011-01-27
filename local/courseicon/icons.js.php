@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 require('../../config.php');
 
@@ -6,15 +6,15 @@ require('../../config.php');
 
 var $ = YAHOO.util.Dom.get;
 
-function previewCourseIcon() {
+function previewCourseIcon(courseId) {
     var iconimg = $('iconpreview');
     var iconselect = $('id_icon');
+    iconimg.src = '<?php echo $CFG->wwwroot ?>/local/courseicon/icon.php?id=' + courseId + '&size=large&type=course&icon='+iconselect.value;
 
-    switch( iconselect.value ){
-    	case 'custom':
-    		break;
-    	default:
-    		iconimg.src = '<?php echo $CFG->wwwroot ?>/local/courseicon/icon.php?id=<?php $COURSE->id ?>&size=large&type=course&icon='+iconselect.value;
-    }
+	// Prevent caching from showing an old version of the custom icon
+	if ( iconselect.value == 'custom' ){
+		iconimg.src = iconimg.src + '&rev=' + (new Date()).getTime();
+	}
+
     return true;
 }
