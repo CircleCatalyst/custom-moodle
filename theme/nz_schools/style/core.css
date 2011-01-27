@@ -6,8 +6,7 @@
 
 body {
     font-family: arial, verdana, sans-serif;
-    font-size: 0.75em;
-
+    font-size: 0.8em;
 	line-height: 1.3em;
     color: #666;
 	margin:0;
@@ -41,7 +40,7 @@ hr {
 	padding:0;
 }
 input, textarea, select {
-	margin-left: 2px;
+	margin-left: 0;
 	margin-right: 3px;
 
 }
@@ -333,7 +332,8 @@ body.path-login .navbar.blank  {
 	padding:4px;
 	border-color: #D3D3D3;
 }
-.block .header, .block h2.header {
+.block .header,
+.block h2.header {
 	border: none;
 	color: #FFFFFF;
 	padding: 0;
@@ -343,11 +343,12 @@ body.path-login .navbar.blank  {
 	padding:5px 0 5px;
 	margin:0;
 	border:none;
-
 }
 .block .header .block_action {
+	height:15px;
 	margin:4px 2px;
 	padding:0;
+	overflow:hidden;
 }
 .block .header .block_action img {
 	margin: 0 4px 0 0;
@@ -498,6 +499,10 @@ h2.main span.helplink{
 	margin-left: 5px;
 
 }
+.categorybox .category {
+	font-size:1.2em;
+	font-weight:normal;
+}
 .coursebox {
 	width:auto;
     border:1px solid #D3D3D3
@@ -571,8 +576,82 @@ h2.main span.helplink{
 .path-course-view .headingblock {
 	margin-bottom:1px;
 }
-.course_category_tree div {
+.categorylist .category {
+	padding-top:0px;
 	margin:5px 0;
+}
+.course_category_tree div {
+	margin:3px 0;
+}
+.course_category_tree .category .category {
+	margin:3px;
+
+}
+.course_category_tree .category.with_children > .category_label,
+.jsenabled .course_category_tree .category.with_children.collapsed .category_label {
+	background-position: 0 2px;
+
+}
+.course_category_tree .category_label {
+	font-size:1.1em;
+	font-weight:bold;
+}
+.categorybox .categorylist .category .name {
+	font-size:0.9em;
+	font-weight:bold;
+
+}
+.categorylist .course {
+	padding-left:0px;
+
+}
+.categorylist .indentation {
+	padding-left:30px;
+
+}
+.course_category_tree .subcategories .category_label {
+	padding-left:40px;
+
+}
+.course_category_tree .category .courses {
+	padding-left:26px;
+	margin:3px 0;
+}
+.course_category_tree .category_label a img,
+.course_category_tree .courses .course a img{
+	margin:0 5px -4px 5px;
+}
+.categorybox .categorylist .category img,
+.categorybox .categorylist .course a img {
+	margin:-7px 3px 0px 5px;
+}
+.categorybox .categorylist .course a img {
+	margin-bottom:-4px;
+}
+.categorybox .categorylist .course .name {
+	margin:5px 0;
+}
+.categorybox .categorylist .course .smallicon {
+	margin: 0 3px
+
+}
+.course_category_tree .controls {
+	font-size:0.85em;
+	font-weight:bold;
+	color:#0066CC;
+	margin: 12px 0 0 0;
+	padding-left:15px;
+}
+.course_category_tree .controls div {
+		margin:0;
+}
+.course_category_tree .controls div.expandall {
+	padding: 0 10px 0 0;
+	border-right:1px solid #777;
+
+}
+.course_category_tree .controls div.collapseall {
+	padding: 0 0 0 10px;
 }
 
 /* Forum
@@ -603,6 +682,14 @@ h2.main span.helplink{
 
 .forumpost .content .posting {
     padding: 5px 10px 10px;
+}
+
+/* Misc
+
+--------------------------*/
+
+.notifysuccess {
+	margin:0 0 10px;
 }
 
 /* Dock
