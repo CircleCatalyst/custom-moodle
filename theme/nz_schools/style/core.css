@@ -47,7 +47,6 @@ input, textarea, select {
 input[type=text] {
 	padding:2px;
 	margin-right: 3px;
-
 }
 input.text {
 	padding:2px;
@@ -57,6 +56,10 @@ input.text {
 .helplink img {
 	width:14px;
 	height:14px;
+}
+.profilepicture {
+	border:1px solid #D3D3D3;
+
 }
 #page {
 	min-width:960px;
@@ -274,7 +277,6 @@ fieldset#general legend {
 	height: 30px;
     line-height: 20px;
     margin: 0;
-
 	width:auto;
 
 }
@@ -333,6 +335,7 @@ body.path-login .navbar.blank  {
 	border-color: #D3D3D3;
 }
 .block .header,
+
 .block h2.header {
 	border: none;
 	color: #FFFFFF;
@@ -359,6 +362,12 @@ body.path-login .navbar.blank  {
 }
 .block .header .commands img {
 	margin:5px 4px;
+}
+.block .content .userpicture {
+	margin-top:3px;
+	margin-bottom:-2px;
+	border:1px solid #D3D3D3;
+
 }
 .block .footer select {
 	width:150px;
@@ -491,17 +500,17 @@ h2.headingblock {
     padding: 8px 5px;
 	background:#fbfbfb;
 }
-h2.main img {
-	margin-right: 3px;
-
-}
 h2.main span.helplink{
 	margin-left: 5px;
 
 }
+h2.main img,
+h3.main img {
+	margin: 0 3px 0 5px;
+}
 .categorybox .category {
 	font-size:1.2em;
-	font-weight:normal;
+	font-weight:bold !important;
 }
 .coursebox {
 	width:auto;
@@ -537,7 +546,6 @@ h2.main span.helplink{
 .course-content .weeks .section.main .content,
 .course-content .topics .section.main .content {
     margin-left: 0px;
-
 	padding-left: 10px;
 	float:left;
 }
@@ -557,7 +565,8 @@ h2.main span.helplink{
 .course-content ul.weeks li.section,
 .course-content ul.topics li.section {
 	margin:2px 0 4px;
- 	border:1px solid #d5d5d5; 
+ 	border:1px solid #d5d5d5;
+
 }
 .course-content .section.main.current {
     background:#f0f0f0;
@@ -576,8 +585,10 @@ h2.main span.helplink{
 .path-course-view .headingblock {
 	margin-bottom:1px;
 }
+.categorybox .categorylist {
+	clear:both !important;
+}
 .categorylist .category {
-	padding-top:0px;
 	margin:5px 0;
 }
 .course_category_tree div {
@@ -587,22 +598,37 @@ h2.main span.helplink{
 	margin:3px;
 
 }
+.course_category_tree .category.with_children .subcategories .with_children .with_children,
+.course_category_tree .category.with_children .subcategories .with_children .with_children .with_children {
+	padding-left:29px;
+}
+.course_category_tree .subcategories .with_children .courses {
+	padding-left:54px;
+}
 .course_category_tree .category.with_children > .category_label,
 .jsenabled .course_category_tree .category.with_children.collapsed .category_label {
-	background-position: 0 2px;
+	background-position: 0 6px;
+
+}
+.course_category_tree .subcategories .category.with_children > .category_label,
+.jsenabled .course_category_tree .subcategories .category.with_children.collapsed .category_label {
+	background-position: 23px 6px;
 
 }
 .course_category_tree .category_label {
 	font-size:1.1em;
 	font-weight:bold;
 }
+.course_category_tree .category .course_info .smallicon {
+	margin:0 0 0 7px;
+}
 .categorybox .categorylist .category .name {
 	font-size:0.9em;
 	font-weight:bold;
-
 }
 .categorylist .course {
 	padding-left:0px;
+	padding-bottom:25px;
 
 }
 .categorylist .indentation {
@@ -652,6 +678,18 @@ h2.main span.helplink{
 }
 .course_category_tree .controls div.collapseall {
 	padding: 0 0 0 10px;
+}
+.categorypicker {
+	margin-bottom:10px;
+
+}
+.path-my .coursebox .overview {
+	padding: 0 0 0 13px;
+
+}
+.path-my .coursebox .overview .info {
+	padding: 0 0 0 35px;
+
 }
 
 /* Forum
