@@ -56,7 +56,10 @@ class auth_plugin_gsaml extends auth_plugin_base {
        global $SESSION;
        global $CFG;
        global $DB;
-
+    $record = $DB->get_record('block_gdata_gapps', array('userid' => $user->id));
+    if (empty($record) || !empty($record->remove)) {
+        return true;
+    }
        // Shouldn't need due to Gmail using OAuth 
        //
 	   // TODO: IMPORTANT user_auth hook gets called for all plugins so
@@ -97,7 +100,14 @@ class auth_plugin_gsaml extends auth_plugin_base {
                     //if (stripos($e->getMessage(),'Error 1100: UserDeletedRecently') ) {
                     //    notice('Error 1100: UserDeletedRecently.<br/> Google does not allow a user to be created after deletion until at least 5 days have passed.');
                     //}
-	        		debugging($e, DEBUG_DEVELOPER);
+                    if(method_exists($e, 'getErrors')) {
+                        $errors = $e->getErrors();
+                        foreach ($errors as $errorcode => $error) {
+                            debugging("Error($errorcode): $error", DEBUG_NORMAL, true);
+                        }
+                    } else {
+                        debugging($e, DEBUG_DEVELOPER);
+                    }
 	        	}
 	        	
   			} catch (blocks_gdata_exception $e) {
@@ -283,7 +293,7 @@ class auth_plugin_gsaml extends auth_plugin_base {
 	        
 	        // Case 1: if your logged in already and the SAML request just needs to 
 	        // be processed go ahead and redirect with authentication.
-	        if( isloggedin() and !is_null($_REQUEST['SAMLRequest']) ) { 
+	        if( isloggedin() and isset($_REQUEST['SAMLRequest']) ) {
 	            $SESSION->samlrequestdata = $_REQUEST['SAMLRequest'];
 	        	$SESSION->samlrelaystate = $_REQUEST['RelayState'];
                 

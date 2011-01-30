@@ -230,7 +230,6 @@ class blocks_gdata_gapps {
         } catch (blocks_gdata_exception $e) {
             // Update users sync status
             $this->moodle_set_status($moodleuser->id, self::STATUS_ACCOUNT_CREATION_ERROR);
-
             throw new blocks_gdata_exception('gappserror', 'block_gdata', $e->getMessage());
         }
     }
@@ -302,13 +301,17 @@ class blocks_gdata_gapps {
      **/
     public function gapps_create_user($username, $firstname, $lastname, $password, $checkexists = true) {
         if ($checkexists) {
-            if ($this->gapps_get_user($username) !== NULL) {
+            $getuserresult = $this->gapps_get_user($username);
+            if ($getuserresult !== NULL) {
                 throw new blocks_gdata_exception('useralreadyexists');
             }
         }
         try {
             $gappsuser = $this->service->createUser($username, $firstname, $lastname, $password, self::PASSWORD_HASH_FUNCTION);
         } catch (Zend_Gdata_Gapps_ServiceException $e) {
+            foreach($e->getErrors() as $code => $error) {
+                print "Error($code): $error<br />\n";
+            }
             throw new blocks_gdata_exception('gappserror', 'block_gdata', (string) $e);
         } catch (Zend_Gdata_App_Exception $e) {
             throw new blocks_gdata_exception('gappserror', 'block_gdata', $e->getMessage());
@@ -557,7 +560,7 @@ class blocks_gdata_gapps {
      * @throws blocks_gdata_exception
      **/
     public function moodle_get_users() {
-        global $CFG;
+        global $CFG, $DB;
 
         // Only grab those who are out of date according to our cron interval
         $timetocheck = time() - ($this->config->croninterval * MINSECS);

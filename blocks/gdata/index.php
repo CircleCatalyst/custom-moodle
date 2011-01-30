@@ -31,7 +31,7 @@
 
 require_once('../../config.php');
 require_once($CFG->libdir.'/blocklib.php');
-
+$PAGE->set_url($CFG->wwwroot . '/blocks/gdata/index.php');
 block_method_result('gdata', 'view');
 
 ?>

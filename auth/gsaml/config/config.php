@@ -9,6 +9,7 @@
  */
 
 defined('MOODLE_INTERNAL') or die();
+global $CFG;
 
 $config = array (
 

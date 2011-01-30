@@ -47,13 +47,16 @@ would be nice to find a way to test teh certifcate and the keys
  */
  
 require_once('../../config.php');
-global $USER,$CFG;
-
+global $USER,$CFG, $OUTPUT, $PAGE;
+$systemcontext = get_context_instance(CONTEXT_SYSTEM);
+$PAGE->set_context($systemcontext);
+$PAGE->set_url($CFG->wwwroot . '/blocks/gdata/index.php');
 require_login();
 
 function gsaml_print_config_table($heading,$table_obj) {
-    print_heading($heading);
-    $conf_table = new object;
+    global $OUTPUT;
+    $OUTPUT->heading($heading);
+    $conf_table = new html_table();
     $conf_table->head  = array('Setting','Value');
     $conf_table->align = array('left','left');
     $conf_table->data  = array();
@@ -61,7 +64,7 @@ function gsaml_print_config_table($heading,$table_obj) {
     foreach( $table_obj as $setting => $value ) {
         $conf_table->data[] = array($setting,$value);
     }
-    print_table($conf_table);
+    echo html_writer::table($conf_table);
 }  
 
 $strcurrentrelease = get_string('googsamldiag','auth_gsaml');
@@ -72,9 +75,6 @@ if (!is_siteadmin($USER->id)) {
     // You are not a site admin no permission to view page
     notice(get_string('notadminnoperm','auth_gsaml'),$CFG->wwwroot);
 } else {
-
-// help button for placement later 
-$hbutton = helpbutton('diagnostics', $title='Google Intergration Diagnostics','auth_gsaml', true, false, $text='', true, '');
 
 
     // Let's make sure we can see our config settings when checking
@@ -99,7 +99,7 @@ $hbutton = helpbutton('diagnostics', $title='Google Intergration Diagnostics','a
  
     // Verify that the Google/Moodle Components are fully installed in the 
     // correct locations
-    print_heading(get_string('componentinstallcheck','auth_gsaml')); 
+    $OUTPUT->heading(get_string('componentinstallcheck','auth_gsaml'));
     $components = '<pre>';
     if (!file_exists($CFG->dirroot.'/blocks/gdata/gapps.php')) {
          $components .= get_string('gdatanotinstalled','auth_gsaml');
@@ -119,9 +119,9 @@ $hbutton = helpbutton('diagnostics', $title='Google Intergration Diagnostics','a
         require_once($CFG->dirroot.'/blocks/moodleblock.class.php');
         require_once($CFG->dirroot.'/blocks/gmail/block_gmail.php');
     }
-    print_box($components); 
+    $OUTPUT->box($components);
      
-    print_heading(get_string('gdataapitestresults','auth_gsaml'));
+    $OUTPUT->heading(get_string('gdataapitestresults','auth_gsaml'));
         
     // Individual Try blocks for hunting problems
     $result = "<pre>";
@@ -133,7 +133,7 @@ $hbutton = helpbutton('diagnostics', $title='Google Intergration Diagnostics','a
        $result .= '<b>'.$e->getMessage().'</b><br/>'.$e.'</pre>'; // show the < > brackets and format
     }  
     print "</pre>";
-    print_box($result,'generalbox','',false); 
+    $OUTPUT->box($result,'generalbox','',false);
     
     
     // Create moodle user tests ?
@@ -179,6 +179,6 @@ $hbutton = helpbutton('diagnostics', $title='Google Intergration Diagnostics','a
     
 }
 
-print_footer();
+$OUTPUT->footer();
  
 ?>

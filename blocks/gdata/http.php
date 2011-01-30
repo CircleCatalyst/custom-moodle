@@ -72,9 +72,8 @@ class blocks_gdata_http extends Zend_Http_Client {
 
             $uri->setQuery($query);
         }
-
-        $body = $this->prepare_body();
-        $headers = $this->prepare_headers();
+        $body = $this->_prepareBody();
+        $headers = $this->_prepareHeaders();
 
         // Open the connection, send the request and read the response
         $this->adapter->connect($uri->getHost(), $uri->getPort(),

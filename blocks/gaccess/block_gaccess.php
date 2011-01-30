@@ -54,7 +54,7 @@ class block_gaccess extends block_list {
     }
 
     function get_content() {
-        global $CFG, $USER, $COURSE;
+        global $CFG, $USER, $COURSE, $OUTPUT;
 
 
         // quick and simple way to prevent block from showing up on front page
