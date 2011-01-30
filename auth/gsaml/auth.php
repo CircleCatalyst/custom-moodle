@@ -264,7 +264,12 @@ class auth_plugin_gsaml extends auth_plugin_base {
      */
     function logoutpage_hook() {
 		require_logout();
+        global $DB, $USER;
 
+        $record = $DB->get_record('block_gdata_gapps', array('userid' => $USER->id));
+        if (empty($record) || !empty($record->remove)) {
+            return;
+        }
         // TODO: if the Google SAML SSO Link Failed don't bother redirecting
 
 		// Google doesn't have an SSO logout procedure as far as I know right now.
