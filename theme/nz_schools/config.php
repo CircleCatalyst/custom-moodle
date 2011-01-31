@@ -46,7 +46,7 @@ $THEME->parents = array('base');
 // changes you want to your theme.
 ////////////////////////////////////////////////////
 
-$THEME->sheets = array('core','colour-scheme');
+$THEME->sheets = array('core','tabtree','colour-scheme');
 
 ////////////////////////////////////////////////////
 // Name of the stylesheet(s) you've including in

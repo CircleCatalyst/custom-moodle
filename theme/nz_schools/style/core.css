@@ -508,6 +508,9 @@ h2.main img,
 h3.main img {
 	margin: 0 3px 0 5px;
 }
+img.icon {
+	vertical-align:inherit;
+}
 .categorybox .category {
 	font-size:1.2em;
 	font-weight:bold !important;
@@ -689,7 +692,12 @@ h3.main img {
 }
 .path-my .coursebox .overview .info {
 	padding: 0 0 0 35px;
-
+}
+.path-grade-report-grader h1 {
+	clear:none;
+}
+.path-grade-report-grader #page-content h1 {
+	clear:both;
 }
 
 /* Forum
