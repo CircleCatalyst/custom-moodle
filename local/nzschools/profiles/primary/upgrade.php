@@ -34,8 +34,10 @@ function nzschoolsprofile_upgrade_primary($oldversion) {
         // Configure Front page
         set_config('frontpage','0'); // News items
         set_config('frontpageloggedin','0,4'); // News items and Combo list
-        // todo: This feature has been removed, see MDL-23024
+        // The "My Moodle Redirect" feature has been removed in Moodle 2 (see MDL-23024).
+        // However, setting the default home page to "My Moodle" has nearly the same effect.
         //set_config('mymoodleredirect', '1'); // Force users to my moodle
+        set_config('defaulthomepage',HOMEPAGE_MY);
     }
 
     if ($oldversion < 2009092103) {
