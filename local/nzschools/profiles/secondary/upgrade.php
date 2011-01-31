@@ -34,8 +34,6 @@ function nzschoolsprofile_upgrade_secondary($oldversion) {
         // Configure Front page
         set_config('frontpage','0'); // News items
         set_config('frontpageloggedin','0,4'); // News items and Combo list
-
-
     }
 
     if ($oldversion < 2009092103) {

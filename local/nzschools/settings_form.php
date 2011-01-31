@@ -9,10 +9,6 @@ class nzschoolssettings_form extends moodleform {
 
         $mform =& $this->_form;
 
-         // the upload manager is used directly in post precessing, moodleform::save_files() is not used yet
-         //todo: replace this with Moodle 2 equivalent
-//        $this->set_upload_manager(new upload_manager('logo', true, false, null, false, null, true, true));
-
         $mform->addElement('header', 'schooldetails', get_string('schooldetails', 'local_nzschools'));
 
         $mform->addElement('text', 'sitename', get_string('sitename', 'local_nzschools'), array('size'=>'48', 'onblur'=>'updateShortName(); '));
