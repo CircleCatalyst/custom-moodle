@@ -250,7 +250,6 @@ function local_nzschools_createcats($fromyear, $toyear) {
 function local_nzschools_restoretemplates($dir) {
     global $CFG, $SESSION, $DB;
 
-    require_once($CFG->dirroot.'/backup/restorelib.php');
     if (!is_dir($dir)) {
         print_error('templatedirnotfound', 'local_nzschools', $dir);
     }
@@ -261,8 +260,9 @@ function local_nzschools_restoretemplates($dir) {
 
     $d = dir($dir);
     while (($entry = $d->read()) !== false) {
-        if (!is_file($dir.'/'.$entry))
+        if (!is_file($dir.'/'.$entry)){
             continue;
+        }
 
         $course = new stdClass();
         $course->category = $CFG->templatecat;
@@ -277,28 +277,55 @@ function local_nzschools_restoretemplates($dir) {
             $origdebug = $CFG->debug;
             $CFG->debug = DEBUG_MINIMAL;
             error_reporting($CFG->debug);
-            // Oops, this function no longer exists in Moodle 2!
-            // todo: reimplement it. Check out /backup/restore.php to see how it's done.
-            // possibly /backup/moodle2/restore_course_task.class.php
-            //import_backup_file_silently($dir.'/'.$entry, $destcourse->id, true, true);
+            local_nzschools_import_backup_file_silently($dir .'/'.$entry, $destcourse->id, true);
             error_reporting($origdebug);
             $CFG->debug = $origdebug;
         }
-
-        // Sync the course to the backup file
-        // HACK - peek at the info moodle backup restore keeps in the session
-        // todo: This won't work until the import_backup_file_silently() is fixed
-//        $course = $destcourse;
-//        $course->fullname       = $SESSION->course_header->course_fullname;
-//        $course->summary        = $SESSION->course_header->course_summary;
-//        $course->shortname      = $SESSION->course_header->course_shortname;
-//        $course->numsections    = $SESSION->course_header->course_numsections;
-//        $course->format         = $SESSION->course_header->course_format;
-
-//        update_course($course);
     }
 }
 
+
+/** this function will restore an entire backup.zip into the specified course
+ * using standard moodle backup/restore functions, but silently.
+ * @param string $pathtofile the absolute path to the backup file.
+ * @param int $destinationcourse the course id to restore to.
+ * @param boolean $emptyfirst whether to delete all coursedata first.
+ */
+function local_nzschools_import_backup_file_silently($pathtofile,$destinationcourse,$emptyfirst=false) {
+    global $CFG, $USER;
+    require_once($CFG->dirroot . '/backup/util/includes/restore_includes.php');
+    $tmpdir = time();
+    $fulltmpdir = $CFG->dataroot . '/temp/backup/' . $tmpdir;
+
+    $zp = new zip_packer();
+    $zp->extract_to_pathname($pathtofile, $fulltmpdir);
+    $rc = new restore_controller(
+        $tmpdir,
+        $destinationcourse,
+        backup::INTERACTIVE_NO,
+        backup::MODE_AUTOMATED,
+        $USER->id,
+        backup::TARGET_EXISTING_DELETING
+    );
+
+    $s =& $rc->get_plan()->get_setting('overwrite_conf');
+    if ($emptyfirst){
+        $s->set_value(1);
+    } else {
+        $s->set_value(0);
+    }
+
+    // todo: If you were going to turn this into a generalized import_backup_file_silently function,
+    // you'd want to add a $settings array variable. To see the available settings, use something
+    // like this:
+    //$settings = $rc->get_plan()->get_settings();
+    //foreach( $settings as &$s ){
+    //    echo $s->get_name() . "\n";
+    //}
+
+    $rc->execute_precheck(false);
+    $rc->execute_plan();
+}
 
 /**
  * Select a forground colour based on the background colour

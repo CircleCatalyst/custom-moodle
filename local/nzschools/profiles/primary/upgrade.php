@@ -25,10 +25,9 @@ function nzschoolsprofile_upgrade_primary($oldversion) {
         // Setup course categories
         if (!empty($createcats)) {
             local_nzschools_createcats($fromyear, $toyear);
-            // todo: Uncomment this once a Moodle 2 version of import_backup_file_silently() is implemented
-//            if ( isset($CFG->templatecat) ){
-//                local_restoretemplates($CFG->dirroot.'/local/nzschools/profiles/primary/templatecourses');
-//            }
+            if ( isset($CFG->templatecat) ){
+                local_nzschools_restoretemplates($CFG->dirroot.'/local/nzschools/profiles/primary/templatecourses');
+            }
         }
 
         // Configure Front page
