@@ -395,6 +395,20 @@ body.path-login .navbar.blank  {
 	padding:2px;
 	width:100px;
 }
+.block_gdata .content .icon img {
+	margin-right: 3px;
+}
+.block_gmail .content .r0,
+.block_gmail .content .r1,
+.block_gaccess .content .r0,
+.block_gaccess .content .r1 {
+	padding:3px 0;
+}
+.block_gmail .content .r1,
+.block_gaccess .content .r1 {
+	background:#f1f1f1;
+}
+
 /* Calendar
 ----------------------------*/
 .block_calendar_month .calendar-controls {
@@ -704,10 +718,16 @@ img.icon {
 
 --------------------------*/
 
+.forumpost {
+	border:none;
+	margin: 5px 0;
+}
 .forumpost .topic {
-    background: #eee;
+    font-size:0.9em;
+	font-weight:bold;
+	background: #eee;
     border-width: 0;
-    padding: 4px 10px 4px;
+    padding: 7px 10px 7px;
 }
 
 .forumpost .subject {
@@ -715,7 +735,8 @@ img.icon {
 }
 
 .forumpost .author {
-    font-size: 0.9em;
+    font-size: 0.95em;
+	font-weight:normal;
     font-style: italic;
 }
 
@@ -728,6 +749,26 @@ img.icon {
 
 .forumpost .content .posting {
     padding: 5px 10px 10px;
+}
+.filemanager-container {
+	margin:6px 0 !important;
+}
+.redirectmessage {
+	color:#333;
+	margin: 10px auto;
+	width:70%;
+	padding:15px;
+	background:#FFFFFF;
+}
+.continuebutton {
+	width:70px !important;
+	padding:5px 10px;
+	background:#FFFFFF;
+	margin:0 auto;
+	text-align:center;
+}
+#page-mod-forum-discuss .discussioncontrols {
+	margin:13px 0;
 }
 
 /* Misc
@@ -868,6 +909,10 @@ fieldset#general legend {
 	padding:8px;
 	margin: 0 auto 10px;
 }
+.notifytiny {
+	background:#FFFFFF;
+}
+
 
 /* Login
 ------------------*/
