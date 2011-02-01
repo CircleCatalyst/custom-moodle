@@ -162,10 +162,8 @@ class block_gmail extends block_list {
             $composelink = '<a '.(($newwinlnk)?'target="_new"':'').' href="'.'http://mail.google.com/a/'.$domain.'/?AuthEventSource=SSO#compose">'.$composestr.'</a>';
             $inboxlink = '<a '.(($newwinlnk)?'target="_new"':'').' href="'.'http://mail.google.com/a/'.$domain.'">'.$inboxstr.'</a>';
 
-            $this->content->items[] = '&nbsp;' . $inboxlink.' '.$composelink.' '.$unreadmsgsstr.'<br/>';
+            $this->content->items[] = '<img src="'.$OUTPUT->pix_url('gmail', 'block_gmail').'" alt="message" />&nbsp;' . $inboxlink.' '.$composelink.' '.$unreadmsgsstr.'<br/>';
 
-            // Main Mail Icon
-            $this->content->icons[] = '<img src="'.$OUTPUT->pix_url('gmail', 'block_gmail').'" alt="message" />';
 		    // Only show as many messages as specified in config
 		    $countmsg = true;
 		    if( !$msgnumber = get_config('blocks/gmail','msgnumber')) {
@@ -214,9 +212,6 @@ class block_gmail extends block_list {
                     $text .= '" href="'.$servicelink.'">'.format_string($msg->get_title()).'</a> '.$author_first.' '.$author_last;
                     $this->content->items[]  = $text;
                 }
-
-		    	// May use message icons, for now a simple dash
-		    	$this->content->icons[] = '-';
 		    }
         }
 
