@@ -121,14 +121,14 @@ class block_gaccess extends block_list {
         }
 
         foreach ($google_services as $gs) {
-            $this->content->items[] = "<a ".$target.". title=\"".$gs['service']."\"  href=\"".$gs['relayurl']."\">".$gs['service']."</a>";
             
             if (!empty($gs['icon_name'])) {
-                $this->content->icons[] = "<img src=\"".$OUTPUT->pix_url($gs['icon_name'], 'block_gaccess')."\" alt=\"".$gs['service']."\" />";        	
+                $icon = "<img src=\"".$OUTPUT->pix_url($gs['icon_name'], 'block_gaccess')."\" alt=\"".$gs['service']."\" />";
             } else {
                 // Default to a check graphic
-                $this->content->icons[] = "<img src=\"".$OUTPUT->pix_url('i/tick_green_small')."\" alt=\"$service\" />";
+                $icon = "<img src=\"".$OUTPUT->pix_url('i/tick_green_small')."\" alt=\"$service\" />";
             }
+            $this->content->items[] = "<a ".$target.". title=\"".$gs['service']."\"  href=\"".$gs['relayurl']."\">".$icon . '&nbsp;' . $gs['service']."</a>";
         }
 
         return $this->content;

@@ -91,7 +91,7 @@ class block_gmail extends block_list {
     }
 
     function get_content() {
-    	global $SESSION,$CFG,$USER;
+    global $SESSION, $CFG, $USER, $OUTPUT;
 
     	// quick and simple way to prevent block from showing up on front page
     	if (!isloggedin()) {
@@ -162,7 +162,7 @@ class block_gmail extends block_list {
             $composelink = '<a '.(($newwinlnk)?'target="_new"':'').' href="'.'http://mail.google.com/a/'.$domain.'/?AuthEventSource=SSO#compose">'.$composestr.'</a>';
             $inboxlink = '<a '.(($newwinlnk)?'target="_new"':'').' href="'.'http://mail.google.com/a/'.$domain.'">'.$inboxstr.'</a>';
 
-            $this->content->items[] = $inboxlink.' '.$composelink.' '.$unreadmsgsstr.'<br/>';
+            $this->content->items[] = '&nbsp;' . $inboxlink.' '.$composelink.' '.$unreadmsgsstr.'<br/>';
 
             // Main Mail Icon
             $this->content->icons[] = '<img src="'.$OUTPUT->pix_url('gmail', 'block_gmail').'" alt="message" />';
@@ -190,8 +190,9 @@ class block_gmail extends block_list {
 		    	$servicelink = str_replace('http://mail.google.com/mail','http://mail.google.com/a/'.$domain,$servicelink); 
 
 		    	// To Save Space given them option to show first and last or just last name
-                list($author_first,$author_last) = split(" ",$author->get_name());
-
+                $authornames = split(" ",$author->get_name());
+                $author_first = array_shift($authornames);
+                $author_last = array_shift($authornames);
                 // Show first Name
                 if( !$showfirstname = get_config('blocks/gmail','showfirstname')) {
                     $author_first = '';
@@ -204,12 +205,12 @@ class block_gmail extends block_list {
 
                 // I should do clean_param($summary, PARAM_TEXT) But then ' will have \' 
                 if ($newwinlnk) {
-                    $text  = ' <a target="_new" title="'.format_string($summary);
+                    $text  = '&nbsp;<a target="_new" title="'.format_string($summary);
                     $text .= '" href="'.$servicelink.'">'.format_string($msg->get_title()).'</a> '.$author_first.' '.$author_last;
 
                     $this->content->items[] = $text;
                 } else {
-		    	    $text  = ' <a title="'.format_string($summary);
+                    $text  = '&nbsp;<a title="'.format_string($summary);
                     $text .= '" href="'.$servicelink.'">'.format_string($msg->get_title()).'</a> '.$author_first.' '.$author_last;
                     $this->content->items[]  = $text;
                 }

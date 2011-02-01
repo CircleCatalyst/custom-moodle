@@ -85,20 +85,20 @@ class block_gdata extends block_list {
         }
 
         $title = get_string('settings', 'block_gdata');
-        $this->content->items[] = "<a title=\"$title\" href=\"$CFG->wwwroot/$CFG->admin/settings.php?section=blocksettinggdata\">$title</a>";
-        $this->content->icons[] = "<img src=\"" . $OUTPUT->pix_url('i/settings') . "\" alt=\"$title\" />";
+        $icon = '<img src="'.$OUTPUT->pix_url('i/settings') . '" class="icon" alt="' . $title . '" />';
+        $this->content->items[] = "<a title=\"$title\" href=\"$CFG->wwwroot/$CFG->admin/settings.php?section=blocksettinggdata\">$icon&nbsp;$title</a>";
 
         $title = get_string('status', 'block_gdata');
-        $this->content->items[] = "<a title=\"$title\" href=\"$CFG->wwwroot/blocks/gdata/index.php?hook=status\">$title</a>";
-        $this->content->icons[] = "<img src=\"" . $OUTPUT->pix_url('i/tick_green_small') . "\" alt=\"$title\" />";
+        $icon = '<img src="'.$OUTPUT->pix_url('i/tick_green_small') . '" class="icon" alt="' . $title . '" />';
+        $this->content->items[] = "<a title=\"$title\" href=\"$CFG->wwwroot/blocks/gdata/index.php?hook=status\">$icon&nbsp;$title</a>";
 
         $title = get_string('userssynced', 'block_gdata');
-        $this->content->items[] = "<a title=\"$title\" href=\"$CFG->wwwroot/blocks/gdata/index.php?hook=users\">$title</a>";
-        $this->content->icons[] = "<img src=\"" . $OUTPUT->pix_url('i/users') . "\" alt=\"$title\" />";
+        $icon = '<img src="'.$OUTPUT->pix_url('i/users') . '" class="icon" alt="' . $title . '" />';
+        $this->content->items[] = "<a title=\"$title\" href=\"$CFG->wwwroot/blocks/gdata/index.php?hook=users\">$icon&nbsp;$title</a>";
 
         $title = get_string('addusers', 'block_gdata');
-        $this->content->items[] = "<a title=\"$title\" href=\"$CFG->wwwroot/blocks/gdata/index.php?hook=addusers\">$title</a>";
-        $this->content->icons[] = "<img src=\"" . $OUTPUT->pix_url('i/users') . "\" alt=\"$title\" />";
+        $icon = '<img src="'.$OUTPUT->pix_url('i/users') . '" class="icon" alt="' . $title . '" />';
+        $this->content->items[] = "<a title=\"$title\" href=\"$CFG->wwwroot/blocks/gdata/index.php?hook=addusers\">$icon&nbsp;$title</a>";
 
         return $this->content;
     }
