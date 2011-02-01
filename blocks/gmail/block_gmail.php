@@ -203,12 +203,12 @@ class block_gmail extends block_list {
 
                 // I should do clean_param($summary, PARAM_TEXT) But then ' will have \' 
                 if ($newwinlnk) {
-                    $text  = '&nbsp;<a target="_new" title="'.format_string($summary);
+                    $text  = '<a target="_new" title="'.format_string($summary);
                     $text .= '" href="'.$servicelink.'">'.format_string($msg->get_title()).'</a> '.$author_first.' '.$author_last;
 
                     $this->content->items[] = $text;
                 } else {
-                    $text  = '&nbsp;<a title="'.format_string($summary);
+                    $text  = '<a title="'.format_string($summary);
                     $text .= '" href="'.$servicelink.'">'.format_string($msg->get_title()).'</a> '.$author_first.' '.$author_last;
                     $this->content->items[]  = $text;
                 }
