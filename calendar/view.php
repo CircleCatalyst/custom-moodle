@@ -147,6 +147,9 @@ switch($view) {
 
 //Link to calendar export page
 echo $OUTPUT->container_start('bottom');
+if (calendar_user_can_add_event()) {
+    echo $OUTPUT->single_button(new moodle_url('import.php', array('courseid'=>$courseid)), get_string('importcalendar', 'calendar'));
+}
 if (!empty($CFG->enablecalendarexport)) {
     echo $OUTPUT->single_button(new moodle_url('export.php', array('course'=>$courseid)), get_string('exportcalendar', 'calendar'));
     if (isloggedin()) {
