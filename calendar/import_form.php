@@ -1,6 +1,7 @@
 <?php
 
-require_once '../config.php';
+defined('MOODLE_INTERNAL') or die();
+
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
 
