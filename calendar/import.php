@@ -111,18 +111,32 @@ if($data = $importform->get_data()) {
 
 } else {
     if ($formdata = $mform->get_data()) {
-        var_dump($formdata->importfile);
-        $calendar = $mform->get_file_content('importfile');
+        $calendar = $mform->get_ical_data();
 
         $ical = new iCalendar;
         $ical->unserialize($calendar);
 
-        echo '<p>';
-        foreach ($ical->parser_errors as $error) {
-            echo $error.'<br />';
+        if (!empty($ical->parser_errors)) {
+            echo "<script type=\"text/javascript\"><!--
+                  function showhide_parsererrors() {
+                    errorlist = document.getElementById('bennu_parser_errors');
+                    if (errorlist.style.display=='none') {
+                        errorlist.style.display = 'block';
+                    } else {
+                        errorlist.style.display = 'none';
+                    }
+                  }
+                  //--></script>\n";
+            echo "<p>
+                  <img alt=\"Bennu parser errors\" src=\"".$OUTPUT->pix_url('t/stop')."\" class=\"iconsmall\" onclick=\"showhide_parsererrors();\" />
+                  Calendar iCal parser encountered errors, <a href=\"#\" onclick=\"showhide_parsererrors()\">click here to view them</a>.
+                  </p>\n";
+            echo "<ul id=\"bennu_parser_errors\" style=\"display:none\">\n";
+            foreach ($ical->parser_errors as $error) {
+                echo "<li class=\"bennu_parser_error\"> {$error} </li>\n";
+            }
+            echo '</ul>';
         }
-        echo '</p>';
-
         $table = new flexible_table('ical_import');
         $columns = array('summary', 'description', 'start', 'duration', 'uid');
         $headers = array('Summary', 'Description', 'Start', 'Duration', 'UUID');
@@ -167,5 +181,5 @@ if($data = $importform->get_data()) {
     $mform->display();
 }
 
-print_footer();
+echo $OUTPUT->footer();
 

@@ -968,7 +968,7 @@ function calendar_get_link_href($linkbase, $d, $m, $y) {
         return '';
     }
     if (!($linkbase instanceof moodle_url)) {
-        $linkbase = new moodle_url();
+        $linkbase = new moodle_url($linkbase);
     }
     if (!empty($d)) {
         $linkbase->param('cal_d', $d);
