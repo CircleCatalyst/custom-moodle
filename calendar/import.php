@@ -63,50 +63,8 @@ calendar_get_allowed_types($allowed);
 $importform = new calendar_import_confirm_form();
 if($data = $importform->get_data()) {
 
-    $ical = new iCalendar;
-    $ical->unserialize($data->calendar);
-    $eventcount = 0;
-    $updatecount = 0;
+    calendar_import_ical_events($data);
 
-    foreach($ical->components['VEVENT'] as $event) {
-        $eventrecord = new stdClass;
-
-        $name = $event->properties['SUMMARY'][0]->value;
-        $name = str_replace('\n', '<br />', $name);
-        $name = str_replace('\\', '', $name);
-        $name = preg_replace('/\s+/', ' ', $name);
-        $eventrecord->name = clean_param($name, PARAM_CLEAN);
-
-        $description = $event->properties['DESCRIPTION'][0]->value;
-        $description = str_replace('\n', '<br />', $description);
-        $description = str_replace('\\', '', $description);
-        $description = preg_replace('/\s+/', ' ', $description);
-        $eventrecord->description = clean_param($description, PARAM_CLEAN);
-
-        $eventrecord->courseid = $data->eventtypes['eventtype'];
-        $eventrecord->timestart = strtotime($event->properties['DTSTART'][0]->value);
-        $eventrecord->timeduration = strtotime($event->properties['DTEND'][0]->value) - $eventrecord->timestart;
-        $eventrecord->uuid = substr($event->properties['UID'][0]->value, 0, 36); // The UUID field only holds 36 characters.
-        $eventrecord->userid = $USER->id;
-        $eventrecord->timemodified = time();
-
-        if ($updaterecord = $DB->get_record('event', array('uuid' => $eventrecord->uuid))) {
-            $eventrecord->id = $updaterecord->id;
-            if ($DB->update_record('event', $eventrecord)) {
-                $updatecount++;
-            } else {
-                echo '<p>Failed to update event: '.$eventrecord->name.' '.date('H:i d/m/Y', $eventrecord->timestart).'</p>';
-            }
-        } else {
-            if ($DB->insert_record('event', $eventrecord)) {
-                $eventcount++;
-            } else {
-                echo '<p>Failed to add event: '.$eventrecord->name.' '.date('H:i d/m/Y', $eventrecord->timestart).'</p>';
-            }
-        }
-    }
-    echo '<p>'.$eventcount.' events imported successfully.</p>';
-    echo '<p>'.$updatecount.' events updated.</p>';
     echo '<p><a href="'.calendar_get_link_href(CALENDAR_URL.'view.php?view=upcoming&amp;course='.$courseid.'&amp;', $now['mday'], $now['mon'], $now['year']).'">Back to Calendar.</a></p>';
 
 } else {
@@ -173,6 +131,10 @@ if($data = $importform->get_data()) {
         }
         $toform = new stdClass();
         $toform->courseid = $courseid;
+        $toform->importfrom = $formdata->importfrom;
+        if ($formdata->importfrom == CALENDAR_IMPORT_URL) {
+            $toform->importurl  = $formdata->importurl;
+        }
         $toform->calendar = $calendar;
         $importform->set_data($toform);
         $importform->display();

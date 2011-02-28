@@ -2,9 +2,6 @@
 
 defined('MOODLE_INTERNAL') or die();
 
-define('IMPORT_CALENDAR_FILE', 0);
-define('IMPORT_CALENDAR_URL',  1);
-
 require_once($CFG->libdir.'/formslib.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
 
@@ -17,16 +14,16 @@ class calendar_import_form extends moodleform {
         $mform    =& $this->_form;
         $mform->addElement('header', 'importheader', 'Select iCal to import:');
 
-        $choices = array(IMPORT_CALENDAR_FILE => get_string('importcalendarfile', 'calendar'),
-                         IMPORT_CALENDAR_URL  => get_string('importcalendarurl',  'calendar'));
+        $choices = array(CALENDAR_IMPORT_FILE => get_string('importcalendarfile', 'calendar'),
+                         CALENDAR_IMPORT_URL  => get_string('importcalendarurl',  'calendar'));
         $mform->addElement('select', 'importfrom', get_string('importcalendarfrom', 'calendar'), $choices);
-        $mform->setDefault('importfrom', IMPORT_CALENDAR_FILE);
+        $mform->setDefault('importfrom', CALENDAR_IMPORT_FILE);
 
         $mform->addElement('filepicker', 'importfile', get_string('importcalendarfile', 'calendar'));
         $mform->addElement('text', 'importurl', get_string('importcalendarurl', 'calendar'), PARAM_URL);
         $mform->addElement('hidden', 'courseid');
-        $mform->disabledIf('importurl',  'importfrom', 'eq', IMPORT_CALENDAR_FILE);
-        $mform->disabledIf('importfile', 'importfrom', 'eq', IMPORT_CALENDAR_URL);
+        $mform->disabledIf('importurl',  'importfrom', 'eq', CALENDAR_IMPORT_FILE);
+        $mform->disabledIf('importfile', 'importfrom', 'eq', CALENDAR_IMPORT_URL);
 
         $mform->addElement('submit', 'preview', 'Preview Import');
     }
@@ -34,10 +31,10 @@ class calendar_import_form extends moodleform {
     function get_ical_data() {
         $formdata = $this->get_data();
         switch ($formdata->importfrom) {
-          case IMPORT_CALENDAR_FILE:
+          case CALENDAR_IMPORT_FILE:
             $calendar = $formdata->get_file_content('importfile');
             break;
-          case IMPORT_CALENDAR_URL:
+          case CALENDAR_IMPORT_URL:
             $calendar = file_get_contents($formdata->importurl);
             break;
         }
@@ -57,6 +54,8 @@ class calendar_import_confirm_form extends moodleform {
         $mform->addElement('header', 'confirmheader', 'Import these events as:');
         $mform->addElement('hidden', 'calendar');
         $mform->addElement('hidden', 'courseid');
+        $mform->addElement('hidden', 'importfrom');
+        $mform->addElement('hidden', 'importurl');
         $radio = array();
 
         if($allowed->site) {
