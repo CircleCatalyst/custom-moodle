@@ -32,7 +32,7 @@ class calendar_import_form extends moodleform {
         $formdata = $this->get_data();
         switch ($formdata->importfrom) {
           case CALENDAR_IMPORT_FILE:
-            $calendar = $formdata->get_file_content('importfile');
+            $calendar = $this->get_file_content('importfile');
             break;
           case CALENDAR_IMPORT_URL:
             $calendar = file_get_contents($formdata->importurl);
