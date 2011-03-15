@@ -118,7 +118,7 @@ class block_gdata extends block_list {
      *
      * @return boolean
      **/
-    function user_can_addto(&$page) {
+    function user_can_addto($page) {
         return self::has_capability();
     }
 
