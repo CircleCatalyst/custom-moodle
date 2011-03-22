@@ -44,6 +44,18 @@ function xmldb_local_importcalendar_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2011032101, 'local', 'importcalendar');
     }
 
+    if ($oldversion < 2011032102) {
+
+        // Add name field to the event_subscriptions table
+        $table = new xmldb_table('event_subscriptions');
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL);
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2011032102, 'local', 'importcalendar');
+    }
+
     return true;
 }
 

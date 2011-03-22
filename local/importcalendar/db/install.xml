@@ -12,7 +12,8 @@
         <FIELD NAME="groupid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="false" DEFAULT="0" SEQUENCE="false" PREVIOUS="courseid" NEXT="userid"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="false" DEFAULT="0" SEQUENCE="false" PREVIOUS="groupid" NEXT="pollinterval"/>
         <FIELD NAME="pollinterval" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="false" DEFAULT="0" SEQUENCE="false" PREVIOUS="userid" NEXT="lastupdated"/>
-        <FIELD NAME="lastupdated" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="pollinterval"/>
+        <FIELD NAME="lastupdated" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="pollinterval" NEXT="name"/>
+        <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="lastupdated"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
