@@ -43,6 +43,7 @@
 require_once('../config.php');
 require_once($CFG->dirroot.'/course/lib.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
+require_once "{$CFG->dirroot}/local/importcalendar/lib.php";
 
 $courseid = optional_param('course', SITEID, PARAM_INT);
 $view = optional_param('view', 'upcoming', PARAM_ALPHA);
@@ -79,6 +80,10 @@ if ($courseid != SITEID && !empty($courseid)) {
     $issite = true;
 }
 require_course_login($course);
+
+if (calendar_user_can_add_event()) {
+    importcalendar_process_subscription_form($courseid);
+}
 
 $calendar = new calendar_information($day, $mon, $yr);
 $calendar->prepare_for_view($course, $courses);

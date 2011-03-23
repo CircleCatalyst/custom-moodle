@@ -3,6 +3,17 @@
 defined('MOODLE_INTERNAL') or die();
 require_once "{$CFG->libdir}/formslib.php";
 
+function importcalendar_get_pollinterval_choices() {
+    return array(
+            '0' => get_string('never', 'local_importcalendar'),
+            '3600' => get_string('hourly', 'local_importcalendar'),
+            '86400' => get_string('daily', 'local_importcalendar'),
+            '604800' => get_string('weekly', 'local_importcalendar'),
+            '2628000' => get_string('monthly', 'local_importcalendar'),
+            '31536000' => get_string('annually', 'local_importcalendar'),
+        );
+}
+
 class importcalendar_addsubscription_form extends moodleform {
 
     function definition() {
@@ -29,14 +40,7 @@ class importcalendar_addsubscription_form extends moodleform {
         $mform->addElement('text', 'url', get_string('calendarurl', 'local_importcalendar'), PARAM_URL);
         $mform->addRule('url', get_string('required'), 'required');
 
-        $choices = array(
-                        '0' => get_string('never', 'local_importcalendar'),
-                        '3600' => get_string('hourly', 'local_importcalendar'),
-                        '86400' => get_string('daily', 'local_importcalendar'),
-                        '604800' => get_string('weekly', 'local_importcalendar'),
-                        '2628000' => get_string('monthly', 'local_importcalendar'),
-                        '31536000' => get_string('annually', 'local_importcalendar'),
-                   );
+        $choices = importcalendar_get_pollinterval_choices();
         $mform->addElement('select', 'pollinterval', get_string('pollinterval', 'local_importcalendar'), $choices);
 
         $mform->setDefault('pollinterval', 604800);
@@ -83,7 +87,9 @@ function importcalendar_show_subscriptions($courseid) {
     foreach ($subs as $id => $sub) {
         $actions =  "<input type=\"submit\" value=\"{$str->update}\" />";
         $actions .= "<input type=\"submit\" value=\"{$str->remove}\" />";
-        $table->data[] = array("<a href=\"{$sub->url}\">{$sub->name}</a>", $sub->pollinterval, $actions);
+        $choices = importcalendar_get_pollinterval_choices();
+        $pollinterval = $choices[$sub->pollinterval];
+        $table->data[] = array("<a href=\"{$sub->url}\">{$sub->name}</a>", $pollinterval, $actions);
     }
     $out .= html_writer::table($table);
 
@@ -99,5 +105,9 @@ function importcalendar_show_subscriptions($courseid) {
 
     $out .= $OUTPUT->box_end();
     return $out;
+}
+
+function importcalendar_process_subscription_form($courseid) {
+    return true;
 }
 
