@@ -160,7 +160,7 @@ function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=n
  * @param int $courseid     The course ID
  * @return string           The table output.
  */
-function importcalendar_show_subscriptions($courseid) {
+function importcalendar_show_subscriptions($courseid, $importresults='') {
     global $DB, $OUTPUT;
 
     $out = '';
@@ -169,9 +169,11 @@ function importcalendar_show_subscriptions($courseid) {
     $str->add    = get_string('add');
 
     $out .= $OUTPUT->box_start('generalbox calendarsubs');
+    $out .= $importresults;
+
     $table = new html_table();
-    $table->head  = array('Calendar', 'Poll', 'Actions');
-    $table->align = array('left', 'left', 'center');
+    $table->head  = array('Calendar', 'Poll', 'Last Updated', 'Actions');
+    $table->align = array('left', 'left', 'left', 'center');
     $table->width = '100%';
     $table->data  = array();
 
@@ -181,7 +183,10 @@ function importcalendar_show_subscriptions($courseid) {
         $actions .= "<input type=\"submit\" value=\"{$str->remove}\" />";
         $choices = importcalendar_get_pollinterval_choices();
         $pollinterval = $choices[$sub->pollinterval];
-        $table->data[] = array("<a href=\"{$sub->url}\">{$sub->name}</a>", $pollinterval, $actions);
+        $lastupdated = empty($sub->lastupdated)
+                ? get_string('never', 'local_importcalendar')
+                : date('Y-m-d H:i:s', $sub->lastupdated);
+        $table->data[] = array("<a href=\"{$sub->url}\">{$sub->name}</a>", $pollinterval, $lastupdated, $actions);
     }
     $out .= html_writer::table($table);
 
@@ -201,8 +206,8 @@ function importcalendar_show_subscriptions($courseid) {
 
 /**
  * Add a subscription from the form data and add its events to the calendar.
- * @param int $courseid The course ID
- * @return string       A log of the import progress, including errors
+ * @param int $courseid     The course ID
+ * @return string           A log of the import progress, including errors
  */
 function importcalendar_process_subscription_form($courseid) {
     global $DB;
@@ -213,14 +218,13 @@ function importcalendar_process_subscription_form($courseid) {
         return true;
     }
     $subscriptionid = importcalendar_add_subscription($formdata);
-    $ical = importcalendar_get_icalendar($formdata->url);
-    return importcalendar_import_icalendar_events($ical, $courseid, $subscriptionid);
+    return importcalendar_update_subscription_events($subscriptionid);
 }
 
 /**
  * From a URL, fetch the calendar and return an iCalendar object.
- * @param string $url The iCalendar URL
- * @return object The iCalendar object
+ * @param string $url   The iCalendar URL
+ * @return object       The iCalendar object
  */
 function importcalendar_get_icalendar($url) {
     $calendar = file_get_contents($url);
@@ -231,9 +235,11 @@ function importcalendar_get_icalendar($url) {
 
 /**
  * Import events from an iCalendar object into a course calendar.
- * @param object  $ical     The iCalendar object
- * @param integer $courseid The course ID for the calendar
- * @return string A log of the import progress, including errors
+ * @param object  $ical             The iCalendar object
+ * @param integer $courseid         The course ID for the calendar
+ * @param integer $subscriptionid   The course ID for the calendar
+ * @return string                   A log of the import progress, including
+ *                                  errors
  */
 function importcalendar_import_icalendar_events($ical, $courseid, $subscriptionid=null) {
     $return = '';
@@ -254,8 +260,32 @@ function importcalendar_import_icalendar_events($ical, $courseid, $subscriptioni
             break;
         }
     }
-    $return .= "<p>{$eventcount} events imported successfully.</p>\n";
-    $return .= "<p>{$updatecount} events updated.</p>\n";
+    $return .= "<p> Events imported: {$eventcount} </p>\n";
+    $return .= "<p> Events updated: {$updatecount} </p>\n";
+    return $return;
+}
+
+/**
+ * Fetch a calendar subscription and update the events in the calendar.
+ * @param integer $subscriptionid   The course ID for the calendar
+ * @return string                   A log of the import progress, including
+ *                                  errors
+ */
+function importcalendar_update_subscription_events($subscriptionid) {
+    global $DB;
+
+    $return = '';
+    $eventcount = 0;
+    $updatecount = 0;
+
+    $sub = $DB->get_record('event_subscriptions', array('id' => $subscriptionid));
+    if (empty($sub)) {
+        print_error('error_badsubscription', 'local_importcalendar');
+    }
+    $ical = importcalendar_get_icalendar($sub->url);
+    $return = importcalendar_import_icalendar_events($ical, $sub->courseid, $subscriptionid);
+    $sub->lastupdated = time();
+    $DB->update_record('event_subscriptions', $sub);
     return $return;
 }
 

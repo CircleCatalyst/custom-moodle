@@ -14,3 +14,4 @@ $string['pollinterval'] = 'Poll interval';
 $string['pollinterval_help'] = 'How often you would like the calendar to update with new events.';
 $string['subscriptionname'] = 'Calendar name';
 
+$string['error_badsubscription'] = 'Calendar subscription not found.';
