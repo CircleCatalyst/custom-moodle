@@ -2,7 +2,14 @@
 
 defined('MOODLE_INTERNAL') or die();
 require_once "{$CFG->libdir}/formslib.php";
+require_once "{$CFG->libdir}/bennu/bennu.inc.php";
 
+define('IMPORTCALENDAR_EVENT_UPDATED',  1);
+define('IMPORTCALENDAR_EVENT_INSERTED', 2);
+
+/**
+ * Returns option list for the pollinterval setting.
+ */
 function importcalendar_get_pollinterval_choices() {
     return array(
             '0' => get_string('never', 'local_importcalendar'),
@@ -14,6 +21,9 @@ function importcalendar_get_pollinterval_choices() {
         );
 }
 
+/**
+ * Form for adding a subscription to a Moodle course calendar.
+ */
 class importcalendar_addsubscription_form extends moodleform {
 
     function definition() {
@@ -68,6 +78,88 @@ class importcalendar_addsubscription_form extends moodleform {
     }
 }
 
+/**
+ * Add an iCalendar subscription to the database.
+ * @param object $sub   The subscription object (e.g. from the form)
+ * @return int          The insert ID, if any.
+ */
+function importcalendar_add_subscription($sub) {
+    global $DB;
+    if (empty($sub->courseid)) {
+        $sub->courseid = $sub->course;
+    }
+    if (!empty($sub->name) and !empty($sub->url)) {
+        $r = $DB->get_record('event_subscriptions', array('courseid' => $sub->courseid, 'url' => $sub->url));
+        if (empty($r)) {
+            $id = $DB->insert_record('event_subscriptions', $sub);
+            return $id;
+        } else {
+            $sub->id = $r->id;
+            $DB->update_record('event_subscriptions', $sub);
+            return $r->id;
+        }
+    } else {
+        return false;
+    }
+}
+
+/**
+ * Add an iCalendar event to the Moodle calendar.
+ * @param object $event         The RFC-2445 iCalendar event
+ * @param int $courseid         The course ID
+ * @param int $subscriptionid   The iCalendar subscription ID
+ * @return int                  Code: 1=updated, 2=inserted, 0=error
+ */
+function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=null) {
+    global $DB, $USER;
+
+    $eventrecord = new stdClass;
+
+    $name = $event->properties['SUMMARY'][0]->value;
+    $name = str_replace('\n', '<br />', $name);
+    $name = str_replace('\\', '', $name);
+    $name = preg_replace('/\s+/', ' ', $name);
+    $eventrecord->name = clean_param($name, PARAM_CLEAN);
+
+    $description = $event->properties['DESCRIPTION'][0]->value;
+    $description = str_replace('\n', '<br />', $description);
+    $description = str_replace('\\', '', $description);
+    $description = preg_replace('/\s+/', ' ', $description);
+    $eventrecord->description = clean_param($description, PARAM_CLEAN);
+
+    $eventrecord->courseid = $courseid;
+    $eventrecord->timestart = strtotime($event->properties['DTSTART'][0]->value);
+    $eventrecord->timeduration = strtotime($event->properties['DTEND'][0]->value) - $eventrecord->timestart;
+    $eventrecord->uuid = substr($event->properties['UID'][0]->value, 0, 36); // The UUID field only holds 36 characters.
+    $eventrecord->userid = $USER->id;
+    $eventrecord->timemodified = time();
+
+    // Add the iCal subscription if required
+    if (!empty($subscriptionid)) {
+        $eventrecord->subscriptionid = $subscriptionid;
+    }
+
+    if ($updaterecord = $DB->get_record('event', array('uuid' => $eventrecord->uuid))) {
+        $eventrecord->id = $updaterecord->id;
+        if ($DB->update_record('event', $eventrecord)) {
+            return IMPORTCALENDAR_EVENT_UPDATED;
+        } else {
+            return 0;
+        }
+    } else {
+        if ($DB->insert_record('event', $eventrecord)) {
+            return IMPORTCALENDAR_EVENT_INSERTED;
+        } else {
+            return 0;
+        }
+    }
+}
+
+/**
+ * Create the list of iCalendar subscriptions for a course calendar.
+ * @param int $courseid     The course ID
+ * @return string           The table output.
+ */
 function importcalendar_show_subscriptions($courseid) {
     global $DB, $OUTPUT;
 
@@ -101,13 +193,69 @@ function importcalendar_show_subscriptions($courseid) {
         $formdata->course = $courseid;
         $form->set_data($formdata);
     }
-    $out .= $form->display();
+    $out .= $form->display(); // TODO: grab the output somehow.
 
     $out .= $OUTPUT->box_end();
     return $out;
 }
 
+/**
+ * Add a subscription from the form data and add its events to the calendar.
+ * @param int $courseid The course ID
+ * @return string       A log of the import progress, including errors
+ */
 function importcalendar_process_subscription_form($courseid) {
-    return true;
+    global $DB;
+
+    $form = new importcalendar_addsubscription_form();
+    $formdata = $form->get_data();
+    if (empty($formdata)) {
+        return true;
+    }
+    $subscriptionid = importcalendar_add_subscription($formdata);
+    $ical = importcalendar_get_icalendar($formdata->url);
+    return importcalendar_import_icalendar_events($ical, $courseid, $subscriptionid);
+}
+
+/**
+ * From a URL, fetch the calendar and return an iCalendar object.
+ * @param string $url The iCalendar URL
+ * @return object The iCalendar object
+ */
+function importcalendar_get_icalendar($url) {
+    $calendar = file_get_contents($url);
+    $ical = new iCalendar();
+    $ical->unserialize($calendar);
+    return $ical;
+}
+
+/**
+ * Import events from an iCalendar object into a course calendar.
+ * @param object  $ical     The iCalendar object
+ * @param integer $courseid The course ID for the calendar
+ * @return string A log of the import progress, including errors
+ */
+function importcalendar_import_icalendar_events($ical, $courseid, $subscriptionid=null) {
+    $return = '';
+    $eventcount = 0;
+    $updatecount = 0;
+
+    foreach($ical->components['VEVENT'] as $event) {
+        $res = importcalendar_add_icalendar_event($event, $courseid, $subscriptionid);
+        switch ($res) {
+          case IMPORTCALENDAR_EVENT_UPDATED:
+            $updatecount++;
+            break;
+          case IMPORTCALENDAR_EVENT_INSERTED:
+            $eventcount++;
+            break;
+          case 0:
+            $return .= '<p>Failed to add event: '.$event->properties['SUMMARY'][0]->value." </p>\n";
+            break;
+        }
+    }
+    $return .= "<p>{$eventcount} events imported successfully.</p>\n";
+    $return .= "<p>{$updatecount} events updated.</p>\n";
+    return $return;
 }
 

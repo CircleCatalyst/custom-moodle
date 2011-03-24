@@ -5,6 +5,7 @@ require_once($CFG->libdir.'/bennu/bennu.inc.php');
 require_once($CFG->libdir.'/tablelib.php');
 require_once($CFG->dirroot.'/calendar/import_form.php');
 require_once($CFG->dirroot.'/calendar/lib.php');
+require_once "{$CFG->dirroot}/local/importcalendar/lib.php";
 
 $courseid = required_param('courseid', PARAM_INT);
 $course = $DB->get_record('course', array('id' => $courseid));
@@ -63,7 +64,9 @@ calendar_get_allowed_types($allowed);
 $importform = new calendar_import_confirm_form();
 if($data = $importform->get_data()) {
 
-    calendar_import_ical_events($data);
+    $ical = new iCalendar();
+    $ical->unserialize($data->calendar);
+    echo importcalendar_import_icalendar_events($ical, $data->eventtypes['eventtype']);
 
     echo '<p><a href="'.calendar_get_link_href(CALENDAR_URL.'view.php?view=upcoming&amp;course='.$courseid.'&amp;', $now['mday'], $now['mon'], $now['year']).'">Back to Calendar.</a></p>';
 
@@ -71,7 +74,7 @@ if($data = $importform->get_data()) {
     if ($formdata = $mform->get_data()) {
         $calendar = $mform->get_ical_data();
 
-        $ical = new iCalendar;
+        $ical = new iCalendar();
         $ical->unserialize($calendar);
 
         if (!empty($ical->parser_errors)) {
