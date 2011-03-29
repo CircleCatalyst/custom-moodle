@@ -164,8 +164,9 @@ function importcalendar_show_subscriptions($courseid, $importresults='') {
     global $DB, $OUTPUT, $CFG;
 
     $view = optional_param('view', '', PARAM_ALPHA);
-
+    $sesskey = sesskey();
     $out = '';
+
     $str->update = get_string('update');
     $str->remove = get_string('remove');
     $str->add    = get_string('add');
@@ -206,6 +207,7 @@ function importcalendar_show_subscriptions($courseid, $importresults='') {
             <form action=\"{$CFG->wwwroot}/calendar/view.php\" method=\"post\">
               {$pollinterval}
               <div style=\"float:right\">
+                <input type=\"hidden\" name=\"sesskey\" value=\"{$sesskey}\" />
                 <input type=\"hidden\" name=\"view\" value=\"{$view}\" />
                 <input type=\"hidden\" name=\"course\" value=\"{$courseid}\" />
                 <input type=\"hidden\" name=\"id\" value=\"{$sub->id}\" />
@@ -279,6 +281,7 @@ function importcalendar_process_subscription_row() {
         break;
 
       case $str->remove:
+        $sesskey = required_param('sesskey', PARAM_ALPHANUM);
         $DB->delete_records('event', array('subscriptionid' => $id));
         $DB->delete_records('event_subscriptions', array('id' => $id));
         return "Calendar subscription '{$sub->name}' removed.";
