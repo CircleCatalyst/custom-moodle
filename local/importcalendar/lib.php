@@ -42,7 +42,11 @@ class importcalendar_addsubscription_form extends moodleform {
             }
           }
         //--></script>');
-        $mform->addElement('header', 'addsubscriptionform', '<a name="targetsubcriptionform" onclick="showhide_subform()">Add new subscription...</a>');
+        $mform->addElement('header', 'addsubscriptionform', '<a name="targetsubcriptionform" onclick="showhide_subform()">Import calendar...</a>');
+
+        $courseid = optional_param('course', 0, PARAM_INT);
+        $importurl = new moodle_url('/calendar/import.php', array('courseid'=>$courseid), get_string('importcalendar', 'calendar'));
+        $mform->addElement('html', "You may <a href=\"{$importurl}\">import a single file</a>, or add a subscription:");
 
         $mform->addElement('text', 'name', get_string('subscriptionname', 'local_importcalendar'), PARAM_URL);
         $mform->addRule('name', get_string('required'), 'required');

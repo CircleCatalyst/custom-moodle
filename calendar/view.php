@@ -153,7 +153,6 @@ switch($view) {
 echo $OUTPUT->container_start('bottom');
 if (calendar_user_can_add_event()) {
     echo importcalendar_show_subscriptions($courseid, $importresults);
-    echo $OUTPUT->single_button(new moodle_url('import.php', array('courseid'=>$courseid)), get_string('importcalendar', 'calendar'));
 }
 //Link to calendar export page
 if (!empty($CFG->enablecalendarexport)) {

@@ -21,6 +21,7 @@ class calendar_import_form extends moodleform {
 
         $mform->addElement('filepicker', 'importfile', get_string('importcalendarfile', 'calendar'));
         $mform->addElement('text', 'importurl', get_string('importcalendarurl', 'calendar'), PARAM_URL);
+        $mform->addElement('html', '<strong>URL Note:</strong> You may want to add this as a subscription instead, which will periodically check for and update new events from the remote calendar.');
         $mform->addElement('hidden', 'courseid');
         $mform->disabledIf('importurl',  'importfrom', 'eq', CALENDAR_IMPORT_FILE);
         $mform->disabledIf('importfile', 'importfrom', 'eq', CALENDAR_IMPORT_URL);
