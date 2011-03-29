@@ -373,7 +373,7 @@ function local_importcalendar_cron() {
     mtrace("Updating calendar subscriptions:");
     $time = time();
     foreach ($DB->get_records_sql('select * from {event_subscriptions}
-                where lastupdated + pollinterval < ?', array($time)) as $sub) {
+                where pollinterval > 0 and lastupdated + pollinterval < ?', array($time)) as $sub) {
         mtrace("   Updating calendar subscription '{$sub->name}' in course {$sub->courseid}");
         $log = importcalendar_update_subscription_events($sub->id);
         mtrace(trim(strip_tags($log)));
