@@ -121,10 +121,14 @@ function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=n
     $name = preg_replace('/\s+/', ' ', $name);
     $eventrecord->name = clean_param($name, PARAM_CLEAN);
 
-    $description = $event->properties['DESCRIPTION'][0]->value;
-    $description = str_replace('\n', '<br />', $description);
-    $description = str_replace('\\', '', $description);
-    $description = preg_replace('/\s+/', ' ', $description);
+    if (empty($event->properties['DESCRIPTION'][0]->value)) {
+        $description = '';
+    } else {
+        $description = $event->properties['DESCRIPTION'][0]->value;
+        $description = str_replace('\n', '<br />', $description);
+        $description = str_replace('\\', '', $description);
+        $description = preg_replace('/\s+/', ' ', $description);
+    }
     $eventrecord->description = clean_param($description, PARAM_CLEAN);
 
     $eventrecord->courseid = $courseid;
