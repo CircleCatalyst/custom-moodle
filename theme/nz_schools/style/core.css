@@ -367,7 +367,6 @@ body.path-login .navbar.blank  {
 	margin-top:3px;
 	margin-bottom:-2px;
 	border:1px solid #D3D3D3;
-
 }
 .block .footer select {
 	width:150px;
@@ -936,3 +935,20 @@ border-top: 1px solid;
 
 /* Icons */
 .course_category_tree .category .courses .course_link {background-image:none;}
+
+
+
+/* Simple Topic Format */
+.simpleforwardbutton-text {
+    float: right;
+    margin: 22px 10px 0px 5px !important;
+    text-align: right;
+    width: auto !important;
+}
+.simplebackbutton-text {
+    float: left;
+    margin: 22px 5px 10px 10px!important;
+    width:auto !important;
+
+}
+
