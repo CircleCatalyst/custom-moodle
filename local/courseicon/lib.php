@@ -71,7 +71,7 @@ function local_courseicon_icon_tag($record=null, $type, $size, $tagid=false, $ad
         $ret .= 'id="'.$tagid.'" ';
     }
     $ret .= 'src="'.$CFG->wwwroot.'/local/courseicon/icon.php?icon='.$record->icon.'&amp;size='.$size.'&amp;type='.$type;
-    if (isset($record->id)){
+    if (isset($record->id) && $record->icon == 'custom'){
         $ret .= '&amp;id='.$record->id;
     }
     if ( $addrev ){
@@ -89,15 +89,17 @@ function local_courseicon_icon_tag($record=null, $type, $size, $tagid=false, $ad
 function local_courseicon_get_stock_icons($type) {
     global $CFG;
     $icons = array(
-		'none' => get_string('noicons', 'local_courseicon'),
+        'default.png' => get_string('default', 'local_courseicon'),
 		'custom' => get_string('customicon', 'local_courseicon'),
+		'none' => get_string('noicons', 'local_courseicon'),
     );
 
     if ($path = local_courseicon_get_stock_icon_dir($type)) {
         $d = dir($path.'/large');
         while(($icon = $d->read()) !== false) {
             if (is_file($path.'/large/'.$icon)) {
-
+                if ($icon == 'default.png')
+                    continue;
                 $icons[$icon] = ucwords(strtr($icon, array('_' => ' ', '-' => ' ', '.png' => '')));
             }
         }
