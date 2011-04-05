@@ -3,6 +3,7 @@
 defined('MOODLE_INTERNAL') or die();
 require_once "{$CFG->libdir}/formslib.php";
 require_once "{$CFG->libdir}/bennu/bennu.inc.php";
+require_once "{$CFG->dirroot}/calendar/lib.php";
 
 define('IMPORTCALENDAR_EVENT_UPDATED',  1);
 define('IMPORTCALENDAR_EVENT_INSERTED', 2);
@@ -19,6 +20,26 @@ function importcalendar_get_pollinterval_choices() {
             '2628000' => get_string('monthly', 'local_importcalendar'),
             '31536000' => get_string('annually', 'local_importcalendar'),
         );
+}
+
+/**
+ * Returns available options for the calendar event type.
+ */
+function importcalendar_get_eventtype_choices($courseid) {
+    $choices = array();
+    $allowed = new stdClass;
+    calendar_get_allowed_types($allowed);
+
+    if ($allowed->user){
+        $choices[0] = get_string('userevents', 'calendar');
+    }
+    if ($allowed->site) {
+        $choices[1] = get_string('globalevents', 'calendar');
+    }
+    if (!empty($allowed->courses)) {
+        $choices[$courseid] = get_string('courseevents', 'calendar');
+    }
+    return $choices;
 }
 
 /**
@@ -60,6 +81,10 @@ class importcalendar_addsubscription_form extends moodleform {
         $mform->setDefault('pollinterval', 604800);
         $mform->addHelpButton('pollinterval', 'pollinterval', 'local_importcalendar');
 
+        // eventtype: 0 = user, 1 = global, anything else = course ID
+        $choices = importcalendar_get_eventtype_choices($courseid);
+        $mform->addElement('select', 'eventtype', get_string('eventkind', 'calendar'), $choices);
+
         $mform->addElement('hidden', 'course', optional_param('course', 0, PARAM_INT));
         $mform->addElement('hidden', 'view', optional_param('view', 'upcoming', PARAM_ALPHA));
         $mform->addElement('hidden', 'cal_d', optional_param('cal_d', 0, PARAM_INT));
@@ -88,10 +113,10 @@ class importcalendar_addsubscription_form extends moodleform {
  * @return int          The insert ID, if any.
  */
 function importcalendar_add_subscription($sub) {
-    global $DB;
-    if (empty($sub->courseid)) {
-        $sub->courseid = $sub->course;
-    }
+    global $DB, $USER;
+    $sub->courseid = $sub->eventtype;
+    $sub->userid = $USER->id;
+
     if (!empty($sub->name) and !empty($sub->url)) {
         $r = $DB->get_record('event_subscriptions', array('courseid' => $sub->courseid, 'url' => $sub->url));
         if (empty($r)) {
@@ -169,7 +194,7 @@ function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=n
  * @return string           The table output.
  */
 function importcalendar_show_subscriptions($courseid, $importresults='') {
-    global $DB, $OUTPUT, $CFG;
+    global $DB, $OUTPUT, $CFG, $USER;
 
     $view = optional_param('view', '', PARAM_ALPHA);
     $sesskey = sesskey();
@@ -188,7 +213,10 @@ function importcalendar_show_subscriptions($courseid, $importresults='') {
     $table->width = '100%';
     $table->data  = array();
 
-    $subs = $DB->get_records('event_subscriptions', array('courseid' => $courseid));
+    $subs = $DB->get_records_sql('select * from {event_subscriptions}
+                where courseid = :courseid
+                   or (courseid = 0 and userid = :userid)',
+                array('courseid' => $courseid, 'userid' => $USER->id));
     if (empty($subs)) {
         $c = new html_table_cell("No calendar subscriptions.");
         $c->colspan = 4;
