@@ -109,10 +109,14 @@ if($data = $importform->get_data()) {
         foreach($ical->components['VEVENT'] as $event) {
             if($count < 20) {
                 $mevent = new stdClass;
-                $mevent->name = $event->properties['SUMMARY'][0]->value;
-                $mevent->description = $event->properties['DESCRIPTION'][0]->value;
+                $mevent->name = stripslashes($event->properties['SUMMARY'][0]->value);
+                $mevent->description = empty($event->properties['DESCRIPTION'])
+                        ? ''
+                        : $event->properties['DESCRIPTION'][0]->value;
                 $mevent->timestart = strtotime($event->properties['DTSTART'][0]->value);
-                $mevent->duration = strtotime($event->properties['DTEND'][0]->value) - $mevent->timestart;
+                $mevent->duration = empty($event->properties['DTEND'])
+                        ? 3600
+                        : strtotime($event->properties['DTEND'][0]->value) - $mevent->timestart;
                 $mevent->uuid = $event->properties['UID'][0]->value;
                 $mevent->timemodified = time();
 
