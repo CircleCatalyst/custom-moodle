@@ -30,7 +30,7 @@ function importcalendar_get_eventtype_choices($courseid) {
     $allowed = new stdClass;
     calendar_get_allowed_types($allowed);
 
-    if ($allowed->user){
+    if ($allowed->user) {
         $choices[0] = get_string('userevents', 'calendar');
     }
     if ($allowed->site) {
@@ -39,7 +39,11 @@ function importcalendar_get_eventtype_choices($courseid) {
     if (!empty($allowed->courses)) {
         $choices[$courseid] = get_string('courseevents', 'calendar');
     }
-    return $choices;
+    if (!empty($allowed->groups) and is_array($allowed->groups)) {
+        $choices['group'] = get_string('group');
+    }
+
+    return array($choices, $allowed->groups);
 }
 
 /**
@@ -82,8 +86,18 @@ class importcalendar_addsubscription_form extends moodleform {
         $mform->addHelpButton('pollinterval', 'pollinterval', 'local_importcalendar');
 
         // eventtype: 0 = user, 1 = global, anything else = course ID
-        $choices = importcalendar_get_eventtype_choices($courseid);
+        list($choices, $groups) = importcalendar_get_eventtype_choices($courseid);
         $mform->addElement('select', 'eventtype', get_string('eventkind', 'calendar'), $choices);
+        $mform->addRule('eventtype', get_string('required'), 'required');
+
+        if (!empty($groups) and is_array($groups)) {
+            $groupoptions = array();
+            foreach ($groups as $group) {
+                $groupoptions[$group->id] = $group->name;
+            }
+            $mform->addElement('select', 'groupid', get_string('typegroup', 'calendar'), $groupoptions);
+            $mform->disabledIf('groupid', 'eventtype', 'noteq', 'group');
+        }
 
         $mform->addElement('hidden', 'course', optional_param('course', 0, PARAM_INT));
         $mform->addElement('hidden', 'view', optional_param('view', 'upcoming', PARAM_ALPHA));
@@ -115,6 +129,9 @@ class importcalendar_addsubscription_form extends moodleform {
 function importcalendar_add_subscription($sub) {
     global $DB, $USER;
     $sub->courseid = $sub->eventtype;
+    if ($sub->eventtype == 'group') {
+        $sub->courseid = $sub->course;
+    }
     $sub->userid = $USER->id;
 
     if (!empty($sub->name) and !empty($sub->url)) {
@@ -128,7 +145,7 @@ function importcalendar_add_subscription($sub) {
             return $r->id;
         }
     } else {
-        return false;
+        print_error('error_badsubscription', 'importcalendar');
     }
 }
 
@@ -160,16 +177,25 @@ function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=n
     }
     $eventrecord->description = clean_param($description, PARAM_CLEAN);
 
-    $eventrecord->courseid = $courseid;
     $eventrecord->timestart = strtotime($event->properties['DTSTART'][0]->value);
-    $eventrecord->timeduration = strtotime($event->properties['DTEND'][0]->value) - $eventrecord->timestart;
+    if (empty($event->properties['DTEND'])) {
+        $eventrecord->timeduration = 3600; // one hour if no end time specified
+    } else {
+        $eventrecord->timeduration = strtotime($event->properties['DTEND'][0]->value) - $eventrecord->timestart;
+    }
     $eventrecord->uuid = substr($event->properties['UID'][0]->value, 0, 36); // The UUID field only holds 36 characters.
-    $eventrecord->userid = $USER->id;
     $eventrecord->timemodified = time();
 
-    // Add the iCal subscription if required
-    if (!empty($subscriptionid)) {
+    // Add the iCal subscription details if required
+    if ($sub = $DB->get_record('event_subscriptions', array('id' => $subscriptionid))) {
         $eventrecord->subscriptionid = $subscriptionid;
+        $eventrecord->userid = $sub->userid;
+        $eventrecord->groupid = $sub->groupid;
+        $eventrecord->courseid = $sub->courseid;
+    } else {
+        $eventrecord->userid = $USER->id;
+        $eventrecord->groupid = 0; // TODO: ???
+        $eventrecord->courseid = $courseid;
     }
 
     if ($updaterecord = $DB->get_record('event', array('uuid' => $eventrecord->uuid))) {
@@ -273,6 +299,8 @@ function importcalendar_show_subscriptions($courseid, $importresults='') {
 
 /**
  * Add a subscription from the form data and add its events to the calendar.
+ * The form data will be either from the new subscription form, or from a form
+ * on one of the rows in the existing subscriptions table.
  * @param int $courseid     The course ID
  * @return string           A log of the import progress, including errors
  */
@@ -290,6 +318,11 @@ function importcalendar_process_subscription_form($courseid) {
     }
 }
 
+/**
+ * Update a subscription from the form data in one of the rows in the existing
+ * subscriptions table.
+ * @return string           A log of the import progress, including errors
+ */
 function importcalendar_process_subscription_row() {
     global $DB;
 
@@ -350,9 +383,16 @@ function importcalendar_get_icalendar($url) {
  *                                  errors
  */
 function importcalendar_import_icalendar_events($ical, $courseid, $subscriptionid=null) {
+    global $DB;
     $return = '';
     $eventcount = 0;
     $updatecount = 0;
+
+    // mark all events in a subscription with a zero timestamp
+    if (!empty($subscriptionid)) {
+        $sql = "update {event} set timemodified = :time where subscriptionid = :id";
+        $DB->execute($sql, array('time' => 0, 'id' => $subscriptionid));
+    }
 
     foreach($ical->components['VEVENT'] as $event) {
         $res = importcalendar_add_icalendar_event($event, $courseid, $subscriptionid);
@@ -370,6 +410,17 @@ function importcalendar_import_icalendar_events($ical, $courseid, $subscriptioni
     }
     $return .= "<p> Events imported: {$eventcount} </p>\n";
     $return .= "<p> Events updated: {$updatecount} </p>\n";
+
+    // delete remaining zero-marked events since they're not in remote calendar
+    if (!empty($subscriptionid)) {
+        $deletecount = $DB->count_records('event', array('timemodified' => 0, 'subscriptionid' => $subscriptionid));
+        if (!empty($deletecount)) {
+            $sql = "delete from {event} where timemodified = :time and subscriptionid = :id";
+            $DB->execute($sql, array('time' => 0, 'id' => $subscriptionid));
+            $return .= "<p> Events deleted: {$deletecount} </p>\n";
+        }
+    }
+
     return $return;
 }
 
@@ -381,10 +432,7 @@ function importcalendar_import_icalendar_events($ical, $courseid, $subscriptioni
  */
 function importcalendar_update_subscription_events($subscriptionid) {
     global $DB;
-
     $return = '';
-    $eventcount = 0;
-    $updatecount = 0;
 
     $sub = $DB->get_record('event_subscriptions', array('id' => $subscriptionid));
     if (empty($sub)) {
