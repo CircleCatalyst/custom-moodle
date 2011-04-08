@@ -56,6 +56,19 @@ function xmldb_local_importcalendar_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2011032102, 'local', 'importcalendar');
     }
 
+    if ($oldversion < 2011040800) {
+        // From RFC-2445:
+        // Implementations MUST be able to receive and persist values of at least
+        // 255 characters for this property [UID].
+        $table = new xmldb_table('event');
+        $field = new xmldb_field('uuid', XMLDB_TYPE_CHAR, 255, null, XMLDB_NOTNULL, null, '', 'visible');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_precision($table, $field);
+        }
+
+        upgrade_plugin_savepoint(true, 2011040800, 'local', 'importcalendar');
+    }
+
     return true;
 }
 

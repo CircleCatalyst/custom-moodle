@@ -183,7 +183,7 @@ function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=n
     } else {
         $eventrecord->timeduration = strtotime($event->properties['DTEND'][0]->value) - $eventrecord->timestart;
     }
-    $eventrecord->uuid = substr($event->properties['UID'][0]->value, 0, 36); // The UUID field only holds 36 characters.
+    $eventrecord->uuid = $event->properties['UID'][0]->value;
     $eventrecord->timemodified = time();
 
     // Add the iCal subscription details if required
