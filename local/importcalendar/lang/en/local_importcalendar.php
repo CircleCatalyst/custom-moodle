@@ -15,3 +15,4 @@ $string['pollinterval_help'] = 'How often you would like the calendar to update 
 $string['subscriptionname'] = 'Calendar name';
 
 $string['error_badsubscription'] = 'Calendar subscription not found.';
+$string['error_requiredurlorfile'] = 'Either a URL or a file is required to import a calendar.';

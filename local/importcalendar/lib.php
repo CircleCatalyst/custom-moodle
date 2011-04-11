@@ -53,6 +53,7 @@ class importcalendar_addsubscription_form extends moodleform {
 
     function definition() {
         $mform =& $this->_form;
+        $courseid = optional_param('course', 0, PARAM_INT);
 
         // code to show/hide the form from the heading
         $mform->addElement('html', '<script type="text/javascript"><!--
@@ -69,15 +70,20 @@ class importcalendar_addsubscription_form extends moodleform {
         //--></script>');
         $mform->addElement('header', 'addsubscriptionform', '<a name="targetsubcriptionform" onclick="showhide_subform()">Import calendar...</a>');
 
-        $courseid = optional_param('course', 0, PARAM_INT);
-        $importurl = new moodle_url('/calendar/import.php', array('courseid'=>$courseid), get_string('importcalendar', 'calendar'));
-        $mform->addElement('html', "You may <a href=\"{$importurl}\">import a single file</a>, or add a subscription:");
-
-        $mform->addElement('text', 'name', get_string('subscriptionname', 'local_importcalendar'), PARAM_URL);
+        $mform->addElement('text', 'name', get_string('subscriptionname', 'local_importcalendar'), 'maxlength="255" size="40"');
         $mform->addRule('name', get_string('required'), 'required');
 
-        $mform->addElement('text', 'url', get_string('calendarurl', 'local_importcalendar'), PARAM_URL);
-        $mform->addRule('url', get_string('required'), 'required');
+        $mform->addElement('html', "Please provide either a URL to a remote calendar, or upload a file.");
+        $choices = array(CALENDAR_IMPORT_FILE => get_string('importcalendarfile', 'calendar'),
+                         CALENDAR_IMPORT_URL  => get_string('importcalendarurl',  'calendar'));
+        $mform->addElement('select', 'importfrom', get_string('importcalendarfrom', 'calendar'), $choices);
+        $mform->setDefault('importfrom', CALENDAR_IMPORT_URL);
+
+        $mform->addElement('text', 'url', get_string('calendarurl', 'local_importcalendar'), 'maxlength="255" size="50"');
+        $mform->addElement('filepicker', 'importfile', get_string('importcalendarfile', 'calendar'));
+
+        $mform->disabledIf('url',  'importfrom', 'eq', CALENDAR_IMPORT_FILE);
+        $mform->disabledIf('importfile', 'importfrom', 'eq', CALENDAR_IMPORT_URL);
 
         $choices = importcalendar_get_pollinterval_choices();
         $mform->addElement('select', 'pollinterval', get_string('pollinterval', 'local_importcalendar'), $choices);
@@ -104,6 +110,7 @@ class importcalendar_addsubscription_form extends moodleform {
         $mform->addElement('hidden', 'cal_d', optional_param('cal_d', 0, PARAM_INT));
         $mform->addElement('hidden', 'cal_m', optional_param('cal_m', 0, PARAM_INT));
         $mform->addElement('hidden', 'cal_y', optional_param('cal_y', 0, PARAM_INT));
+        $mform->addElement('hidden', 'id', optional_param('id', 0, PARAM_INT));
 
         $mform->addElement('submit', 'add', get_string('add'));
 
@@ -113,11 +120,15 @@ class importcalendar_addsubscription_form extends moodleform {
 
     function get_ical_data() {
         $formdata = $this->get_data();
-        if (!empty($formdata->url)) {
-            return file_get_contents($formdata->url);
-        } else {
-            return false;
+        switch ($formdata->importfrom) {
+          case CALENDAR_IMPORT_FILE:
+            $calendar = $this->get_file_content('importfile');
+            break;
+          case CALENDAR_IMPORT_URL:
+            $calendar = file_get_contents($formdata->importurl);
+            break;
         }
+        return $calendar;
     }
 }
 
@@ -134,15 +145,18 @@ function importcalendar_add_subscription($sub) {
     }
     $sub->userid = $USER->id;
 
-    if (!empty($sub->name) and !empty($sub->url)) {
-        $r = $DB->get_record('event_subscriptions', array('courseid' => $sub->courseid, 'url' => $sub->url));
-        if (empty($r)) {
+    // file subscriptions never update.
+    if (empty($sub->url)) {
+        $sub->pollinterval = 0;
+    }
+
+    if (!empty($sub->name)) {
+        if (empty($sub->id)) {
             $id = $DB->insert_record('event_subscriptions', $sub);
             return $id;
         } else {
-            $sub->id = $r->id;
             $DB->update_record('event_subscriptions', $sub);
-            return $r->id;
+            return $sub->id;
         }
     } else {
         print_error('error_badsubscription', 'importcalendar');
@@ -249,20 +263,26 @@ function importcalendar_show_subscriptions($courseid, $importresults='') {
         $table->data[] = new html_table_row(array($c));
     }
     foreach ($subs as $id => $sub) {
-        $c_url = new html_table_cell("<a href=\"{$sub->url}\">{$sub->name}</a>");
+        $label = empty($sub->url) ? $sub->name : "<a href=\"{$sub->url}\">{$sub->name}</a>";
+        $c_url = new html_table_cell($label);
         $lastupdated = empty($sub->lastupdated)
                 ? get_string('never', 'local_importcalendar')
                 : date('Y-m-d H:i:s', $sub->lastupdated);
         $c_updated = new html_table_cell($lastupdated);
 
-        // assemble pollinterval control
-        $pollinterval = "<div style=\"float:left\">
-            <select name=\"pollinterval\">\n";
-        foreach (importcalendar_get_pollinterval_choices() as $k => $v) {
-            $selected = ($k == $sub->pollinterval) ? ' selected' : '';
-            $pollinterval .= "<option value=\"{$k}\"{$selected}>{$v}</option>\n";
+        if (empty($sub->url)) {
+            // don't update an iCal file, which has no URL.
+            $pollinterval = '<input type="hidden" name="pollinterval" value="0" />';
+        } else {
+            // assemble pollinterval control
+            $pollinterval = "<div style=\"float:left\">
+                <select name=\"pollinterval\">\n";
+            foreach (importcalendar_get_pollinterval_choices() as $k => $v) {
+                $selected = ($k == $sub->pollinterval) ? ' selected' : '';
+                $pollinterval .= "<option value=\"{$k}\"{$selected}>{$v}</option>\n";
+            }
+            $pollinterval .= "</select></div>";
         }
-        $pollinterval .= "</select></div>";
 
         // assemble form for the subscription row
         $rowform = "
@@ -273,7 +293,9 @@ function importcalendar_show_subscriptions($courseid, $importresults='') {
                 <input type=\"hidden\" name=\"view\" value=\"{$view}\" />
                 <input type=\"hidden\" name=\"course\" value=\"{$courseid}\" />
                 <input type=\"hidden\" name=\"id\" value=\"{$sub->id}\" />
-                <input type=\"submit\" name=\"action\" value=\"{$str->update}\" />
+                " . (empty($sub->url)
+                    ? ''
+                    : "<input type=\"submit\" name=\"action\" value=\"{$str->update}\" />") . "
                 <input type=\"submit\" name=\"action\" value=\"{$str->remove}\" />
               </div>
             </form>";
@@ -310,8 +332,21 @@ function importcalendar_process_subscription_form($courseid) {
     $form = new importcalendar_addsubscription_form();
     $formdata = $form->get_data();
     if (!empty($formdata)) {
-        $subscriptionid = importcalendar_add_subscription($formdata);
-        return importcalendar_update_subscription_events($subscriptionid);
+        if (empty($formdata->url) and empty($formdata->importfile)) {
+            print_error('error_requiredurlorfile', 'local_importcalendar');
+        }
+        if ($formdata->importfrom == CALENDAR_IMPORT_FILE) {
+            // blank the URL if it's a file import
+            $formdata->url = '';
+            $subscriptionid = importcalendar_add_subscription($formdata);
+            $calendar = $form->get_ical_data();
+            $ical = new iCalendar();
+            $ical->unserialize($calendar);
+            return importcalendar_import_icalendar_events($ical, $courseid, $subscriptionid);
+        } else {
+            $subscriptionid = importcalendar_add_subscription($formdata);
+            return importcalendar_update_subscription_events($subscriptionid);
+        }
     } else {
         // process any subscription row form data
         return importcalendar_process_subscription_row();
@@ -342,6 +377,10 @@ function importcalendar_process_subscription_row() {
     $sub = $DB->get_record('event_subscriptions', array('id' => $id), '*', MUST_EXIST);
     switch ($action) {
       case $str->update:
+        // skip updating file subscriptions
+        if (empty($sub->url)) {
+            break;
+        }
         $sub->pollinterval = $pollinterval;
         $DB->update_record('event_subscriptions', $sub);
 
@@ -378,7 +417,7 @@ function importcalendar_get_icalendar($url) {
  * Import events from an iCalendar object into a course calendar.
  * @param object  $ical             The iCalendar object
  * @param integer $courseid         The course ID for the calendar
- * @param integer $subscriptionid   The course ID for the calendar
+ * @param integer $subscriptionid   The subscription ID
  * @return string                   A log of the import progress, including
  *                                  errors
  */
@@ -393,7 +432,6 @@ function importcalendar_import_icalendar_events($ical, $courseid, $subscriptioni
         $sql = "update {event} set timemodified = :time where subscriptionid = :id";
         $DB->execute($sql, array('time' => 0, 'id' => $subscriptionid));
     }
-
     foreach($ical->components['VEVENT'] as $event) {
         $res = importcalendar_add_icalendar_event($event, $courseid, $subscriptionid);
         switch ($res) {
@@ -437,6 +475,10 @@ function importcalendar_update_subscription_events($subscriptionid) {
     $sub = $DB->get_record('event_subscriptions', array('id' => $subscriptionid));
     if (empty($sub)) {
         print_error('error_badsubscription', 'local_importcalendar');
+    }
+    // Don't update a file subscription. TODO: Update from a new uploaded file?
+    if (empty($sub->url)) {
+        return 'File subscription not updated.';
     }
     $ical = importcalendar_get_icalendar($sub->url);
     $return = importcalendar_import_icalendar_events($ical, $sub->courseid, $subscriptionid);
