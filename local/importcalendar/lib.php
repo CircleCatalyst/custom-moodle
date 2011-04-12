@@ -427,6 +427,9 @@ function importcalendar_import_icalendar_events($ical, $courseid, $subscriptioni
     $eventcount = 0;
     $updatecount = 0;
 
+    // large calendars take a while...
+    ini_set('max_execution_time', 300);
+
     // mark all events in a subscription with a zero timestamp
     if (!empty($subscriptionid)) {
         $sql = "update {event} set timemodified = :time where subscriptionid = :id";
