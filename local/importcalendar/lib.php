@@ -59,7 +59,7 @@ class importcalendar_addsubscription_form extends moodleform {
         $mform->addElement('html', '<script type="text/javascript"><!--
           function showhide_subform() {
             divs = document.getElementById("addsubscriptionform").getElementsByTagName("div");
-            for (var i in divs) {
+            for (var i = 0; i < divs.length; ++i) {
               if (divs[i].style.display=="none") {
                   divs[i].style.display = "block";
               } else {
@@ -114,8 +114,8 @@ class importcalendar_addsubscription_form extends moodleform {
 
         $mform->addElement('submit', 'add', get_string('add'));
 
-        // fold up the form
-        $mform->addElement('html', '<script type="text/javascript">showhide_subform()</script>');
+        // *sigh* folding up the form breaks the filepicker control
+        // $mform->addElement('html', '<script type="text/javascript">showhide_subform()</script>');
     }
 
     function get_ical_data() {
@@ -313,7 +313,13 @@ function importcalendar_show_subscriptions($courseid, $importresults='') {
         $formdata->course = $courseid;
         $form->set_data($formdata);
     }
-    $out .= $form->display(); // TODO: grab the output somehow.
+
+    // *sigh* there appears to be no function that returns Moodle Form HTML.
+    ob_start();
+    $form->display();
+    $buffer = ob_get_contents();
+    $out .= $buffer;
+    ob_end_clean();
 
     $out .= $OUTPUT->box_end();
     return $out;
