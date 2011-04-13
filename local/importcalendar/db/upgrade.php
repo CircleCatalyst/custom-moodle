@@ -36,7 +36,7 @@ function xmldb_local_importcalendar_upgrade($oldversion) {
 
         // Add subscription field to the event table
         $table = new xmldb_table('event');
-        $field = new xmldb_field('subscriptionid', XMLDB_TYPE_INTEGER, '10');
+        $field = new xmldb_field('subscriptionid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null, 'timemodified');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
@@ -48,7 +48,7 @@ function xmldb_local_importcalendar_upgrade($oldversion) {
 
         // Add name field to the event_subscriptions table
         $table = new xmldb_table('event_subscriptions');
-        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL);
+        $field = new xmldb_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, '', 'lastupdated');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
