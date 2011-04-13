@@ -191,6 +191,11 @@ function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=n
     }
     $eventrecord->description = clean_param($description, PARAM_CLEAN);
 
+    // probably a repeating event with RRULE etc. TODO: skip for now
+    if (empty($event->properties['DTSTART'][0]->value)) {
+        return 0;
+    }
+
     $eventrecord->timestart = strtotime($event->properties['DTSTART'][0]->value);
     if (empty($event->properties['DTEND'])) {
         $eventrecord->timeduration = 3600; // one hour if no end time specified
