@@ -175,6 +175,11 @@ function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=n
 
     $eventrecord = new stdClass;
 
+    // probably an unsupported X-MICROSOFT-CDO-BUSYSTATUS event.
+    if (empty($event->properties['SUMMARY'])) {
+        return 0;
+    }
+
     $name = $event->properties['SUMMARY'][0]->value;
     $name = str_replace('\n', '<br />', $name);
     $name = str_replace('\\', '', $name);
