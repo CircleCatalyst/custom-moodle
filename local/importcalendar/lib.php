@@ -461,7 +461,7 @@ function importcalendar_import_icalendar_events($ical, $courseid, $subscriptioni
             $eventcount++;
             break;
           case 0:
-            $return .= '<p>Failed to add event: '.$event->properties['SUMMARY'][0]->value." </p>\n";
+            $return .= '<p>Failed to add event: '.(empty($event->properties['SUMMARY'])?'(no title)':$event->properties['SUMMARY'][0]->value)." </p>\n";
             break;
         }
     }
