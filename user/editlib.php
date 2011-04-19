@@ -305,10 +305,15 @@ function useredit_shared_definition(&$mform, $editoroptions = null) {
 
     $mform->addElement('text', 'msn', get_string('msnid'), 'maxlength="50" size="25"');
     $mform->setType('msn', PARAM_NOTAGS);
-
+    
+// DATAVIEW customisation to hide element from user if not admin
+if(has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))){
     $mform->addElement('text', 'idnumber', get_string('idnumber'), 'maxlength="255" size="25"');
     $mform->setType('idnumber', PARAM_NOTAGS);
-
+} else {
+$mform->addElement('hidden', 'idnumber', NULL);
+$mform->setType('idnumber', PARAM_NOTAGS); //not sure what this does..
+}    
     $mform->addElement('text', 'institution', get_string('institution'), 'maxlength="40" size="25"');
     $mform->setType('institution', PARAM_MULTILANG);
 
