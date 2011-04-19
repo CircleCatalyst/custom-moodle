@@ -93,8 +93,13 @@ class course_edit_form extends moodleform {
             $mform->hardFreeze('shortname');
             $mform->setConstant('shortname', $course->shortname);
         }
-
+        
+// customised to disable element if not admin
+if(has_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM))){
         $mform->addElement('text','idnumber', get_string('idnumbercourse'),'maxlength="100"  size="10"');
+} else {
+$mform->addElement('hidden','idnumber', NULL);
+}
         $mform->addHelpButton('idnumber', 'idnumbercourse');
         $mform->setType('idnumber', PARAM_RAW);
         if (!empty($course->id) and !has_capability('moodle/course:changeidnumber', $coursecontext)) {
