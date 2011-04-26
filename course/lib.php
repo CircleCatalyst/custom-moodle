@@ -853,6 +853,7 @@ function print_overview($courses, array $remote_courses=array()) {
     foreach ($courses as $course) {
         $fullname = format_string($course->fullname, true, array('context' => get_context_instance(CONTEXT_COURSE, $course->id)));
         if ($lastprintedcat != $course->category){
+            echo($lastprintedcat.' != '.$course->category);
             if ($opendiv){
                 echo $OUTPUT->box_end();
             }
@@ -860,7 +861,7 @@ function print_overview($courses, array $remote_courses=array()) {
             echo $OUTPUT->box_start('categorybox');
             $opendiv = true;
             echo $OUTPUT->heading(local_courseicon_icon_tag($coursecats[$course->category],'coursecategory','small') . $coursecats[$course->category]->name);
-            $lastprinted = $course->category;
+            $lastprintedcat = $course->category;
         }
         echo $OUTPUT->box_start('coursebox');
         $attributes = array('title' => s($fullname));
