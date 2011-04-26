@@ -853,7 +853,6 @@ function print_overview($courses, array $remote_courses=array()) {
     foreach ($courses as $course) {
         $fullname = format_string($course->fullname, true, array('context' => get_context_instance(CONTEXT_COURSE, $course->id)));
         if ($lastprintedcat != $course->category){
-            echo($lastprintedcat.' != '.$course->category);
             if ($opendiv){
                 echo $OUTPUT->box_end();
             }
