@@ -567,7 +567,7 @@ img.icon {
 }
 .course-content .weeks .section.main .left,
 .course-content .topics .section.main .left {
- 	width:20px;
+ 	width:auto;
 	padding:5px;
 	font-size:1.2em;
 	font-weight:bold;
