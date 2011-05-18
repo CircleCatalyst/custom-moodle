@@ -188,10 +188,10 @@ function local_nzschools_createcats($fromyear, $toyear) {
     $newcategory->theme = '';
     $newcategory->parent = 0;
 
-    // Delete the default cat moodle creates if it's empty
+    // Hide the default cat moodle creates if it's empty
     if ($misccat = $DB->get_record('course_categories', array('name'=>'Miscellaneous'))) {
         if(!$DB->record_exists('course', array('category'=>$misccat->id))) {
-            $DB->delete_records('course_categories', array('id'=>$misccat->id));
+            $DB->update_record('course_categories', array('id'=>$misccat->id, 'visible'=>0));
         }
     }
 

@@ -4,4 +4,5 @@
  * database customizations. But this will keep the "Site Administration"->Plugins->"Local plugins"
  * screen from showing a "?" for this plugin.
  */
-$plugin->version = 2011012500;
+$plugin->version = 2011051800;
+$plugin->requires = 2011012500;
