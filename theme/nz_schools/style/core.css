@@ -953,3 +953,7 @@ border-top: 1px solid;
 }
 
 .course-content .weeks .section.main .right, .course-content .topics .section.main .right {width:auto !important;}
+.content .summary font {line-height:1em;}
+
+
+.simplecss-format .summary {padding-top:1em;}
