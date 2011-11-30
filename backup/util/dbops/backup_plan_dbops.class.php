@@ -231,7 +231,8 @@ abstract class backup_plan_dbops extends backup_dbops {
             $shortname = moodle_strtolower(trim(clean_filename($shortname), '_'));
         }
 
-        $name = empty($shortname) ? $id : $shortname;
+        //$name = empty($shortname) ? $id : $shortname;
+        $name = empty($shortname) ? $id : '_id_'.$id.'_'.$shortname; // use both id and shortname
 
         // Calculate date
         $backupdateformat = str_replace(' ', '_', get_string('backupnameformat', 'langconfig'));
