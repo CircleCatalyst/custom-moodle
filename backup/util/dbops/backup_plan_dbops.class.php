@@ -231,11 +231,9 @@ abstract class backup_plan_dbops extends backup_dbops {
             $shortname = moodle_strtolower(trim(clean_filename($shortname), '_'));
         }
 
-        // The name will always contain the ID, but we append the course short name if requested.
-        $name = $id;
-        if (!$useidonly && $shortname != '') {
-            $name .= '-' . $shortname;
-        }
+//      7bdf831... BK: changes to make backup filename have both id and shortname to identify the course better
+        //$name = empty($shortname) ? $id : $shortname;
+        $name = empty($shortname) ? $id : '_id_'.$id.'_'.$shortname; // use both id and shortname
 
         // Calculate date
         $backupdateformat = str_replace(' ', '_', get_string('backupnameformat', 'langconfig'));
