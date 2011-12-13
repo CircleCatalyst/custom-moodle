@@ -2096,7 +2096,7 @@ function get_course_category_tree($id = 0, $depth = 0) {
     list($ccselect, $ccjoin) = context_instance_preload_sql('c.id', CONTEXT_COURSE, 'ctx');
     list($catsql, $catparams) = $DB->get_in_or_equal(array_keys($categoryids));
     $sql = "SELECT
-            c.id,c.sortorder,c.visible,c.fullname,c.shortname,c.summary,c.category
+            c.id,c.sortorder,c.visible,c.fullname,c.shortname,c.summary,c.category,c.icon
             $ccselect
             FROM {course} c
             $ccjoin
