@@ -859,7 +859,7 @@ function print_overview($courses, array $remote_courses=array()) {
 
             echo $OUTPUT->box_start('categorybox');
             $opendiv = true;
-            echo $OUTPUT->heading(local_courseicon_category_icon_tag($coursecats[$course->category]) . $coursecats[$course->category]->name);
+            echo $OUTPUT->heading(local_courseicon_category_icon_tag($coursecats[$course->category],'small') . $coursecats[$course->category]->name);
             $lastprinted = $course->category;
         }
         echo $OUTPUT->box_start('coursebox');
@@ -867,7 +867,7 @@ function print_overview($courses, array $remote_courses=array()) {
         if (empty($course->visible)) {
             $attributes['class'] = 'dimmed';
         }
-        echo $OUTPUT->heading(local_courseicon_course_icon_tag($course, 'large').html_writer::link(
+        echo $OUTPUT->heading(local_courseicon_course_icon_tag($course, 'small').html_writer::link(
             new moodle_url('/course/view.php', array('id' => $course->id)), $fullname, $attributes), 3);
         if (array_key_exists($course->id,$htmlarray)) {
             foreach ($htmlarray[$course->id] as $modname => $html) {
