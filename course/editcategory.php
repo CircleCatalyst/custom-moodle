@@ -105,6 +105,9 @@ if ($mform->is_cancelled()) {
     $DB->update_record('course_categories', $newcategory);
     fix_course_sortorder();
 
+    require_once($CFG->dirroot.'/local/courseicon/lib.php');
+    local_courseicon_update_category_icon($newcategory, $data, $mform);
+
     redirect('category.php?id='.$newcategory->id.'&categoryedit=on');
 }
 

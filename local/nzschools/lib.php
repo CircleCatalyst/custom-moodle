@@ -325,44 +325,6 @@ function local_get_stock_icons($type) {
 
 
 /**
- * Update course icon
- *
- * @param object $course Course object
- * @param object $data Formslib form data
- * @param object $mform Moodle form
- * @global $CFG
- */
-function local_update_coursecategory_icon($coursecategory, $data, &$mform) {
-    global $CFG;
-
-    $site = get_site();
-
-    $updatecoursecat = new stdClass;
-    $updatecoursecat->id = $coursecategory->id;
-
-    if ($data->icon == 'custom') {
-        //Move icon to course
-        $updatecoursecat->icon = 'custom';
-
-        $dest = $CFG->dataroot.'/'.$site->id.'/icons/coursecategory/';
-        make_upload_directory($dest);
-        $mform->save_files($dest);
-
-        if ($filename =  $mform->get_new_filename()) {
-            resize_image($dest.$filename, $dest.'large', 50, 50, 'png');
-            resize_image($dest.$filename, $dest.'small', 25, 25, 'png');
-            unlink($dest.$filename);
-        }
-
-    } elseif ($data->icon == 'none') {
-        $updatecoursecat->icon = '';
-    } else {
-        $updatecoursecat->icon = $data->icon;
-    }
-    update_record('course_categories', $updatecoursecat);
-}
-
-/**
  * Select a forground colour based on the background colour
  *
  * @param string $bg background colour
@@ -406,5 +368,3 @@ function fg_colour($bg, $light_option = 'FFFFFF', $dark_option = '333333') {
 
     return $CFG->wwwroot.'/local/logo.php?timestamp='.$timestamp;
  }
-
-?>

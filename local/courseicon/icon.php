@@ -18,6 +18,6 @@ if ($size != 'large') {
 if ($type == 'course') {
     local_courseicon_output_course_icon($id, $icon, $size);
 } else {
-    local_courseicon_output_coursecategory_icon($icon, $size);
+    local_courseicon_output_category_icon($icon, $size);
 }
 ?>

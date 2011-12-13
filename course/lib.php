@@ -844,8 +844,24 @@ function print_overview($courses, array $remote_courses=array()) {
             }
         }
     }
+
+    // get course categories
+    $coursecats = $DB->get_records('course_categories');
+    $lastprintedcat = 0;
+    $opendiv = false;
+
     foreach ($courses as $course) {
         $fullname = format_string($course->fullname, true, array('context' => get_context_instance(CONTEXT_COURSE, $course->id)));
+        if ($lastprintedcat != $course->category){
+            if ($opendiv){
+                echo $OUTPUT->box_end();
+            }
+
+            echo $OUTPUT->box_start('categorybox');
+            $opendiv = true;
+            echo $OUTPUT->heading(local_courseicon_category_icon_tag($coursecats[$course->category]) . $coursecats[$course->category]->name);
+            $lastprinted = $course->category;
+        }
         echo $OUTPUT->box_start('coursebox');
         $attributes = array('title' => s($fullname));
         if (empty($course->visible)) {
@@ -858,6 +874,9 @@ function print_overview($courses, array $remote_courses=array()) {
                 echo $html;
             }
         }
+        echo $OUTPUT->box_end();
+    }
+    if ($opendiv){
         echo $OUTPUT->box_end();
     }
 
@@ -2209,7 +2228,7 @@ function print_category_info($category, $depth=0, $showcourses = false) {
     if ($showcourses and $coursecount) {
         echo '<div class="categorylist clearfix">';
         $cat = '';
-        $cat .= html_writer::tag('div', $catimage, array('class'=>'image'));
+        $cat .= html_writer::tag('div', local_courseicon_category_icon_tag($category, 'small'), array('class'=>'image'));
         $catlink = html_writer::link(new moodle_url('/course/category.php', array('id'=>$category->id)), $fullname, $catlinkcss);
         $cat .= html_writer::tag('div', $catlink, array('class'=>'name'));
 

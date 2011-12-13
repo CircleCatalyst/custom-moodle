@@ -50,6 +50,9 @@ class editcategory_form extends moodleform {
             $mform->addElement('select', 'theme', get_string('forcetheme'), $themes);
         }
 
+        require_once($CFG->dirroot.'/local/courseicon/lib.php');
+        local_courseicon_category_form_definition($mform, $category);
+
         $mform->addElement('hidden', 'id', 0);
         $mform->setType('id', PARAM_INT);
         $mform->setDefault('id', $category->id);
