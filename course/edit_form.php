@@ -184,7 +184,7 @@ class course_edit_form extends moodleform {
         }
 
         require_once($CFG->dirroot.'/local/courseicon/lib.php');
-        local_courseicon_course_form_definition($mform, $course);
+        local_courseicon_form_definition($mform, $course, 'course');
 
 //--------------------------------------------------------------------------------
         enrol_course_edit_form($mform, $course, $context);

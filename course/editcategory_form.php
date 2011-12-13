@@ -51,7 +51,7 @@ class editcategory_form extends moodleform {
         }
 
         require_once($CFG->dirroot.'/local/courseicon/lib.php');
-        local_courseicon_category_form_definition($mform, $category);
+        local_courseicon_form_definition($mform, $category, 'coursecategory');
 
         $mform->addElement('hidden', 'id', 0);
         $mform->setType('id', PARAM_INT);

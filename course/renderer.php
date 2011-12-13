@@ -111,7 +111,7 @@ class core_course_renderer extends plugin_renderer_base {
 
         $content .= html_writer::start_tag('div', array('class'=>join(' ', $classes)));
         $content .= html_writer::start_tag('div', array('class'=>'category_label'));
-        $content .= html_writer::link(new moodle_url('/course/category.php', array('id'=>$category->id)), local_courseicon_category_icon_tag($category,'small').$categoryname, array('class'=>'category_link'));
+        $content .= html_writer::link(new moodle_url('/course/category.php', array('id'=>$category->id)), local_courseicon_icon_tag($category,'coursecategory','small').$categoryname, array('class'=>'category_link'));
         $content .= html_writer::end_tag('div');
         if ($hassubcategories) {
             $content .= html_writer::start_tag('div', array('class'=>'subcategories'));
@@ -132,7 +132,7 @@ class core_course_renderer extends plugin_renderer_base {
                 $coursecount ++;
                 $classes[] = ($coursecount%2)?'odd':'even';
                 $content .= html_writer::start_tag('div', array('class'=>join(' ', $classes)));
-                $content .= html_writer::link(new moodle_url('/course/view.php', array('id'=>$course->id)), local_courseicon_course_icon_tag($course,'small').format_string($course->fullname), array('class'=>$linkclass));
+                $content .= html_writer::link(new moodle_url('/course/view.php', array('id'=>$course->id)), local_courseicon_icon_tag($course,'course','small').format_string($course->fullname), array('class'=>$linkclass));
                 $content .= html_writer::start_tag('div', array('class'=>'course_info clearfix'));
 
                 // print enrol info

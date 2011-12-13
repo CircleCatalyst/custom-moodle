@@ -5,16 +5,17 @@
 
  * @param $mform MoodleQuickForm
  * @param $course stdClass
+ * @param $type 'course' or 'coursecategory'
  * @return void
  */
-function local_courseicon_course_form_definition($mform, $course){
+function local_courseicon_form_definition($mform, $course, $type){
     global $CFG, $PAGE;
     $mform->addElement('header','',get_string('courseicon','local_courseicon'));
-    $mform->addElement('static','currenticon',get_string('currenticon','local_courseicon'), local_courseicon_course_icon_tag($course, 'large', true));
-    $mform->addElement('select','icon',get_string('icon','local_courseicon'), local_courseicon_get_stock_icons('course'));
+    $mform->addElement('static','currenticon',get_string('currenticon','local_courseicon'), local_courseicon_icon_tag($course, $type,'large','iconpreview',true));
+    $mform->addElement('select','icon',get_string('icon','local_courseicon'), local_courseicon_get_stock_icons($type));
 
     $iconel = $mform->getElement('icon');
-    $iconel->updateAttributes(array('onchange'=>'previewCourseIcon('.$course->id.'); '));
+    $iconel->updateAttributes(array('onchange'=>'previewCourseIcon('.$course->id.',\''.$type.'\'); '));
     $PAGE->requires->js('/local/courseicon/icons.js.php');
 
     $filemanager_options = array();
@@ -31,77 +32,50 @@ function local_courseicon_course_form_definition($mform, $course){
 }
 
 /**
- *
-
- * @param $mform MoodleQuickForm
- * @param $category stdClass
- * @return void
- */
-function local_courseicon_category_form_definition($mform, $category){
-    global $CFG, $PAGE;
-    $mform->addElement('static','currenticon',get_string('currenticon','local_courseicon'), local_courseicon_category_icon_tag($category));
-    $mform->addElement('select','icon',get_string('icon','local_courseicon'), local_courseicon_get_stock_icons('coursecategory'));
-
-// todo: Javascript to make the icon on the form update automatically so the user can preview it
-//    $iconel = $mform->getElement('icon');
-//    $iconel->updateAttributes(array('onchange'=>'previewCourseIcon(); '));
-//    $PAGE->requires->js('/local/courseicon/icons.js.php');
-
-// todo: picker for custom icon
-//    $filemanager_options = array();
-//    // 3 == FILE_EXTERNAL & FILE_INTERNAL
-//    // These two constant names are defined in repository/lib.php
-//    $filemanager_options['return_types'] = 3;
-//    $filemanager_options['accepted_types'] = 'web_image';
-//    $filemanager_options['maxbytes'] = get_max_upload_file_size($CFG->maxbytes);
-//    $mform->addElement('filepicker', 'uploadicon', get_string('uploadicon', 'local_courseicon'), null, $filemanager_options);
-//
-
-//    $mform->disabledIf('uploadicon','icon','neq','custom');
-}
-
-/**
  * Return img tag to a course icon
  *
  * @param object $course Course object
+ * @param string $type 'course' or 'coursecategory'
  * @param string $size Size of icon set to use
+ * @param string $tagid An id attribute for the tag (or false if none)
+ * @param string $addrev Whether or not to add a "rev" attribute to the end of the img tag (to get past cacheing)
  * @global $CFG
  * @global $COURSE
  * @return string img tag
  */
-function local_courseicon_course_icon_tag($course=null, $size='large', $addrev=false) {
-    global $CFG, $COURSE, $DB;
-    if (!isset($course)) {
-        $course = $COURSE;
+function local_courseicon_icon_tag($record=null, $type, $size, $tagid=false, $addrev=false) {
+    global $CFG, $DB;
+
+    if ($size != 'large'){
+        $size = 'small';
     }
-    // Get the course icon if it's not set
-    if (!isset($course->icon)) {
-        if (isset($course->id)){
-            $course->icon = $DB->get_field('course','icon',array('id'=>$course->id));
+
+    // Get the icon if it's not set
+    if (!isset($record->icon)) {
+        if (isset($record->id)){
+            switch( $type ){
+                case 'course':
+                    $table = 'course';
+                    break;
+                case 'coursecategory':
+                    $table = 'course_categories';
+                    break;
+            }
+            $record->icon = $DB->get_field($table,'icon',array('id'=>$record->id));
         } else {
-            $course->icon = '';
+            $record->icon = '';
         }
     }
-    $ret = '<img id="iconpreview" src="'.$CFG->wwwroot.'/local/courseicon/icon.php?id='.$course->id.'&amp;icon='.$course->icon.'&amp;size='.$size.'&amp;type=course';
+    $ret = '<img ';
+    if ( $tagid ){
+        $ret .= 'id="'.$tagid.'" ';
+    }
+    $ret .= 'src="'.$CFG->wwwroot.'/local/courseicon/icon.php?id='.$record->id.'&amp;icon='.$record->icon.'&amp;size='.$size.'&amp;type='.$type;
     if ( $addrev ){
         $ret .= '&amp;rev=' . time();
     }
-    $ret .='" alt="'.$course->shortname.'" class="class_icon" />';
+    $ret .='" class="class_icon" />';
     return $ret;
-}
-
-/**
- * Return img tag to a course category icon
- *
- * @param object $coursecat Course category object
- * @param string $size Size of icon set to use
- * @global $CFG
- * @global $COURSE
- * @return string img tag
- */
-function local_courseicon_category_icon_tag($coursecat, $size='large') {
-    global $CFG;
-    return '<img src="'.$CFG->wwwroot.'/local/courseicon/icon.php?icon='.$coursecat->icon.'&amp;size='.$size.'&type=coursecategory" alt="'.$coursecat->name.'" class="class_icon" />';
 }
 
 /**
@@ -155,63 +129,47 @@ function local_courseicon_get_stock_icon_dir($type) {
  *
  * @param int $courseid Course id
  * @param string $courseicon Name of icon to send
+ * @param string $type 'course' or 'coursecategory'
  * @param string $size Icon size to send
  * @global $CFG
  */
-function local_courseicon_output_course_icon($courseid, $courseicon, $size='large') {
+function local_courseicon_send_icon($courseid, $courseicon, $type, $size) {
     global $CFG;
 
-    $icondir = local_courseicon_get_stock_icon_dir('course');
+    // This defines the defaults we will use if we can't find the icon they're asking for
+    $icondir = local_courseicon_get_stock_icon_dir($type);
     $iconname = 'default.png';
     $icon = $icondir.'/'.$size.'/default.png';
 
-    // Todo: rewrite this to work with the new file API
     if ($courseicon == 'custom') {
+        // They've specified a custom icon, so see if one is in file storage
         $fs = get_file_storage();
-        $context = get_context_instance(CONTEXT_COURSE,$courseid);
+        switch( $type ){
+            case 'course':
+                $context = get_context_instance(CONTEXT_COURSE, $courseid);
+                break;
+            case 'coursecategory':
+                $context = get_context_instance(CONTEXT_COURSECAT, $courseid);
+                break;
+        }
         $files = $fs->get_area_files($context->id, 'local_courseicon', "customicon-{$size}");
+
+        // If we found the custom icon in file storage, send it back and don't continue
         if (count($files)){
             $file = array_pop($files);
             send_stored_file($file);
             return;
         }
     } else {
+
+        // They specified a stock icon. Look for it.
         if (is_file($icondir.'/'.$size.'/'.$courseicon)) {
             $icon = $icondir.'/'.$size.'/'.$courseicon;
             $iconname = $courseicon;
         }
     }
-    send_file($icon, $iconname);
-}
 
-/**
- * Send course cateogry icon data
- *
- * @param string $courseicon Name of icon to send
- * @param string $size Icon size to send
- * @global $CFG
- */
-function local_courseicon_output_category_icon($iconname, $size='large') {
-    global $CFG;
-
-    $site = get_site();
-
-    $icondir = local_courseicon_get_stock_icon_dir('coursecategory');
-    $iconpath = 'default.png';
-    $icon = $icondir.'/'.$size.'/default.png';
-
-    // Todo: rewrite this to work with the new file API
-    if ($iconname == 'custom') {
-        if (is_file($CFG->dataroot.'/'.$site->id.'/icons/coursecategory/'.$size.'.png')) {
-            $icon = $CFG->dataroot.'/'.$site->id.'/icons/coursecategory/'.$size.'.png';
-            $iconpath = 'customicon.png';
-        }
-    } else {
-        if (is_file($icondir.'/'.$size.'/'.$iconname)) {
-            $icon = $icondir.'/'.$size.'/'.$iconname;
-        }
-        $iconpath = $iconname;
-    }
+    // Send back the stock icon, or the default icon
     send_file($icon, $iconname);
 }
 
@@ -219,11 +177,12 @@ function local_courseicon_output_category_icon($iconname, $size='large') {
  * Update course icon
  *
  * @param object $course Course object
+ * @param string $type 'course' or 'coursecategory'
  * @param object $data Formslib form data
  * @param MoodleQuickForm $mform Moodle form
  * @global $CFG
  */
-function local_courseicon_update_course_icon($course, $data, &$mform) {
+function local_courseicon_update_icon($course, $type, $data, &$mform) {
     global $CFG, $DB;
     $updatecourse = new stdClass();
     $updatecourse->id = $course->id;
@@ -235,7 +194,14 @@ function local_courseicon_update_course_icon($course, $data, &$mform) {
 
         if ($tempfilepath){
             $fs = get_file_storage();
-            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+            switch( $type ){
+                case 'course':
+                    $context = get_context_instance(CONTEXT_COURSE, $course->id);
+                    break;
+                case 'coursecategory':
+                    $context = get_context_instance(CONTEXT_COURSECAT, $course->id);
+                    break;
+            }
             $fs->delete_area_files($context->id, 'local_courseicon');
             local_courseicon_resize_image($tempfilepath, 'icon-large', $context, 'local_courseicon', 'customicon-large', 0, '/', 50, 50, 'png');
             local_courseicon_resize_image($tempfilepath, 'icon-small', $context, 'local_courseicon', 'customicon-small', 0, '/', 25, 25, 'png');
@@ -249,46 +215,15 @@ function local_courseicon_update_course_icon($course, $data, &$mform) {
         $updatecourse->icon = $data->icon;
     }
 
-    $DB->update_record('course', $updatecourse);
-}
-
-/**
- * Update course category icon
- *
- * @param object $coursecategory Course object
- * @param object $data Formslib form data
- * @param MoodleQuickForm $mform Moodle form
- * @global $CFG
- */
-function local_courseicon_update_category_icon($coursecategory, $data, &$mform) {
-    global $CFG, $DB;
-
-    $site = get_site();
-
-    $updatecoursecat = new stdClass;
-    $updatecoursecat->id = $coursecategory->id;
-
-    if ($data->icon == 'custom') {
-        // todo: make this work with new File API
-//        //Move icon to course
-//        $updatecoursecat->icon = 'custom';
-//
-//        $dest = $CFG->dataroot.'/'.$site->id.'/icons/coursecategory/';
-//        make_upload_directory($dest);
-//        $mform->save_files($dest);
-//
-//        if ($filename =  $mform->get_new_filename()) {
-//            resize_image($dest.$filename, $dest.'large', 50, 50, 'png');
-//            resize_image($dest.$filename, $dest.'small', 25, 25, 'png');
-//            unlink($dest.$filename);
-//        }
-//
-    } elseif ($data->icon == 'none') {
-        $updatecoursecat->icon = '';
-    } else {
-        $updatecoursecat->icon = $data->icon;
+    switch( $type ){
+        case 'course':
+            $table = 'course';
+            break;
+        case 'coursecategory':
+            $table = 'course_categories';
+            break;
     }
-    $DB->update_record('course_categories', $updatecoursecat);
+    $DB->update_record($table, $updatecourse);
 }
 
 /**
