@@ -719,7 +719,7 @@ unset($urlthemename);
 
 // Ensure a valid theme is set.
 if (!isset($CFG->theme)) {
-    $CFG->theme = 'standardwhite';
+    $CFG->theme = 'nz_schools';
 }
 
 // Set language/locale of printed times.  If user has chosen a language that

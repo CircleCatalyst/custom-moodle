@@ -62,6 +62,7 @@ $confirmrelease = optional_param('confirmrelease', 0, PARAM_BOOL);
 $confirmplugins = optional_param('confirmplugincheck', 0, PARAM_BOOL);
 $showallplugins = optional_param('showallplugins', 0, PARAM_BOOL);
 $agreelicense   = optional_param('agreelicense', 0, PARAM_BOOL);
+$seenpresetup = optional_param('seenpresetup', 0, PARAM_BOOL);
 
 // Check some PHP server settings
 
@@ -123,6 +124,20 @@ if (!core_tables_exist()) {
 
     // remove current session content completely
     session_get_instance()->terminate_current();
+
+    if (empty($seenpresetup) && empty($agreelicense)) {
+        ini_set('display_errors',true);
+        $strpresetup = get_string('presetup', 'local_nzschools');
+        $PAGE->navbar->add($strpresetup);
+        $PAGE->set_title($strpresetup);
+        $PAGE->set_heading(get_string('nzschools', 'local_nzschools'));
+        $PAGE->set_cacheable(false);
+        echo $OUTPUT->header();
+        echo $OUTPUT->box(get_string('presetupinfo', 'local_nzschools'));
+        echo $OUTPUT->continue_button(new moodle_url('/admin/index.php?seenpresetup=1', array('seenpresetup'=>1)));
+        echo $OUTPUT->footer();
+        die();
+    }
 
     if (empty($agreelicense)) {
         $strlicense = get_string('license');
