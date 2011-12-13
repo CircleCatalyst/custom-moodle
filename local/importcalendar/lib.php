@@ -161,7 +161,9 @@ function importcalendar_add_icalendar_event($event, $courseid, $subscriptionid=n
  * @return string           The table output.
  */
 function importcalendar_show_subscriptions($courseid, $importresults='') {
-    global $DB, $OUTPUT;
+    global $DB, $OUTPUT, $CFG;
+
+    $view = optional_param('view', '', PARAM_ALPHA);
 
     $out = '';
     $str->update = get_string('update');
@@ -172,21 +174,48 @@ function importcalendar_show_subscriptions($courseid, $importresults='') {
     $out .= $importresults;
 
     $table = new html_table();
-    $table->head  = array('Calendar', 'Poll', 'Last Updated', 'Actions');
+    $table->head  = array('Calendar', 'Last Updated', 'Poll', 'Actions');
     $table->align = array('left', 'left', 'left', 'center');
     $table->width = '100%';
     $table->data  = array();
 
     $subs = $DB->get_records('event_subscriptions', array('courseid' => $courseid));
+    if (empty($subs)) {
+        $c = new html_table_cell("No calendar subscriptions.");
+        $c->colspan = 4;
+        $table->data[] = new html_table_row(array($c));
+    }
     foreach ($subs as $id => $sub) {
-        $actions =  "<input type=\"submit\" value=\"{$str->update}\" />";
-        $actions .= "<input type=\"submit\" value=\"{$str->remove}\" />";
-        $choices = importcalendar_get_pollinterval_choices();
-        $pollinterval = $choices[$sub->pollinterval];
+        $c_url = new html_table_cell("<a href=\"{$sub->url}\">{$sub->name}</a>");
         $lastupdated = empty($sub->lastupdated)
                 ? get_string('never', 'local_importcalendar')
                 : date('Y-m-d H:i:s', $sub->lastupdated);
-        $table->data[] = array("<a href=\"{$sub->url}\">{$sub->name}</a>", $pollinterval, $lastupdated, $actions);
+        $c_updated = new html_table_cell($lastupdated);
+
+        // assemble pollinterval control
+        $pollinterval = "<div style=\"float:left\">
+            <select name=\"pollinterval\">\n";
+        foreach (importcalendar_get_pollinterval_choices() as $k => $v) {
+            $selected = ($k == $sub->pollinterval) ? ' selected' : '';
+            $pollinterval .= "<option value=\"{$k}\"{$selected}>{$v}</option>\n";
+        }
+        $pollinterval .= "</select></div>";
+
+        // assemble form for the subscription row
+        $rowform = "
+            <form action=\"{$CFG->wwwroot}/calendar/view.php\" method=\"post\">
+              {$pollinterval}
+              <div style=\"float:right\">
+                <input type=\"hidden\" name=\"view\" value=\"{$view}\" />
+                <input type=\"hidden\" name=\"course\" value=\"{$courseid}\" />
+                <input type=\"hidden\" name=\"id\" value=\"{$sub->id}\" />
+                <input type=\"submit\" name=\"action\" value=\"{$str->update}\" />
+                <input type=\"submit\" name=\"action\" value=\"{$str->remove}\" />
+              </div>
+            </form>";
+        $c_form = new html_table_cell($rowform);
+        $c_form->colspan = 2;
+        $table->data[] = new html_table_row(array($c_url, $c_updated, $c_form));
     }
     $out .= html_writer::table($table);
 
@@ -214,11 +243,51 @@ function importcalendar_process_subscription_form($courseid) {
 
     $form = new importcalendar_addsubscription_form();
     $formdata = $form->get_data();
-    if (empty($formdata)) {
-        return true;
+    if (!empty($formdata)) {
+        $subscriptionid = importcalendar_add_subscription($formdata);
+        return importcalendar_update_subscription_events($subscriptionid);
+    } else {
+        // process any subscription row form data
+        return importcalendar_process_subscription_row();
     }
-    $subscriptionid = importcalendar_add_subscription($formdata);
-    return importcalendar_update_subscription_events($subscriptionid);
+}
+
+function importcalendar_process_subscription_row() {
+    global $DB;
+
+    $id             = optional_param('id', 0, PARAM_INT);
+    $courseid       = optional_param('course', 0, PARAM_INT);
+    $pollinterval   = optional_param('pollinterval', 0, PARAM_INT);
+    $action         = optional_param('action', '', PARAM_ALPHA);
+
+    if (empty($id)) {
+        return '';
+    }
+
+    $str->update = get_string('update');
+    $str->remove = get_string('remove');
+
+    // update or remove the subscription, based on action.
+    $sub = $DB->get_record('event_subscriptions', array('id' => $id), '*', MUST_EXIST);
+    switch ($action) {
+      case $str->update:
+        $sub->pollinterval = $pollinterval;
+        $DB->update_record('event_subscriptions', $sub);
+
+        // update the events
+        return "<p>Calendar subscription '{$sub->name}' updated.</p>" . importcalendar_update_subscription_events($id);
+        break;
+
+      case $str->remove:
+        $DB->delete_records('event', array('subscriptionid' => $id));
+        $DB->delete_records('event_subscriptions', array('id' => $id));
+        return "Calendar subscription '{$sub->name}' removed.";
+        break;
+
+      default:
+        break;
+    }
+    return '';
 }
 
 /**
@@ -287,5 +356,22 @@ function importcalendar_update_subscription_events($subscriptionid) {
     $sub->lastupdated = time();
     $DB->update_record('event_subscriptions', $sub);
     return $return;
+}
+
+/**
+ * Update calendar subscriptions.
+ */
+function local_importcalendar_cron() {
+    global $DB;
+    mtrace("Updating calendar subscriptions:");
+    $time = time();
+    foreach ($DB->get_records_sql('select * from {event_subscriptions}
+                where lastupdated + pollinterval < ?', array($time)) as $sub) {
+        mtrace("   Updating calendar subscription '{$sub->name}' in course {$sub->courseid}");
+        $log = importcalendar_update_subscription_events($sub->id);
+        mtrace(trim(strip_tags($log)));
+    }
+    mtrace("Finished updating calendar subscriptions.");
+    return true;
 }
 
