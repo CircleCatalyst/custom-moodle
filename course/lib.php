@@ -830,6 +830,7 @@ function print_log_ods($course, $user, $date, $order='l.time DESC', $modname,
 
 function print_overview($courses, array $remote_courses=array()) {
     global $CFG, $USER, $DB, $OUTPUT;
+    require_once($CFG->dirroot.'/local/courseicon/lib.php');
 
     $htmlarray = array();
     if ($modules = $DB->get_records('modules')) {
@@ -850,7 +851,7 @@ function print_overview($courses, array $remote_courses=array()) {
         if (empty($course->visible)) {
             $attributes['class'] = 'dimmed';
         }
-        echo $OUTPUT->heading(html_writer::link(
+        echo $OUTPUT->heading(local_courseicon_course_icon_tag($course, 'large').html_writer::link(
             new moodle_url('/course/view.php', array('id' => $course->id)), $fullname, $attributes), 3);
         if (array_key_exists($course->id,$htmlarray)) {
             foreach ($htmlarray[$course->id] as $modname => $html) {
@@ -2181,6 +2182,7 @@ function get_course_display_name_for_list($course) {
  */
 function print_category_info($category, $depth=0, $showcourses = false) {
     global $CFG, $DB, $OUTPUT;
+    require_once($CFG->dirroot.'/local/courseicon/lib.php');
 
     $strsummary = get_string('summary');
 
@@ -2200,7 +2202,7 @@ function print_category_info($category, $depth=0, $showcourses = false) {
         $catimage = "&nbsp;";
     }
 
-    $courses = get_courses($category->id, 'c.sortorder ASC', 'c.id,c.sortorder,c.visible,c.fullname,c.shortname,c.summary');
+    $courses = get_courses($category->id, 'c.sortorder ASC', 'c.id,c.sortorder,c.visible,c.fullname,c.shortname,c.summary,c.icon');
     $context = get_context_instance(CONTEXT_COURSECAT, $category->id);
     $fullname = format_string($category->name, true, array('context' => $context));
 
@@ -2234,7 +2236,7 @@ function print_category_info($category, $depth=0, $showcourses = false) {
                 }
 
                 $coursename = get_course_display_name_for_list($course);
-                $courselink = html_writer::link(new moodle_url('/course/view.php', array('id'=>$course->id)), format_string($coursename), $linkcss);
+                $courselink = html_writer::link(new moodle_url('/course/view.php', array('id'=>$course->id)), local_courseicon_course_icon_tag($course,'small').format_string($coursename), $linkcss);
 
                 // print enrol info
                 $courseicon = '';

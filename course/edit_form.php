@@ -183,6 +183,9 @@ class course_edit_form extends moodleform {
             $mform->addElement('select', 'theme', get_string('forcetheme'), $themes);
         }
 
+        require_once($CFG->dirroot.'/local/courseicon/lib.php');
+        local_courseicon_course_form_definition($mform, $course);
+
 //--------------------------------------------------------------------------------
         enrol_course_edit_form($mform, $course, $context);
 

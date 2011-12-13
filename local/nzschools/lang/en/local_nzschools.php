@@ -51,14 +51,6 @@ $string['courses'] = 'Classes';
 $string['sandpits'] = 'Staff Sandpits';
 $string['templates'] = 'Class Templates';
 
-// Course icon lang strings
-$string['icon'] = 'Icon';
-$string['currenticon'] = 'Current icon';
-$string['uploadicon'] = 'Select a custom icon';
-$string['customicon'] = 'Custom icon...';
-$string['none'] = 'No Icon';
-$string['courseicon'] = 'Course Icon';
-
 $string['nocustomcoloursupport'] = 'Your current theme doesn\'t support customised colours. Any colours chosen below will not be displayed.';
 $string['nocustomlogosupport'] = 'Your current theme doesn\'t support custom logo\'s.';
 $string['themeplainbg'] = 'Logo Has Solid Background Colour';

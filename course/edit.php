@@ -117,6 +117,8 @@ if ($editform->is_cancelled()) {
         // Get the context of the newly created course
         $context = get_context_instance(CONTEXT_COURSE, $course->id, MUST_EXIST);
 
+        local_courseicon_update_course_icon($course, $data, $editform);
+
         if (!empty($CFG->creatornewroleid) and !is_viewing($context, NULL, 'moodle/role:assign') and !is_enrolled($context, NULL, 'moodle/role:assign')) {
             // deal with course creators - enrol them internally with default role
             enrol_try_internal_enrol($course->id, $USER->id, $CFG->creatornewroleid);
@@ -137,6 +139,7 @@ if ($editform->is_cancelled()) {
     } else {
         // Save any changes to the files used in the editor
         update_course($data, $editoroptions);
+        local_courseicon_update_course_icon($course, $data, $editform);
     }
 
     switch ($returnto) {
