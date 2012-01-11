@@ -1,6 +1,7 @@
 <?php // $Id$
 /**
-* Copyright (C) 2009  Moodlerooms Inc.
+* @copyright  Copyright (c) 2009 Moodlerooms Inc. (http://www.moodlerooms.com)
+* Copyright (C) 2011 Catalyst IT Ltd (http://www.catalyst.net.nz)
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -15,13 +16,23 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see http://opensource.org/licenses/gpl-3.0.html.
 * 
-* @copyright  Copyright (c) 2009 Moodlerooms Inc. (http://www.moodlerooms.com)
+* @author     Chris Stones
+* @author     Piers Harding
 * @license    http://opensource.org/licenses/gpl-3.0.html     GNU Public License
-* @author Chris Stones
 */
  
 $string['pluginname'] = 'Google Apps';
 $string['nodomainyet'] = 'No domain configured yet.';
 $string['newwinlink'] = 'New Window Links';
 $string['newwinlink_desc'] = 'If selected links will open in new window.';
-
+$string['mustusegoogleauthenticaion'] = 'You must configure the gaccess block for it to work correctly.';
+$string['domainnamestr'] = 'Domain Name';
+$string['domainnameinfo'] = 'This is your Google Apps Domain Name - usually something like hogwarts.school.nz';
+$string['gmail'] = 'Show GMail Link';
+$string['gmail_desc'] = 'If selected GMail link will be shown.';
+$string['docs'] = 'Show Google Docs Link';
+$string['docs_desc'] = 'If selected Google Docs link will be shown.';
+$string['start'] = 'Show Google Start Page Link';
+$string['start_desc'] = 'If selected Google Start Page link will be shown.';
+$string['calendar'] = 'Show Google Calendar Link';
+$string['calendar_desc'] = 'If selected Google Calendar link will be shown.';

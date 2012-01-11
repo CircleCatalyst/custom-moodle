@@ -1,6 +1,7 @@
 <?php
 /**
-* Copyright (C) 2009  Moodlerooms Inc.
+* @copyright  Copyright (c) 2009 Moodlerooms Inc. (http://www.moodlerooms.com)
+* Copyright (C) 2011 Catalyst IT Ltd (http://www.catalyst.net.nz)
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -15,9 +16,9 @@
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see http://opensource.org/licenses/gpl-3.0.html.
 * 
-* @copyright  Copyright (c) 2009 Moodlerooms Inc. (http://www.moodlerooms.com)
+* @author     Chris Stones
+* @author     Piers Harding
 * @license    http://opensource.org/licenses/gpl-3.0.html     GNU Public License
-* @author Chris Stones
 */
  
 /**
@@ -34,7 +35,13 @@ defined('MOODLE_INTERNAL') or die();
 require_once "$CFG->libdir/adminlib.php";
 
 $configs   = array();
+
+$configs[] = new admin_setting_configtext('domainname', get_string('domainnamestr', 'block_gaccess'), get_string('domainnameinfo', 'block_gaccess'), '', PARAM_RAW, 30);
 $configs[] = new admin_setting_configcheckbox('newwinlink', get_string('newwinlink', 'block_gaccess'), get_string('newwinlink_desc', 'block_gaccess'), '1');
+$configs[] = new admin_setting_configcheckbox('gmail', get_string('gmail', 'block_gaccess'), get_string('gmail_desc', 'block_gaccess'), '0');
+$configs[] = new admin_setting_configcheckbox('docs', get_string('docs', 'block_gaccess'), get_string('docs_desc', 'block_gaccess'), '0');
+$configs[] = new admin_setting_configcheckbox('start', get_string('start', 'block_gaccess'), get_string('start_desc', 'block_gaccess'), '0');
+$configs[] = new admin_setting_configcheckbox('calendar', get_string('calendar', 'block_gaccess'), get_string('calendar_desc', 'block_gaccess'), '0');
 
 // Define the config plugin so it is saved to
 // the config_plugin table then add to the settings page
