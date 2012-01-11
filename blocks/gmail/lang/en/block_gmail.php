@@ -1,6 +1,7 @@
 <?php
 /**
-* Copyright (C) 2009  Moodlerooms Inc.
+* @copyright  Copyright (c) 2009 Moodlerooms Inc. (http://www.moodlerooms.com)
+* Copyright (C) 2011 Catalyst IT Ltd (http://www.catalyst.net.nz)
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -14,15 +15,23 @@
 *
 * You should have received a copy of the GNU General Public License
 * along with this program.  If not, see http://opensource.org/licenses/gpl-3.0.html.
-* 
-* @copyright  Copyright (c) 2009 Moodlerooms Inc. (http://www.moodlerooms.com)
+*
+* @author     Chris Stones
+* @author     Piers Harding
 * @license    http://opensource.org/licenses/gpl-3.0.html     GNU Public License
-* @author Chris Stones
 */
- 
+
 $string['pluginname'] = 'Gmail';
 
+$string['gmail:viewlist'] = 'View list of GMail unread messages';
+
+$string['unread'] = 'You have {$a} unread message';
+
 $string['gmail'] = 'gmail';
+$string['domainnamestr'] = 'Domain Name';
+$string['domainnameinfo'] = 'This is your Google Apps Domain Name - usually something like hogwarts.school.nz';
+$string['usernamestr'] = 'User Name from';
+$string['usernameinfo'] = 'This is the Moodle user field that the Google User is derived from - defaults to username, but email is another possibility';
 $string['oauthsecretstr'] = 'OAuth Consumer Secret';
 $string['oauthsecretinfo'] = 'This is the same value you find on Google\'s Manage OAuth Access page under Advanced tools.';
 $string['msgnumberunread'] = "Unread Message Count";
@@ -42,6 +51,6 @@ $string['newwinlink'] = 'New Window Links';
 $string['newwinlinkinfo'] = 'If selected links will open in new window.';
 
 
-$string['mustusegoogleauthenticaion'] = 'You must be using Google SSO Authentication for this block to work.';
+$string['mustusegoogleauthenticaion'] = 'You must configure the gmail block for it to work correctly.';
 $string['missingoauthkey'] = 'Missing OAuth Key';
 
