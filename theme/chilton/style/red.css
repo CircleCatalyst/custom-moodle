@@ -1,0 +1,121 @@
+/********************************************************
+**
+** Theme name: Chilton
+** Creation Date: 30/06/09
+** Author: Synergy Learning
+** Author URI: http://synergylearning.com
+** Modified: Catalyst / Dataview [BK]
+*********************************************************/
+
+/* Global 
+------------------------*/
+
+body.chilton-red {                /* Define margins and background colour/image */
+    /*background: url([[pix:theme|bgred]]) top left repeat-x #fff;
+	background: url("../images/bg_main_tile.jpg") repeat-y scroll 0 0 transparent; */
+	background: url([[pix:theme|bgred]]) repeat-y scroll 0 0 transparent;
+    margin: 0 auto;
+    padding: 0;
+    width: 100%;
+}
+
+.chilton-red a:link {        /* Defining all link styles*/
+    color: #D31243;
+}
+
+.chilton-red a:visited {        /* Setting all visited link styles */
+    color: #D31243;
+}
+
+.chilton-red a:hover {        /* Setting all rollover link styles */
+    color: #100f30;
+}
+
+.chilton-red a:active {        /* Setting all active link styles */
+    color: #D31243;
+}
+
+
+/* Header 
+-----------------------*/
+.chilton-red #page-header {            /* Set height for header */
+    float: none;
+    padding: 0;
+    margin:0;
+    color: #fff;
+    height: 346px;
+    background: url([[pix:theme|pageheaderbgred]]) top center no-repeat;
+	margin-bottom: 10px;
+}
+
+.chilton-red #logobox{  /* holder background for logo*/
+    height: 235px;
+    width: 252px;
+    margin: auto;
+    text-align: center;
+    background: url([[pix:theme|lbgv2red]]) no-repeat;
+    float: left;
+}
+
+
+.chilton-red #colourswitcher p{
+    color:#D31243
+}
+
+
+/* Custom Menu
+-----------------------*/
+.chilton-red #custommenu .yui3-menu-content ul.first-of-type li{
+    border-right: 1px solid #FF8AA8;
+}
+
+.chilton-red #custommenu div.yui3-menu.custom_menu_submenu .yui3-menu-content{
+    background:#D31245;
+    border:1px solid #fff;
+    color: #fff;
+}
+
+/* Content
+-----------------------*/
+
+.chilton-red .coursebox{
+    padding-left:5px;
+    border-bottom: 1px dashed #cbd3d6;
+}
+
+.chilton-red ul.topics li#section-0, ul.weeks li#section-0 {
+    background: #D31245;
+    border: 1px solid #ccc;
+}
+
+/* Sideblocks
+-----------------------*/
+
+.chilton-red #region-pre .block .header,
+.chilton-red #region-post .block .header {  /*-- right block header   --*/
+    background: url([[pix:theme|sbheaderbg2red]]) center no-repeat;
+    padding: 12px 5px 5px;
+    color: #fff;
+}
+
+/* Mini Calendar
+------------------------*/
+
+.chilton-red .block .minicalendar td.weekend {    /* setting weekend date colour */
+    color:#D31245;
+}
+
+
+/* Forum
+------------------------*/
+
+.chilton-red .forumpost .topic .subject,
+.path-blog.chilton-red .forumpost .subject a,
+.path-blog.chilton-red .forumpost .subject a:link,
+.path-blog.chilton-red .forumpost .subject a:visited {    /* forum subject section inside topic header */
+    font-weight: bold;
+    font-size: 1.1em;
+    padding-left: 5px;
+    background: #D31245;
+    color: #fff;
+}

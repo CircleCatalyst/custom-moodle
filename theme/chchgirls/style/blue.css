@@ -1,0 +1,121 @@
+/********************************************************
+**
+** Theme name: Chchgirls
+** Creation Date: 30/06/09
+** Author: Synergy Learning
+** Author URI: http://synergylearning.com
+** Modified: Catalyst / Dataview [BK]
+*********************************************************/
+
+/* Global 
+------------------------*/
+
+body.chchgirls-blue {                /* Define margins and background colour/image */
+    /*background: url([[pix:theme|bgblue]]) top left repeat-x #fff;
+	background: url("../images/bg_main_tile.jpg") repeat-y scroll 0 0 transparent; */
+	background: url([[pix:theme|bgblue]]) repeat-y scroll 0 0 transparent;
+    margin: 0 auto;
+    padding: 0;
+    width: 100%;
+}
+
+.chchgirls-blue a:link {        /* Defining all link styles*/
+    color: #262571;
+}
+
+.chchgirls-blue a:visited {        /* Setting all visited link styles */
+    color: #262571;
+}
+
+.chchgirls-blue a:hover {        /* Setting all rollover link styles */
+    color: #100f30;
+}
+
+.chchgirls-blue a:active {        /* Setting all active link styles */
+    color: #262571;
+}
+
+
+/* Header 
+-----------------------*/
+.chchgirls-blue #page-header {            /* Set height for header */
+    float: none;
+    padding: 0;
+    margin:0;
+    color: #fff;
+    height: 308px;
+    background: url([[pix:theme|pageheaderbgblue]]) top center no-repeat;
+
+}
+
+.chchgirls-blue #logobox{  /* holder background for logo*/
+    height: 185px;
+    width: 252px;
+    margin: auto;
+    text-align: center;
+    background: url([[pix:theme|lbgv2blue]]) no-repeat;
+    float: left;
+}
+
+
+.chchgirls-blue #colourswitcher p{
+    color:#262571
+}
+
+
+/* Custom Menu
+-----------------------*/
+.chchgirls-blue #custommenu .yui3-menu-content ul.first-of-type li{
+    border-right: 1px solid #bfced7;
+}
+
+.chchgirls-blue #custommenu div.yui3-menu.custom_menu_submenu .yui3-menu-content{
+    background:#262571;
+    border:1px solid #fff;
+    color: #fff;
+}
+
+/* Content
+-----------------------*/
+
+.chchgirls-blue .coursebox{
+    padding-left:5px;
+    border-bottom: 1px dashed #cbd3d6;
+}
+
+.chchgirls-blue ul.topics li#section-0, ul.weeks li#section-0 {
+    background: #262571;
+    border: 1px solid #ccc;
+}
+
+/* Sideblocks
+-----------------------*/
+
+.chchgirls-blue #region-pre .block .header,
+.chchgirls-blue #region-post .block .header {  /*-- right block header   --*/
+    background: url([[pix:theme|sbheaderbg2blue]]) center no-repeat;
+    padding: 12px 5px 5px;
+    color: #fff;
+}
+
+/* Mini Calendar
+------------------------*/
+
+.chchgirls-blue .block .minicalendar td.weekend {    /* setting weekend date colour */
+    color:#262571;
+}
+
+
+/* Forum
+------------------------*/
+
+.chchgirls-blue .forumpost .topic .subject,
+.path-blog.chchgirls-blue .forumpost .subject a,
+.path-blog.chchgirls-blue .forumpost .subject a:link,
+.path-blog.chchgirls-blue .forumpost .subject a:visited {    /* forum subject section inside topic header */
+    font-weight: bold;
+    font-size: 1.1em;
+    padding-left: 5px;
+    background: #262571;
+    color: #fff;
+}
