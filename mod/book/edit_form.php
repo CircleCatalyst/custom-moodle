@@ -36,25 +36,18 @@ class book_chapter_edit_form extends moodleform {
         $options = $this->_customdata['options'];
 
         $mform = $this->_form;
-        $context = $options['context'];
 
         $mform->addElement('header', 'general', get_string('edit'));
 
-        $mform->addElement('text', 'title', get_string('chaptertitle', 'book'), array('size'=>'30'));
+        $mform->addElement('text', 'title', get_string('chaptertitle', 'mod_book'), array('size'=>'30'));
         $mform->setType('title', PARAM_RAW);
         $mform->addRule('title', null, 'required', null, 'client');
 
-        $mform->addElement('advcheckbox', 'subchapter', get_string('subchapter', 'book'));
+        $mform->addElement('advcheckbox', 'subchapter', get_string('subchapter', 'mod_book'));
 
-        $mform->addElement('editor', 'content_editor', get_string('content', 'book'), null, $options);
+        $mform->addElement('editor', 'content_editor', get_string('content', 'mod_book'), null, $options);
         $mform->setType('content_editor', PARAM_RAW);
         $mform->addRule('content_editor', get_string('required'), 'required', null, 'client');
-
-        if ($chapter->id and has_capability('mod/book:import', $context)) {
-            //TODO: after files
-            //$mform->addElement('static', 'doimport', get_string('importingchapters', 'book').':', '<a href="import.php?id='.$chapter->cmid.'">'.get_string('doimport', 'book').'</a>');
-        }
-
 
         $mform->addElement('hidden', 'id');
         $mform->setType('id', PARAM_INT);

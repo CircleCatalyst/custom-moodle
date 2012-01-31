@@ -19,12 +19,16 @@
  *
  * @package    mod
  * @subpackage book
- * @copyright  2004-2010 Petr Skoda  {@link http://skodak.org}
+ * @copyright  2004-2011 Petr Skoda  {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$module->version  = 2010120805;  // The current module version (Date: YYYYMMDDXX)
-$module->requires = 2010120700;  // Requires this Moodle version
-$module->cron     = 0;           // Period for cron to check this module (secs)
+defined('MOODLE_INTERNAL') || die;
 
-$release = "2.0dev";             // User-friendly version number
+$module->version   = 2011110500; // The current module version (Date: YYYYMMDDXX)
+$module->requires  = 2011070100; // Requires this Moodle version
+$module->cron      = 0;          // Period for cron to check this module (secs)
+$module->component = 'mod_book'; // Full name of the plugin (used for diagnostics)
+
+$module->maturity  = MATURITY_STABLE;
+$module->release   = "2.1 (20111105)"; // User-friendly version number

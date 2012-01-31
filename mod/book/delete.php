@@ -19,12 +19,12 @@
  *
  * @package    mod
  * @subpackage book
- * @copyright  2004-2010 Petr Skoda  {@link http://skodak.org}
+ * @copyright  2004-2011 Petr Skoda  {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require dirname(__FILE__).'/../../config.php';
-require_once($CFG->dirroot.'/mod/book/locallib.php');
+require(dirname(__FILE__).'/../../config.php');
+require_once(dirname(__FILE__).'/locallib.php');
 
 $id        = required_param('id', PARAM_INT);        // Course Module ID
 $chapterid = required_param('chapterid', PARAM_INT); // Chapter ID
@@ -52,6 +52,7 @@ $PAGE->set_heading(format_string($course->fullname));
 
 ///form processing
 if ($confirm) {  // the operation was confirmed.
+    $fs = get_file_storage();
     if (!$chapter->subchapter) { //delete all its subchapters if any
         $chapters = $DB->get_records('book_chapters', array('bookid'=>$book->id), 'pagenum', 'id, subchapter');
         $found = false;
@@ -59,29 +60,32 @@ if ($confirm) {  // the operation was confirmed.
             if ($ch->id == $chapter->id) {
                 $found = true;
             } else if ($found and $ch->subchapter) {
+                $fs->delete_area_files($context->id, 'mod_book', 'chapter', $ch->id);
                 $DB->delete_records('book_chapters', array('id'=>$ch->id));
             } else if ($found) {
                 break;
             }
         }
     }
+    $fs->delete_area_files($context->id, 'mod_book', 'chapter', $chapter->id);
     $DB->delete_records('book_chapters', array('id'=>$chapter->id));
 
     add_to_log($course->id, 'course', 'update mod', '../mod/book/view.php?id='.$cm->id, 'book '.$book->id);
     add_to_log($course->id, 'book', 'update', 'view.php?id='.$cm->id, $book->id, $cm->id);
 
-    book_check_structure($book->id);
-    redirect('view.php?id='.$cm->id);
+    book_preload_chapters($book); //fix structure
+    $DB->set_field('book', 'revision', $book->revision+1, array('id'=>$book->id));
 
+    redirect('view.php?id='.$cm->id);
 }
 
 echo $OUTPUT->header();
 
 // the operation has not been confirmed yet so ask the user to do so
 if ($chapter->subchapter) {
-    $strconfirm = get_string('confchapterdelete','book');
+    $strconfirm = get_string('confchapterdelete','mod_book');
 } else {
-    $strconfirm = get_string('confchapterdeleteall','book');
+    $strconfirm = get_string('confchapterdeleteall','mod_book');
 }
 echo '<br />';
 $continue = new moodle_url('/mod/book/delete.php', array('id'=>$cm->id, 'chapterid'=>$chapter->id, 'confirm'=>1));

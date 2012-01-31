@@ -28,8 +28,9 @@ $capabilities = array(
     'mod/book:read' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
+        'archetypes' => array(
             'guest' => CAP_ALLOW,
+            'frontpage' => CAP_ALLOW,
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
@@ -40,7 +41,7 @@ $capabilities = array(
     'mod/book:viewhiddenchapters' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
+        'archetypes' => array(
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
@@ -51,37 +52,9 @@ $capabilities = array(
         'riskbitmask' => RISK_XSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
+        'archetypes' => array(
             'editingteacher' => CAP_ALLOW,
             'manager' => CAP_ALLOW,
         )
     ),
-
-    'mod/book:import' => array(
-        'riskbitmask' => RISK_XSS,
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        )
-    ),
-
-    'mod/book:print' => array(
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'legacy' => array(
-            'guest' => CAP_ALLOW,
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        )
-    ),
-
-    'mod/book:exportimscp' => array(
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE
-    ),
-
 );
