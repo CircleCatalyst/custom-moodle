@@ -1,0 +1,130 @@
+/********************************************************
+**
+** Theme name: sbc
+** Creation Date: 30/06/09
+** Author: Synergy Learning
+** Author URI: http://synergylearning.com
+**
+*********************************************************/
+
+/* Global 
+------------------------*/
+
+body.sbc-orange {                /* Define margins and background colour/image */
+    background: url([[pix:theme|bgorange]]) top left repeat-x #f4f4f4;
+    margin: 0 auto;
+    padding: 0;
+    width: 100%;
+}
+
+.sbc-orange a:link {        /* Defining all link styles*/
+    color: #7c7165;
+}
+
+.sbc-orange a:visited {        /* Setting all visited link styles */
+    color: #7c7165;
+}
+
+.sbc-orange a:hover {        /* Setting all rollover link styles */
+    color: #5f564c;
+}
+
+.sbc-orange a:active {        /* Setting all active link styles */
+    color: #7c7165;
+}
+
+/* Header 
+-----------------------*/
+
+.sbc-orange #page-header {            /* Set height for header */
+    float: none;
+    padding: 0;
+    margin:0;
+    color: #fff;
+    height: 308px;
+    background: url([[pix:theme|pageheaderbgorange]]) top center no-repeat;
+}
+
+.sbc-orange #logobox{  /* holder background for logo*/
+    height: 185px;
+    width: 252px;
+    margin: auto;
+    text-align: center;
+    background: url([[pix:theme|lbgv2orange]]) no-repeat;
+    float: left;
+}
+
+.sbc-orange #colourswitcher p{
+    color: #cb8f47;
+}
+
+/* Custom Menu
+-----------------------*/
+ .sbc-orange #custommenu .yui3-menu-content ul.first-of-type li{
+    border-right: 1px solid #dbcfc0;
+}
+
+.sbc-orange #custommenu div.yui3-menu.custom_menu_submenu .yui3-menu-content{
+    background:#cb8f47;
+    border:1px solid #fff;
+    color: #fff;
+}
+
+/* Content
+-----------------------*/
+.sbc-orange ul.topics li#section-0, ul.weeks li#section-0 {
+    background: #df9a55;
+    border: 1px solid #ccc;
+}
+
+.sbc-orange .coursebox{
+    padding-left:5px;
+    border-bottom: 1px dashed #f0e7de;
+}
+
+/* Sideblocks
+-----------------------*/
+
+.sbc-orange #region-pre .block .header,  /*-- right block header   --*/
+.sbc-orange #region-post .block .header {  /*-- right block header   --*/
+    background: url([[pix:theme|sbheaderbg2orange]]) center no-repeat;
+    padding: 12px 5px 5px;
+    color: #fff;
+}
+
+/* Mini Calendar
+------------------------*/
+
+.sbc-orange .block .minicalendar td.weekend {    /* setting weekend date colour */
+    color:#cb8f47;
+}
+
+/* Forum
+------------------------*/
+
+.sbc-orange .forumpost .topic .subject {    /* forum subject section inside topic header */
+    font-weight: bold;
+    font-size: 1.1em;
+    padding-left: 5px;
+    background:  #cb8f47;
+    color: #fff;
+}
+
+/* Blog
+------------------------*/
+
+.sbc-orange .blog_entry .subject a:link {        /* Defining all link styles*/
+    color: #000;
+}
+
+.sbc-orange .blog_entry .subject a:visited {        /* Setting all visited link styles */
+    color: #000;
+}
+
+.sbc-orange .blog_entry .subject a:hover {        /* Setting all rollover link styles */
+    color: #000;
+}
+
+.sbc-orange .blog_entry .subject a:active {        /* Setting all active link styles */
+    color: #000;
+}
