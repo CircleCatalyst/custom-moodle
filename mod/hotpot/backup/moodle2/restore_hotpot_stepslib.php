@@ -257,6 +257,7 @@ class restore_hotpot_activity_structure_step extends restore_activity_structure_
      * after_execute
      */
     protected function after_execute()  {
+        $this->add_related_files('mod_hotpot', 'sourcefile', null);
         $this->add_related_files('mod_hotpot', 'entrytext', null);
         $this->add_related_files('mod_hotpot', 'exittext',  null);
     }
