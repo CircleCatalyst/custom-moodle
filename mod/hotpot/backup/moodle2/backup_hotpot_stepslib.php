@@ -140,7 +140,7 @@ class backup_hotpot_activity_structure_step extends backup_activity_structure_st
         // file annotations
         ////////////////////////////////////////////////////////////////////////
 
-        $hotpot->annotate_files('mod_hotpot', 'sourcefile', 'id');
+        $hotpot->annotate_files('mod_hotpot', 'sourcefile', null);
         $hotpot->annotate_files('mod_hotpot', 'entrytext',  null);
         $hotpot->annotate_files('mod_hotpot', 'exittext',   null);
 
