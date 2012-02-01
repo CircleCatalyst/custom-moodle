@@ -44,10 +44,14 @@ global $CFG;
 
 // Absolutly necessary samllibs
 require_once($CFG->dirroot.'/auth/gsaml/samllib/Utilities.php');
-require_once($CFG->dirroot.'/auth/gsaml/samllib/Configuration.php');
-require_once($CFG->dirroot.'/auth/gsaml/samllib/SessionHandler.php');
-require_once($CFG->dirroot.'/auth/gsaml/samllib/SessionHandlerPHP.php');
-require_once($CFG->dirroot.'/auth/gsaml/samllib/Session.php');
+
+// classes that clash with auth/saml and the real ssphp
+if (!class_exists('SimpleSAML_Configuration')) {
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/Configuration.php');
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/SessionHandler.php');
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/SessionHandlerPHP.php');
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/Session.php');
+}
 require_once($CFG->dirroot.'/auth/gsaml/samllib/MetaDataStorageSource.php');
 require_once($CFG->dirroot.'/auth/gsaml/samllib/MetaDataStorageHandlerFlatFile.php');
 require_once($CFG->dirroot.'/auth/gsaml/samllib/MetaDataStorageHandler.php');
@@ -57,10 +61,13 @@ require_once($CFG->dirroot.'/auth/gsaml/samllib/AuthnRequest.php');
 require_once($CFG->dirroot.'/auth/gsaml/samllib/AuthnResponse_abstract.php');
 require_once($CFG->dirroot.'/auth/gsaml/samllib/AuthnResponse.php');
 
-require_once($CFG->dirroot.'/auth/gsaml/samllib/Logger.php');
-require_once($CFG->dirroot.'/auth/gsaml/samllib/LoggingHandlerErrorLog.php');
-require_once($CFG->dirroot.'/auth/gsaml/samllib/LoggingHandlerFile.php');
-require_once($CFG->dirroot.'/auth/gsaml/samllib/LoggingHandlerSyslog.php');
+// classes that clash with auth/saml and the real ssphp
+if (!class_exists('SimpleSAML_Configuration')) {
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/Logger.php');
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/LoggingHandlerErrorLog.php');
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/LoggingHandlerFile.php');
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/LoggingHandlerSyslog.php');
+}
 
 require_once($CFG->dirroot.'/auth/gsaml/samllib/AttributeFilter.php');
 
