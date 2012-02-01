@@ -43,7 +43,9 @@ defined('MOODLE_INTERNAL') or die();
 global $CFG;
 
 // Absolutly necessary samllibs
-require_once($CFG->dirroot.'/auth/gsaml/samllib/Utilities.php');
+if (!class_exists('SimpleSAML_Utilities')) {
+    require_once($CFG->dirroot.'/auth/gsaml/samllib/Utilities.php');
+}
 
 // classes that clash with auth/saml and the real ssphp
 if (!class_exists('SimpleSAML_Configuration')) {
