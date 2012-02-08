@@ -16,14 +16,14 @@
  */
 
 
-$SIMPLESAMLPHP_LIB = '/var/simplesamlphp';
-$SIMPLESAMLPHP_CONFIG = '/var/simplesamlphp/config';
+$SIMPLESAMLPHP_LIB = '/data/u00/www/htdocs/simplesaml';
+$SIMPLESAMLPHP_CONFIG = '/data/u00/www/htdocs/simplesaml/config';
 $SIMPLESAMLPHP_SP = 'default-sp';
 //$SIMPLESAMLPHP_RETURN_TO = 'http://some.other.target'; // for when you need to override RelayState
 $SIMPLESAMLPHP_RETURN_TO = null;
-// $SIMPLESAMLPHP_ERROR_URL = 'http://some.other.target'; // for when you need to override login error target
-$SIMPLESAMLPHP_ERROR_URL = null;
+$SIMPLESAMLPHP_RETURN_TO = 'http://'.$_SERVER['HTTP_HOST'].'/auth/saml/';
+
 
 // change this to something specific if you don't want users to be sent to
 // Moodle $CFG->wwwroot when logout is completed
-$SIMPLESAMLPHP_LOGOUT_LINK = "";  
+$SIMPLESAMLPHP_LOGOUT_LINK = ""; 
