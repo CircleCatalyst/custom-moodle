@@ -19,7 +19,7 @@
  *
  * @package    mod
  * @subpackage book
- * @copyright  2009-2010 Petr Skoda  {@link http://skodak.org}
+ * @copyright  2009-2011 Petr Skoda  {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -29,6 +29,10 @@ function xmldb_book_upgrade($oldversion) {
     global $CFG, $DB;
 
     $dbman = $DB->get_manager();
+
+    if ($oldversion < 2004081100) {
+        throw new upgrade_exception('mod_book', $oldversion, 'Can not upgrade such an old book module, sorry, you should have upgraded it long time ago in 1.9 already.');
+    }
 
     if ($oldversion < 2007052001) {
 
@@ -80,7 +84,18 @@ function xmldb_book_upgrade($oldversion) {
             $dbman->add_field($table, $field);
         }
 
-        $DB->set_field('book', 'introformat', FORMAT_HTML, array());
+        // conditionally migrate to html format in intro
+        if ($CFG->texteditors !== 'textarea') {
+            $rs = $DB->get_recordset('book', array('introformat'=>FORMAT_MOODLE), '', 'id,intro,introformat');
+            foreach ($rs as $b) {
+                $b->intro       = text_to_html($b->intro, false, false, true);
+                $b->introformat = FORMAT_HTML;
+                $DB->update_record('book', $b);
+                upgrade_set_timeout();
+            }
+            unset($b);
+            $rs->close();
+        }
 
         // book savepoint reached
         upgrade_mod_savepoint(true, 2010120803, 'book');
@@ -123,7 +138,7 @@ function xmldb_book_upgrade($oldversion) {
 
                 $context = get_context_instance(CONTEXT_MODULE, $book->cmid);
 
-                book_migrate_moddata_dir_to_legacy($book, $context, '/');
+                mod_book_migrate_moddata_dir_to_legacy($book, $context, '/');
 
                 // remove dirs if empty
                 @rmdir("$CFG->dataroot/$book->course/$CFG->moddata/book/$book->id/");
@@ -138,10 +153,49 @@ function xmldb_book_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2010120805, 'book');
     }
 
+    if ($oldversion < 2011011600) {
+        // Define field disableprinting to be dropped from book
+        $table = new xmldb_table('book');
+        $field = new xmldb_field('disableprinting');
 
+        // Conditionally launch drop field disableprinting
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
 
-    //TODO: migrate the legacy file.php links to new pluginfile.php and file areas per chapter
+        // book savepoint reached
+        upgrade_mod_savepoint(true, 2011011600, 'book');
+    }
 
+    if ($oldversion < 2011011601) {
+        unset_config('book_tocwidth');
+
+        // book savepoint reached
+        upgrade_mod_savepoint(true, 2011011601, 'book');
+    }
+
+    if ($oldversion < 2011090800) {
+        require_once("$CFG->dirroot/mod/book/db/upgradelib.php");
+
+        mod_book_migrate_all_areas();
+
+        upgrade_mod_savepoint(true, 2011090800, 'book');
+    }
+
+    if ($oldversion < 2011100900) {
+
+        // Define field revision to be added to book
+        $table = new xmldb_table('book');
+        $field = new xmldb_field('revision', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'customtitles');
+
+        // Conditionally launch add field revision
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // book savepoint reached
+        upgrade_mod_savepoint(true, 2011100900, 'book');
+    }
 
     return true;
 }

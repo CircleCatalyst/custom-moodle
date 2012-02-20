@@ -19,22 +19,18 @@
  *
  * @package    mod
  * @subpackage book
- * @copyright  2004-2010 Petr Skoda  {@link http://skodak.org}
+ * @copyright  2004-2011 Petr Skoda  {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require dirname(__FILE__).'/../../config.php';
-require_once($CFG->dirroot.'/mod/book/locallib.php');
-require_once($CFG->dirroot.'/mod/book/edit_form.php');
+require(dirname(__FILE__).'/../../config.php');
+require_once(dirname(__FILE__).'/locallib.php');
+require_once(dirname(__FILE__).'/edit_form.php');
 
 $cmid       = required_param('cmid', PARAM_INT);  // Book Course Module ID
 $chapterid  = optional_param('id', 0, PARAM_INT); // Chapter ID
 $pagenum    = optional_param('pagenum', 0, PARAM_INT);
 $subchapter = optional_param('subchapter', 0, PARAM_BOOL);
-
-// =========================================================================
-// security checks START - only teachers edit
-// =========================================================================
 
 $cm = get_coursemodule_from_id('book', $cmid, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id'=>$cm->course), '*', MUST_EXIST);
@@ -46,10 +42,7 @@ $context = get_context_instance(CONTEXT_MODULE, $cm->id);
 require_capability('mod/book:edit', $context);
 
 $PAGE->set_url('/mod/book/edit.php', array('cmid'=>$cmid, 'id'=>$chapterid, 'pagenum'=>$pagenum, 'subchapter'=>$subchapter));
-
-// =========================================================================
-// security checks END
-// =========================================================================
+$PAGE->set_pagelayout('admin'); //this is a bloody hack!
 
 if ($chapterid) {
     $chapter = $DB->get_record('book_chapters', array('id'=>$chapterid, 'bookid'=>$book->id), '*', MUST_EXIST);
@@ -105,12 +98,13 @@ if ($mform->is_cancelled()) {
         // store the files
         $data = file_postupdate_standard_editor($data, 'content', $options, $context, 'mod_book', 'chapter', $data->id);
         $DB->update_record('book_chapters', $data);
+        $DB->set_field('book', 'revision', $book->revision+1, array('id'=>$book->id));
 
         add_to_log($course->id, 'course', 'update mod', '../mod/book/view.php?id='.$cm->id, 'book '.$book->id);
         add_to_log($course->id, 'book', 'update', 'view.php?id='.$cm->id.'&chapterid='.$data->id, $book->id, $cm->id);
     }
 
-    book_check_structure($book->id);
+    book_preload_chapters($book); // fix structure
     redirect("view.php?id=$cm->id&chapterid=$data->id");
 }
 
@@ -120,7 +114,11 @@ $PAGE->add_body_class('mod_book');
 $PAGE->set_heading(format_string($course->fullname));
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('editingchapter', 'book'));
+echo $OUTPUT->heading(get_string('editingchapter', 'mod_book'));
+
+if (debugging()) {
+    echo $OUTPUT->box($OUTPUT->notification(get_string('missingfilemanagement', 'mod_book', html_writer::link('http://tracker.moodle.org/browse/MDL-28019', 'MDL-28019'))));
+}
 
 $mform->display();
 

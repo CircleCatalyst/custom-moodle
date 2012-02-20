@@ -29,5 +29,4 @@ $logs = array(
     array('module'=>'book', 'action'=>'update', 'mtable'=>'book', 'field'=>'name'),
     array('module'=>'book', 'action'=>'view', 'mtable'=>'book', 'field'=>'name'),
     array('module'=>'book', 'action'=>'view all', 'mtable'=>'book', 'field'=>'name'),
-    array('module'=>'book', 'action'=>'print', 'mtable'=>'book', 'field'=>'name'),
 );

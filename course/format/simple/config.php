@@ -6,6 +6,6 @@
 // format.
 //
 // The default blocks layout for this course format:
-    $format['defaultblocks'] = 'admin';
+    $format['defaultblocks'] = '';
 //
 ?>
