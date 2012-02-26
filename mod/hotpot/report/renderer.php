@@ -197,7 +197,6 @@ class mod_hotpot_report_renderer extends mod_hotpot_renderer {
 
         // add user details (if necessary)
         if (in_array('fullname', $this->tablecolumns)) {
-            $select .= ', u.id AS userid, u.firstname, u.lastname, u.picture, u.imagealt, u.email';
             $from   .= ', {user} u';
             $where  .= ' AND ha.userid=u.id';
         }
