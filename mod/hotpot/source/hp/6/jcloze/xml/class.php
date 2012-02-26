@@ -80,7 +80,8 @@ class hotpot_source_hp_6_jcloze_xml extends hotpot_source_hp_6_jcloze {
 
             // surround ampersands in open text by CDATA start and end tags
             $search = '/(?<=>)([^<]*)(?=<)/s';
-            $match = preg_replace_callback($search, array(&$this, 'compact_filecontents_opentext'), $match);
+            $callback = array($this, 'compact_filecontents_opentext');
+            $match = preg_replace_callback($search, $callback, $match);
 
             $this->filecontents = substr_replace($this->filecontents, $match, $start, $length);
         }
@@ -89,21 +90,22 @@ class hotpot_source_hp_6_jcloze_xml extends hotpot_source_hp_6_jcloze {
     /**
      * compact_filecontents_opentext
      *
-     * @param xxx $matches (passed by reference)
+     * @param xxx $match
      * @return xxx
      */
-    function compact_filecontents_opentext(&$matches)  {
+    function compact_filecontents_opentext($match)  {
         $search = '/&[a-zA-Z0-9#;]*;/';
-        return preg_replace_callback($search, array(&$this, 'compact_filecontents_entities'), $matches[0]);
+        $callback = array($this, 'compact_filecontents_entities');
+        return preg_replace_callback($search, $callback, $match[0]);
     }
 
     /**
      * compact_filecontents_entities
      *
-     * @param xxx $matches (passed by reference)
+     * @param xxx $match
      * @return xxx
      */
-    function compact_filecontents_entities(&$matches)  {
+    function compact_filecontents_entities($match)  {
         // these html entities are coverted back to plain text
         static $html_entities = array(
             '&apos;' => "'",
@@ -112,6 +114,6 @@ class hotpot_source_hp_6_jcloze_xml extends hotpot_source_hp_6_jcloze {
             '&gt;'   => '>',
             '&amp;'  => '&'
         );
-        return '<![CDATA['.strtr($matches[0], $html_entities).']]>';
+        return '<![CDATA['.strtr($match[0], $html_entities).']]>';
     }
 }

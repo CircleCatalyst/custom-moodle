@@ -38,17 +38,6 @@ require_once($CFG->dirroot.'/user/filters/lib.php');
 class hotpot_user_filtering extends user_filtering {
 
     /**
-     * hotpot_user_filtering
-     *
-     * @param xxx $fieldnames (optional, default=null)
-     * @param xxx $baseurl (optional, default=null)
-     * @param xxx $extraparams (optional, default=null)
-     */
-    function hotpot_user_filtering($fieldnames=null, $baseurl=null, $extraparams=null)  {
-        parent::user_filtering($fieldnames, $baseurl, $extraparams);
-    }
-
-    /**
      * get_field
      *
      * @param xxx $fieldname
@@ -164,7 +153,7 @@ class hotpot_filter_group extends user_filter_select {
      * @param boolean $advanced advanced form element flag
      * @param mixed $default option
      */
-    function hotpot_filter_group($filtername, $advanced, $default=null) {
+    function __construct($filtername, $advanced, $default=null) {
         global $hotpot;
 
         $label = '';
@@ -292,10 +281,10 @@ class hotpot_filter_status extends user_filter_select {
      * @param boolean $advanced advanced form element flag
      * @param mixed $default option
      */
-    function hotpot_filter_status($name, $advanced, $default=null) {
+    function __construct($name, $advanced, $default=null) {
         $label = get_string($name, 'hotpot');
         $options = hotpot::available_statuses_list();
-        parent::user_filter_select($name, $label, $advanced, '', $options, $default);
+        parent::__construct($name, $label, $advanced, '', $options, $default);
     }
 
     /**
@@ -349,7 +338,7 @@ class hotpot_filter_number extends user_filter_select {
      * @param boolean $advanced advanced form element flag
      * @param mixed $default option
      */
-    function hotpot_filter_number($name, $label, $advanced, $default=null) {
+    function __construct($name, $label, $advanced, $default=null) {
         parent::user_filter_type($name, $label, $advanced);
 
         $this->_field   = '';
@@ -481,16 +470,6 @@ class hotpot_filter_number extends user_filter_select {
  * @since     Moodle 2.0
  */
 class hotpot_filter_duration extends hotpot_filter_number {
-    /**
-     * Constructor
-     *
-     * @param string $name the name of the filter instance
-     * @param boolean $advanced advanced form element flag
-     * @param mixed $default option
-     */
-    function hotpot_filter_duration($name, $label, $advanced, $default=null) {
-        parent::hotpot_filter_number($name, $label, $advanced, $default);
-    }
 
     /**
      * setupForm

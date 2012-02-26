@@ -83,4 +83,56 @@ class mod_hotpot_attempt_hp_6_jcloze_xml_dropdown_renderer extends mod_hotpot_at
     function fix_bodycontent()  {
         $this->fix_bodycontent_rottmeier(true);
     }
+
+    /**
+     * fix_js_Build_GapText
+     *
+     * @param xxx $str (passed by reference)
+     * @param xxx $start
+     * @param xxx $length
+     * @return xxx
+     */
+    function fix_js_Build_GapText(&$str, $start, $length) {
+        $substr = substr($str, $start, $length);
+
+        parent::fix_js_Build_GapText($substr, 0, strlen($substr));
+
+        if ($this->expand_CaseSensitive()) {
+            $search = 'SelectorList = Shuffle(SelectorList);';
+            $replace = 'SelectorList = AlphabeticalSort(SelectorList, x);';
+            $substr = str_replace($search, $replace, $substr);
+            $substr .= "\n"
+                ."function AlphabeticalSort(SelectorList, x) {\n"
+                ."	if (MakeIndividualDropdowns) {\n"
+                ."		var y_max = I[x][1].length - 1;\n"
+                ."	} else {\n"
+                ."		var y_max = I.length - 1;\n"
+                ."	}\n"
+                ."	var sorted = false;\n"
+                ."	while (! sorted) {\n"
+                ."		sorted = true;\n"
+                ."		for (var y=0; y<y_max; y++) {\n"
+                ."			var y1 = SelectorList[y];\n"
+                ."			var y2 = SelectorList[y + 1];\n"
+                ."			if (MakeIndividualDropdowns) {\n"
+                ."				var s1 = I[x][1][y1][0].toLowerCase();\n"
+                ."				var s2 = I[x][1][y2][0].toLowerCase();\n"
+                ."			} else {\n"
+                ."				var s1 = I[y1][1][0][0].toLowerCase();\n"
+                ."				var s2 = I[y2][1][0][0].toLowerCase();\n"
+                ."			}\n"
+                ."			if (s1 > s2) {\n"
+                ."				sorted = false;\n"
+                ."				SelectorList[y] = y2;\n"
+                ."				SelectorList[y + 1] = y1;\n"
+                ."			}\n"
+                ."		}\n"
+                ."	}\n"
+                ."	return SelectorList;\n"
+                ."}\n"
+            ;
+        }
+
+        $str = substr_replace($str, $substr, $start, $length);
+    }
 }

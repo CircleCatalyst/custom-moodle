@@ -40,7 +40,16 @@ class hotpot_mediafilter {
     // media filetypes that this filter can handle
     // this initial list is of the file types that Moodle's standard mediaplugin can handle
     // media file types specified by individual media players will be added to this list
-    public $media_filetypes = array('avi','flv','mov','mpeg','mpg','mp3','ram','rpm','rm','swf','wmv');
+    public $media_filetypes = array(
+        // any params allowed (flash audio/video, html5 audio/video)
+        'aac'=>'any', 'f4v'=>'any', 'flv'=>'any', 'm4a'=>'any', 'm4v'=>'any',
+        'mp4'=>'any', 'oga'=>'any', 'ogg'=>'any', 'ogv'=>'any', 'webm'=>'any',
+        // only "d=WIDTHxHEIGHT" param allowed in moodle filter
+        'avi'=>'size', 'm4v'=>'size', 'm4a'=>'size', 'mov'=>'size',
+        'mp4'=>'size', 'mpeg'=>'size', 'mpg'=>'size', 'swf'=>'size', 'wmv'=>'size',
+        // no params allowed in moodle filter
+        'mp3'=>'none', 'ra'=>'none', 'ram'=>'none', 'rm'=>'none', 'rv'=>'none'
+    );
 
     public $param_names = 'movie|src|url';
     //  wmp        : url
@@ -52,11 +61,12 @@ class hotpot_mediafilter {
     public $tagchars = '(?(1)[^>]|(?(2).(?!\\\\u003E)))*?';  // string of chars inside the tag
     public $tagclose = '(?(1)>|(?(2)\\\\u003E))'; // right angle-bracket (to match the left one)
     public $tagreopen = '(?(1)<|(?(2)\\\\u003C))'; // another left angle-bracket (to match the first one)
+    //$tagopen = '(?:(<)|(&lt;)|(&amp;#x003C;))';
+    //$tagclose = '(?(2)>|(?(3)&gt;|(?(4)&amp;#x003E;)))';
 
-    public $link_url = '';
-    public $param_url = '';
-    public $flashvars_url = '';
-    public $querystring_url = '';
+    public $link_search = '';
+    public $object_search = '';
+    public $object_searches = array();
 
     public $js_inline = '';
     public $js_external = '';
@@ -77,13 +87,13 @@ class hotpot_mediafilter {
      *
      * @param xxx $output (passed by reference)
      */
-    function __construct(&$output)  {
+    function __construct($output)  {
         global $CFG, $THEME;
 
         $this->players[$this->defaultplayer] = new hotpot_mediaplayer();
 
-        $flashvars_mediaurls = array();
-        $querystring_mediaurl = array();
+        $flashvars_paramnames = array();
+        $querystring_paramname = array();
 
         $players = get_list_of_plugins('mod/hotpot/mediafilter/hotpot'); // sorted
         foreach ($players as $player) {
@@ -93,11 +103,11 @@ class hotpot_mediafilter {
                 $this->players[$player] = new $playerclass();
 
                 // note the names urls in flashvars and querystring
-                if ($name = $this->players[$player]->flashvars_mediaurl) {
-                    $flashvars_mediaurls[$name] = true;
+                if ($name = $this->players[$player]->flashvars_paramname) {
+                    $flashvars_paramnames[$name] = true;
                 }
-                if ($name = $this->players[$player]->querystring_mediaurl) {
-                    $querystring_mediaurls[$name] = true;
+                if ($name = $this->players[$player]->querystring_paramname) {
+                    $querystring_paramnames[$name] = true;
                 }
 
                 // add aliases to this player
@@ -107,34 +117,63 @@ class hotpot_mediafilter {
 
                 // add any new media file types
                 foreach ($this->players[$player]->media_filetypes as $filetype) {
-                    if (! in_array($filetype, $this->media_filetypes)) {
-                        $this->media_filetypes[] = $filetype;
+                    if (! array_key_exists($filetype, $this->media_filetypes)) {
+                        $this->media_filetypes[$filetype] = '';
                     }
                 }
             }
         }
 
-        $filetypes = implode('|', $this->media_filetypes);
-        $filepath = '[^"'."']*".'\.(?:'.$filetypes.')[^"'."'\\\\]*";
+        $filetypes = implode('|', array_keys($this->media_filetypes));
+        $filepath = '[^"'."'?]*".'\.('.$filetypes.')[^"'."']*";
 
         // detect backslash before double quotes and slashes within JavaScript
         $escape = '(?:\\\\)?';
 
-        // pattern to match <a> tags which link to multimedia files
-        //$this->link_url = '/'.$this->tagopen.'a'.'\s.*?'.'href="('.$filepath.')"'.'.*?'.$this->tagclose.'.*?'.$this->tagreopen.'\/a'.$this->tagclose.'/is';
-        $this->link_url = '/'.$this->tagopen.'a'.'\s'.$this->tagchars.'href='.$escape.'"('.$filepath.')'.$escape.'"'.$this->tagchars.$this->tagclose.'.*?'.$this->tagreopen.$escape.'\/a'.$this->tagclose.'/is';
+        // search string to extract <a> tags
+        $this->link_search = '/'.$this->tagopen.'a'.'\s+'.$this->tagchars.'href='.$escape.'"('.$filepath.')'.$escape.'"'.$this->tagchars.$this->tagclose.'.*?'.$this->tagreopen.$escape.'\/a'.$this->tagclose.'/is';
 
-        // pattern to match <param> tags which contain the file path
-        $this->param_url = '/'.$this->tagopen.'param'.'\s'.$this->tagchars.'name='.$escape.'"(?:'.$this->param_names.')'.$escape.'"'.$this->tagchars.'value='.$escape.'"('.$filepath.')'.$escape.'"'.$this->tagchars.$this->tagclose.'/is';
+        // search string to extract <object> or <embed> tags
+        $this->object_search = '/'.$this->tagopen.'(object|embed)'.'\s'.$this->tagchars.$this->tagclose.'(.*?)(?:'.$this->tagreopen.'(?:\\\\)?'.'\/\3'.$this->tagclose.')+/is';
 
-        if ($flashvars_mediaurls = implode('|', array_keys($flashvars_mediaurls))) {
-            $this->flashvars_url = '/'.$this->tagopen.'param'.'\s+'.'name='.$escape.'"FlashVars'.$escape.'"'.'\s+'.'value='.$escape.'"(?:'.$flashvars_mediaurls.')=('.$filepath.')'.$escape.'"'.$this->tagchars.$this->tagclose.'/is';
+        // search Flashvars with specific names
+        // $flashvars_paramnames e.g. TheSound
+        // e.g. param name="Flashvars" value="TheSound=abc.mp3"
+        if ($flashvars_paramnames = implode('|', array_keys($flashvars_paramnames))) {
+            $this->object_searches[] = '/'.$this->tagopen.'param'.'\s+'.$this->tagchars.'name='.$escape.'"FlashVars'.$escape.'"'.$this->tagchars.'value='.$escape.'"(?:'.$flashvars_paramnames.')=('.$filepath.')'.$escape.'"'.$this->tagchars.$this->tagclose.'/is';
         }
 
-        if ($querystring_mediaurls = implode('|', array_keys($querystring_mediaurls))) {
-            // could you this to detect url in query string
-            $filepath_querystring = $filepath.'\?[^"'."']*((?:$querystring_mediaurls)".'=[^"'."=']*)".'[^"'."']*";
-            $this->querystring_url = '/'.$this->tagopen.'a'.'\s'.$this->tagchars.'href='.$escape.'"'.$filepath_querystring.$escape.'"'.$this->tagchars.$this->tagclose.'.*?'.$this->tagreopen.$escape.'\/a'.$this->tagclose.'/is';
+        // html tags and attributes to search for urls
+        $tags = array(
+            'object'=>'data', 'embed'=>'src', 'a'=>'href'
+        );
+
+        // search for specific querystrings
+        // e.g. param name="movie" value="player.swf?mp3=abc.mp3"
+        // e.g. object data="player.swf?mp3=abc.mp3"
+        // e.g. embed src="player.swf?mp3=abc.mp3"
+        // e.g. a href="player.swf?mp3=abc.mp3"
+        if ($querystring_paramnames = implode('|', array_keys($querystring_paramnames))) {
+            $querystring_filepath = '[^"'."'?]*".'\?[^"'."']*(?:$querystring_paramnames)=($filepath)".'[^"'."']*";
+
+            if ($this->param_names) {
+                $this->object_searches[] = '/'.$this->tagopen.'param'.'\s+'.$this->tagchars.'name='.$escape.'"(?:'.$this->param_names.')'.$escape.'"'.$this->tagchars.'value='.$escape.'"'.$querystring_filepath.$escape.'"'.$this->tagchars.$this->tagclose.'/is';
+            }
+            foreach ($tags as $tag => $attribute) {
+                $this->object_searches[] = '/'.$this->tagopen.$tag.'\s+'.$this->tagchars.$attribute.'='.$escape.'"'.$querystring_filepath.$escape.'"'.$this->tagchars.$this->tagclose.'.*?'.$this->tagreopen.$escape.'\/'.$tag.$this->tagclose.'/is';
+            }
+        }
+
+        // search for full urls
+        // e.g. param name="movie" value="abc.mp3"
+        // e.g. object data="mp3=abc.mp3"
+        // e.g. embed src="abc=abc.mp3"
+        // e.g. a href="abc=abc.mp3"
+        if ($this->param_names) {
+            $this->object_searches[] = '/'.$this->tagopen.'param'.'\s+'.$this->tagchars.'name='.$escape.'"(?:'.$this->param_names.')'.$escape.'"'.$this->tagchars.'value='.$escape.'"('.$filepath.')'.$escape.'"'.$this->tagchars.$this->tagclose.'/is';
+        }
+        foreach ($tags as $tag => $attribute) {
+            $this->object_searches[] = '/'.$this->tagopen.$tag.'\s+'.$this->tagchars.$attribute.'='.$escape.'"('.$filepath.')'.$escape.'"'.$this->tagchars.$this->tagclose.'.*?'.$this->tagreopen.$escape.'\/'.$tag.$this->tagclose.'/is';
         }
 
         // check player settings
@@ -170,27 +209,26 @@ class hotpot_mediafilter {
     /**
      * fix
      *
-     * @param xxx $output (passed by reference)
      * @param xxx $text
+     * @param xxx $output (passed by reference)
      */
-    function fix(&$output, $text) {
-        $this->fix_objects($output, $text);
-        $this->fix_links($output, $text);
-        $this->fix_specials($output, $text);
+    function fix($text, $output) {
+        $this->fix_objects($text, $output);
+        $this->fix_links($text, $output);
+        $this->fix_specials($text, $output);
     }
 
     /**
      * fix_objects
      *
-     * @param xxx $output (passed by reference)
      * @param xxx $text
+     * @param xxx $output (passed by reference)
      */
-    function fix_objects(&$output, $text)  {
-        $search = '/'.$this->tagopen.'object'.'\s'.$this->tagchars.$this->tagclose.'(.*?)(?:'.$this->tagreopen.'(?:\\\\)?'.'\/object'.$this->tagclose.')+/ise';
+    function fix_objects($text, $output)  {
         // Segments[0][0] = '<object classid=\"CLSID:6BF52A52-394A-11d3-B153-00C04F79FAA6\" width=\"100\" height=\"30\"><param name=\"url\" value=\"http://localhost/moodle/19/mysql/file.php/2/hennyjellema/frag.01.mp3\" /><param name=\"autostart\" value=\"false\" /><param name=\"showcontrols\" value=\"true\" /><\/object>';
-        // $search = '/<object[^>]*>(.*?)(?:'.'(?:\\\\)*'.'\/object>)+'.'/ise';
-        $replace = '$this->fix_object($output,"\\0","\\2")';
-        $output->$text = preg_replace($search, $replace, $output->$text);
+        $callback = array($this, 'fix_object');
+        $callback = partial($callback, $output);
+        $output->$text = preg_replace_callback($this->object_search, $callback, $output->$text);
     }
 
     /**
@@ -202,22 +240,21 @@ class hotpot_mediafilter {
      * @param xxx $quote (optional, default="'")
      * @return xxx
      */
-    function fix_object(&$output, $object, $unicode, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $object = str_replace('\\'.$quote, $quote, $object);
+    function fix_object($output, $match)  {
+        $object = $match[0];
+        $unicode = $match[2];
+
+        $url = '';
+        $filetype = '';
+        foreach ($this->object_searches as $search) {
+            if (preg_match($search, $object, $matches)) {
+                $url = $matches[3];
+                $filetype = $matches[4];
+                break;
+            }
         }
 
-        if ($this->flashvars_url && preg_match($this->flashvars_url, $object, $matches)) {
-            $url = $matches[3]; // from flashvars
-        } else if ($this->querystring_url && preg_match($this->querystring_url, $object, $matches)) {
-            $url = $matches[3]; // from querystring
-        } else if (preg_match($this->param_url, $object, $matches)) {
-            $url = $matches[3]; // from param
-        } else if (preg_match($this->link_url, $object, $matches)) {
-            $url = $matches[3]; // from link
-        } else {
-            // no url found - shouldn't happen !!
+        if ($url=='') {
             return $object;
         }
 
@@ -225,12 +262,32 @@ class hotpot_mediafilter {
         $txt = preg_replace('/'.$this->tagopen.'.*?'.$this->tagclose.'/', '', $object);
         $txt = trim($txt);
 
-        // if url has a query string, we assume the target url is the last value in the query string
-        $url = preg_replace('/^[^?]*\?'.'(?:[^=]+=[^&]*&(?:amp;))*'.'[^=]+=([^&]*)'.'$/', '$1', $url, 1);
+        // if url has a query string, we assume the target url
+        // is one of the values in the query string
+        // $pos : 0=first value, 1=named value, 2=last value
+        $pos = 1;
+        switch ($pos) {
+            case 0: $search = '/^[^?]*\?'.'[^=]+=([^&]*)'.'.*$/'; break;
+            case 1: $search = '/^[^?]*\?'.'(?:file|src|thesound|mp3)+=([^&]*)'.'.*$/'; break;
+            case 2: $search = '/^[^?]*\?'.'(?:[^=]+=[^&]*&(?:amp;))*'.'[^=]+=([^&]*)'.'$/'; break;
+        }
+        $url = preg_replace($search, '$1', $url, 1);
 
         // create new media player for this media file
+        $player = $this->get_defaultplayer($url, $filetype);
+        if ($player=='moodle' && isset($this->media_filetypes[$filetype])) {
+            $allow = $this->media_filetypes[$filetype];
+            $count = 0;
+            if ($allow=='size') {
+                $url = preg_replace('/^([^?#&]*).*?(d=\d{1,4}x\d{1,4}).*$/', '$1?$2', $url, -1, $count);
+            }
+            if ($allow=='none' || ($allow=='size' && $count==0)) {
+                $url = preg_replace('/^([^?]*)[?#&].*$/', '$1', $url);
+            }
+        }
+        $options = array('unicode' => $unicode, 'player' => $player);
         $link = '<a href="'.$url.'">'.$txt.'</a>';
-        return $this->fix_link($output, $link, $unicode, '');
+        return $this->fix_link($output, $options, $link);
     }
 
     /**
@@ -239,7 +296,7 @@ class hotpot_mediafilter {
      * @param xxx $output (passed by reference)
      * @param xxx $text
      */
-    function fix_specials(&$output, $text)  {
+    function fix_specials($text, $output)  {
         // search for [url   player   width   height   options]
         //     url : the (relative or absolute) url of the media file
         //     player : string of alpha chars (underscore and hyphen are also allowed)
@@ -252,7 +309,7 @@ class hotpot_mediafilter {
         //     height : the required display height (e.g. 25 or 25px or 5em)
         //     options : xx OR xx= OR xx=abc123 OR xx="a b c 1 2 3"
         // Note: only url is required; others values are optional
-        $filetypes = implode('|', $this->media_filetypes);
+        $filetypes = implode('|', array_keys($this->media_filetypes));
         $search = ''
             .'/\[\s*'
             .'('.'[^ \]]*?'.'\.(?:'.$filetypes.')(?:\?[^ \]]*)?)' // 1: url (+ querystring)
@@ -262,38 +319,31 @@ class hotpot_mediafilter {
             .'((?:\s+[^ =\]]+(?:=(?:(?:\\\\?"[^"]*")|\w*))?)*)' // 5: options
             .'\s*\]'
             .'((?:\s*<br\s*\/?>)*)' // 6: trailing newlines
-            .'/ise'
+            .'/is'
         ;
-        $replace = '$this->fix_special($output,"\\1",trim("\\2"),trim("\\3"),trim("\\4"),trim("\\5"),trim("\\6"))';
-        $output->$text = preg_replace($search, $replace, $output->$text);
+        $callback = array($this, 'fix_special');
+        $callback = partial($callback, $output);
+        $output->$text = preg_replace_callback($search, $callback, $output->$text);
     }
 
     /**
      * fix_special
      *
+     * @param xxx $match
      * @param xxx $output (passed by reference)
-     * @param xxx $url
-     * @param xxx $player
-     * @param xxx $width
-     * @param xxx $height
-     * @param xxx $options
-     * @param xxx $space
-     * @param xxx $quote (optional, default="'")
      * @return xxx
      */
-    function fix_special(&$output, $url, $player, $width, $height, $options, $space, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $url = str_replace('\\'.$quote, $quote, $url);
-            $player = str_replace('\\'.$quote, $quote, $player);
-            $width = str_replace('\\'.$quote, $quote, $width);
-            $height = str_replace('\\'.$quote, $quote, $height);
-            $options = str_replace('\\'.$quote, $quote, $options);
-            $space = str_replace('\\'.$quote, $quote, $space);
-        }
+    function fix_special($output, $match)  {
+
+        $url = trim($match[1]);
+        $player = trim($match[2]);
+        $width = trim($match[3]);
+        $height = trim($match[4]);
+        $options = trim($match[5]);
+        $space = trim($match[6]);
 
         // convert $url to $absoluteurl
-        $absoluteurl = $output->convert_url_relative('', $url, '', '');
+        $absoluteurl = $output->convert_url_relative($url);
         //$absoluteurl = $output->convert_url($url, '');
 
         // set height equal to width, if necessary
@@ -308,6 +358,10 @@ class hotpot_mediafilter {
         //if ($player=='img' || $player=='image') {
         //    return '<img src="'.$absoluteurl.'" width="'.$width.'" height="'.$height.'" />';
         //}
+
+        if ($player=='') {
+            $player = $this->get_defaultplayer($url);
+        }
 
         // $options_array will be passed to mediaplugin_filter
         $options_array = array();
@@ -349,7 +403,7 @@ class hotpot_mediafilter {
         }
 
         $link = '<a href="'.$absoluteurl.'" target="_blank">'.$url.'</a>';
-        return $this->fix_link($output, $link, '', '', $options_array).$space;
+        return $this->fix_link($output, $options_array, $link).$space;
     }
 
     /**
@@ -358,29 +412,40 @@ class hotpot_mediafilter {
      * @param xxx $output (passed by reference)
      * @param xxx $text
      */
-    function fix_links(&$output, $text)  {
-        $search = $this->link_url.'e';
-        $replace = '$this->fix_link($output,"\\0","\\2")';
-        $output->$text = preg_replace($search, $replace, $output->$text);
+    function fix_links($text, $output)  {
+        $callback = array($this, 'fix_link');
+        $callback = partial($callback, $output, array());
+        $output->$text = preg_replace_callback($this->link_search, $callback, $output->$text);
     }
 
     /**
      * fix_link
      *
+     * @param xxx $match
      * @param xxx $output (passed by reference)
-     * @param xxx $link
-     * @param xxx $unicode
-     * @param xxx $quote (optional, default="'")
      * @param xxx $options (optional, default=array)
      * @return xxx
      */
-    function fix_link(&$output, $link, $unicode, $quote="'", $options=array())  {
+    function fix_link($output, $options, $match)  {
         global $CFG, $PAGE;
+        static $load_flowplayer = 0;
         static $eolas_fix_applied = 0;
 
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $link = str_replace('\\'.$quote, $quote, $link);
+        if (is_string($match)) {
+            $link = $match;
+            $unicode = '';
+        } else if (is_array($match)) {
+            $link = $match[0];
+            $unicode = $match[2];
+        } else {
+            debugging('Oops, $match is not an array or string !');
+            $args = func_get_args();
+            print_object(count($args));
+            die;
+        }
+
+        if (array_key_exists('unicode', $options)) {
+            $unicode = $options['unicode'];
         }
 
         // set player default, if necessary
@@ -417,17 +482,18 @@ class hotpot_mediafilter {
                     // 1st quiz - eolas_fix.js was added by filter/mediaplugin/filter.php
                 } else {
                     // 2nd (or later) quiz - e.g. we are being called by hotpot_cron()
-                    $PAGE->requires->js('/filter/mediaplugin/eolas_fix.js');
-                    //$object .= '<script defer="defer" src="'.$CFG->wwwroot.'/filter/mediaplugin/eolas_fix.js" type="text/javascript"></script>';
+                    $PAGE->requires->js('/mod/hotpot/mediafilter/eolas_fix.js');
+                    //$object .= '<script defer="defer" src="'.$CFG->wwwroot.'/mod/hotpot/mediafilter/eolas_fix.js" type="text/javascript"></script>';
                 }
-                $PAGE->requires->js('/lib/ufo.js', true);
-                //$object .= '<script type="text/javascript" src="'.$CFG->wwwroot.'/lib/ufo.js"></script>';
+                $PAGE->requires->js('/mod/hotpot/mediafilter/ufo.js', true);
+                //$object .= '<script type="text/javascript" src="'.$CFG->wwwroot.'/mod/hotpot/mediafilter/ufo.js"></script>';
                 $eolas_fix_applied = $output->hotpot->id;
             }
 
-            //$search = '/(flashvars:")([^"]*)(")/e';
-            //$replace = '$this->fix_flashvars("\\1", "\\2", "\\3", $options)';
-            //$object = preg_replace($search, $replace, $object);
+            $search = '/(flashvars:")([^"]*)(")/';
+            $callback = array($this, 'fix_flashvars');
+            $callback = partial($callback, $options);
+            $object = preg_replace_callback($search, $callback, $object);
 
             // fix height and width (e.g. height="15", "height": 15)
             foreach (array('width', 'height') as $option) {
@@ -448,35 +514,47 @@ class hotpot_mediafilter {
             unset($options['center']);
         }
 
-        if ($object!=$link) {
+        // if required, remove the link contained in the object tag
+        // Note: strcmp() returns true if strings are different
+        $player = $options['player'];
+        if ($this->players[$player]->removelink && strcmp($object, $link)) {
+            $search = '/<a href="[^"]*"[^>]*>[^<]*<\/a>\s*/is';
+            $object = preg_replace($search, '', $object);
+        }
 
-            // remove the link
-            $object = str_replace($link, '', $object);
-
-            // extract the external javascripts
-            $search = '/\s*<script[^>]*src[^>]*>.*?<\/script>\s*/is';
-            if (preg_match_all($search, $object, $scripts, PREG_OFFSET_CAPTURE)) {
-                foreach (array_reverse($scripts[0]) as $script) {
-                    // $script: [0] = matched string, [1] = offset to start of string
-                    // remove the javascript from the player
-                    $object = substr_replace($object, "\n", $script[1], strlen($script[0]));
-                    // store this javascript so it can be run later
-                    $this->js_external = trim($script[0])."\n".$this->js_external;
-                }
+        // extract the external javascripts
+        $search = '/\s*<script[^>]*src[^>]*>.*?<\/script>\s*/is';
+        if (preg_match_all($search, $object, $scripts, PREG_OFFSET_CAPTURE)) {
+            foreach (array_reverse($scripts[0]) as $script) {
+                // $script: [0] = matched string, [1] = offset to start of string
+                // remove the javascript from the player
+                $object = substr_replace($object, "\n", $script[1], strlen($script[0]));
+                // store this javascript so it can be run later
+                $this->js_external = trim($script[0])."\n".$this->js_external;
             }
+        }
 
-            // extract the inline javascripts
-            $search = '/\s*<script[^>]*>.*?<\/script>\s*/is';
-            if (preg_match_all($search, $object, $scripts, PREG_OFFSET_CAPTURE)) {
-                foreach (array_reverse($scripts[0]) as $script) {
-                    // $script: [0] = matched string, [1] = offset to start of string
-                    // remove the script from the player
-                    $object = substr_replace($object, "\n", $script[1], strlen($script[0]));
-                    // format the script (helps readability of the html source)
-                    $script[0] = $this->format_script($script[0]);
-                    //store this javascript so it can be run later
-                    $this->js_inline = trim($script[0])."\n".$this->js_inline;
-                }
+        // extract the inline javascripts
+        $search = '/\s*<script[^>]*>.*?<\/script>\s*/is';
+        if (preg_match_all($search, $object, $scripts, PREG_OFFSET_CAPTURE)) {
+            foreach (array_reverse($scripts[0]) as $script) {
+                // $script: [0] = matched string, [1] = offset to start of string
+                // remove the script from the player
+                $object = substr_replace($object, "\n", $script[1], strlen($script[0]));
+                // format the script (helps readability of the html source)
+                $script[0] = $this->format_script($script[0]);
+                //store this javascript so it can be run later
+                $this->js_inline = trim($script[0])."\n".$this->js_inline;
+            }
+            if ($this->js_inline && $load_flowplayer==0) {
+                $load_flowplayer = 1;
+                $this->js_inline .= ''
+                    .'<script type="text/javascript">'."\n"
+                    ."//<![CDATA[\n"
+                    ."\t".'M.util.load_flowplayer();'."\n"
+                    ."//]]>\n"
+                    ."</script>\n"
+                ;
             }
         }
 
@@ -495,26 +573,41 @@ class hotpot_mediafilter {
     }
 
     /**
-     * fix_flashvars
+     * get_defaultplayer
      *
-     * @param xxx $before
-     * @param xxx $flashvars
-     * @param xxx $after
-     * @param xxx $options (passed by reference)
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $url
      * @return xxx
      */
-    function fix_flashvars($before, $flashvars, $after, &$options, $quote="'")  {
-        global $CFG;
-        if ($quote) {
-            $before = str_replace('\\'.$quote, $quote, $before);
-            $flashvars = str_replace('\\'.$quote, $quote, $flashvars);
-            $after = str_replace('\\'.$quote, $quote, $after);
+    function get_defaultplayer($url, $filetype='') {
+        if ($filetype=='') {
+            $filetype = pathinfo($url, PATHINFO_EXTENSION);
         }
+        foreach ($this->players as $playername => $player) {
+            if (in_array($filetype, $player->media_filetypes)) {
+                return $playername;
+            }
+        }
+        return $this->defaultplayer;
+    }
 
+    /**
+     * fix_flashvars
+     *
+     * @param xxx $match
+     * @param xxx $options (passed by reference)
+     * @return xxx
+     */
+    function fix_flashvars($options, $match)  {
+        global $CFG;
+
+        $before = $match[1];
+        $flashvars = $match[2];
+        $after  = $match[3];
+
+        // get text manipulation library
         $textlib = textlib_get_instance();
 
-        // html_entity_decode() is required undo the call to htmlentities(), see MDL-5223
+        // entities_to_utf8() is required undo the call to htmlentities(), see MDL-5223
         // this is necessary to allow waitForPlay and autoPlay to be effective on Firefox
         $flashvars = $textlib->entities_to_utf8($flashvars);
 
@@ -532,36 +625,33 @@ class hotpot_mediafilter {
     /**
      * format_script
      *
-     * @param xxx $script
+     * @param xxx $str
      * @param xxx $quote (optional, default="'")
      * @return xxx
      */
-    function format_script($script, $quote="'")  {
-        if ($quote) {
-            $script = str_replace('\\'.$quote, $quote, $script);
-        }
-        // format FO (Flash Object) properties (one property per line)
-        $search = '/(var FO)\s*=\s*\{\s*(.*?)\s*\}/ise';
-        $replace = '"\\1 = {".$this->format_script_FO("\\2")."\\n  }"';
-        return preg_replace($search, $replace, $script);
-    }
+    function format_script($str)  {
+        // fix indents
+        $str = preg_replace('/^ +/m', "\t", $str);
 
-    /**
-     * format_script_FO
-     *
-     * @param xxx $properties
-     * @param xxx $quote (optional, default="'")
-     * @return xxx
-     */
-    function format_script_FO($properties, $quote="'")  {
-        if ($quote) {
-            $properties = str_replace('\\'.$quote, $quote, $properties);
+        // format FO (Flash Object) properties (one property per line)
+        $search = '/var FO\s*=\s*\{\s*(.*?)\s*\}/is';
+        // $1 : properties of the FO object
+        if (preg_match_all($search, $str, $matches, PREG_OFFSET_CAPTURE)) {
+            $search = '/\s*(\w+)\s*:\s*(".*?",?)/is';
+            // $1 : the name of an FO object property
+            // $2 : the value of an FO object property
+            $replace = "\t".'$1 : $2'."\n\t";
+            $i_max = count($matches[0]) - 1;
+            for ($i=$i_max; $i>=0; $i--) {
+                list($match, $start) = $matches[0][$i];
+                $length = strlen($match);
+                $properties = preg_replace($search, $replace, $matches[1][$i][0]);
+                $str = substr_replace($str, 'var FO ={'."\n\t".$properties.'}', $start, $length);
+            }
+        } else {
+            $str = preg_replace('/\s*(M.util.add_[^;]*;)\s*/', "\n\t".'$1'."\n", $str);
         }
-        // $1 : the name of an FO object property
-        // $2 : the value of an FO object property
-        $search = '/\s*(\w+)\s*:\s*(".*?")/ise';
-        $replace = 'sprintf("% -5s% -6s : %s", "\\n", "\\1", "\\2")';
-        return preg_replace($search, $replace, $properties);
+        return $str;
     }
 
     /**
@@ -589,8 +679,8 @@ class hotpot_mediaplayer {
     public $aliases = array();
     public $playerurl = '';
     public $flashvars = array();
-    public $flashvars_mediaurl = '';
-    public $querystring_mediaurl = '';
+    public $flashvars_paramname = '';
+    public $querystring_paramname = '';
     public $options = array(
         'width' => 0, 'height' => 0, 'build' => 40,
         'quality' => 'high', 'majorversion' => '6', 'flashvars' => null
@@ -598,6 +688,7 @@ class hotpot_mediaplayer {
     public $more_options = array();
     public $media_filetypes = array();
     public $spantext = '';
+    public $removelink = true;
 
     /**
      * contructor for this class
@@ -639,20 +730,20 @@ class hotpot_mediaplayer {
         // add movie url to $options, if necessary
         if (! isset($options['movie'])) {
             $options['movie'] = $this->playerurl;
-            if ($this->querystring_mediaurl) {
-                $options['movie'] .= '?'.$this->querystring_mediaurl.'='.$mediaurl;
+            if ($this->querystring_paramname) {
+                $options['movie'] .= '?'.$this->querystring_paramname.'='.$mediaurl;
             }
         }
 
         // do we need to make sure the mediaurl is added to flashvars?
-        if ($this->flashvars_mediaurl && empty($options['skipmediaurl'])) {
+        if ($this->flashvars_paramname && empty($options['skipmediaurl'])) {
             $find_mediaurl = true;
         } else {
             $find_mediaurl = false;
         }
 
         // get list of option names to be cleaned
-        $search = '/^player|playerurl|querystring_mediaurl|flashvars_mediaurl|skipmediaurl$/i';
+        $search = '/^player|playerurl|querystring_paramname|flashvars_paramname|skipmediaurl$/i';
         $names = preg_grep($search, array_keys($options), PREG_GREP_INVERT);
 
         // clean the options
@@ -686,7 +777,7 @@ class hotpot_mediaplayer {
                         }
                         list($n, $v) = explode('=', $flashvar, 2);
                         $n = clean_param($n, PARAM_ALPHANUM);
-                        if ($n==$this->flashvars_mediaurl) {
+                        if ($n==$this->flashvars_paramname) {
                             $found_mediaurl = true;
                             $options[$name][$n] = clean_param($v, PARAM_URL);
                         } else if (array_key_exists($n, $this->flashvars)) {
@@ -698,7 +789,7 @@ class hotpot_mediaplayer {
 
                     // add media url to flashvars, if necessary
                     if ($find_mediaurl && ! $found_mediaurl) {
-                        $n = $this->flashvars_mediaurl;
+                        $n = $this->flashvars_paramname;
                         $options[$name][$n] = clean_param($mediaurl, PARAM_URL);
                     }
 
@@ -725,7 +816,7 @@ class hotpot_mediaplayer {
                     $quote = '';
                     if (isset($options[$name])) {
                         $value = $options[$name];
-                        if (preg_match('/^(\\\\*["'."']".')?(.*)'.'\\1'.'$/', $value, $matches)) {
+                        if (preg_match('/^(\\\\*["'."']".')?(.*)'.'$1'.'$/', $value, $matches)) {
                             $quote = $matches[1];
                             $value = $matches[2];
                         }

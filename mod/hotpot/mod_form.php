@@ -382,7 +382,7 @@ class mod_hotpot_mod_form extends moodleform_mod {
         $mform->disabledIf('delay3specific[timeunit]', 'delay3', 'ne', hotpot::TIME_SPECIFIC);
 
         // Allow review?
-        $mform->addElement('selectyesno', 'allowreview', get_string('allowreview', 'quiz'));
+        $mform->addElement('selectyesno', 'allowreview', get_string('allowreview', 'hotpot'));
         $mform->setDefault('allowreview', get_user_preferences('hotpot_review', 1));
         $mform->addHelpButton('allowreview', 'allowreview', 'hotpot');
         $mform->setAdvanced('allowreview');
@@ -499,6 +499,12 @@ class mod_hotpot_mod_form extends moodleform_mod {
     function add_activity_list($type)  {
         global $PAGE;
 
+        // if activity name is longer than $namelength, it will be truncated
+        // to first $headlength chars + " ... " + last $taillength chars
+        $namelength = 40;
+        $headlength = 16;
+        $taillength = 16;
+
         $mform = $this->_form;
 
         $optgroups = array(
@@ -514,6 +520,10 @@ class mod_hotpot_mod_form extends moodleform_mod {
         );
 
         if ($modinfo = get_fast_modinfo($PAGE->course)) {
+
+            // we may need textlib to truncate activity names
+            $textlib = textlib_get_instance();
+
             switch ($PAGE->course->format) {
                 case 'weeks': $strsection = get_string('strftimedateshort'); break;
                 case 'topics': $strsection = get_string('topic'); break;
@@ -547,39 +557,45 @@ class mod_hotpot_mod_form extends moodleform_mod {
                         $options[$optgroup] = array();
                     }
                 }
-                $optgroups[$optgroup][$cmid] = format_string($mod->name);
+
+                $name = format_string($mod->name);
+                $strlen = $textlib->strlen($name);
+                if ($strlen > $namelength) {
+                    $head = $textlib->substr($name, 0, $headlength);
+                    $tail = $textlib->substr($name, $strlen - $taillength, $taillength);
+                    $name = $head.' ... '.$tail;
+                }
+                $optgroups[$optgroup][$cmid] = $name;
             }
         }
 
+        $options = array();
+        for ($i=100; $i>=0; $i--) {
+            $options[$i] = $i.'%';
+        }
+        $elements = array(
+            $mform->createElement('selectgroups', $type.'cm', '', $optgroups),
+            $mform->createElement('select', $type.'grade', '', $options)
+        );
+        $mform->addGroup($elements, $type.'cm_elements', get_string($type.'cm', 'hotpot'), array(' '), false);
+        $mform->addHelpButton($type.'cm_elements', $type.'cm', 'hotpot');
         if ($type=='entry') {
-            $options = array();
-            for ($i=100; $i>=0; $i--) {
-                $options[$i] = $i.'%';
-            }
-            $elements = array(
-                $mform->createElement('selectgroups', $type.'cm', '', $optgroups),
-                $mform->createElement('select', $type.'grade', '', $options)
-            );
-            $mform->addGroup($elements, $type.'cm_elements', get_string($type.'cm', 'hotpot'), array(' '), false);
-            $mform->addHelpButton($type.'cm_elements', $type.'cm', 'hotpot');
-            $mform->setDefault($type.'cm', get_user_preferences('hotpot_'.$type.'cm', hotpot::ACTIVITY_NONE));
-            $mform->setDefault($type.'grade', get_user_preferences('hotpot_'.$type.'grade', 100));
-            $mform->disabledIf($type.'cm_elements', $type.'cm', 'eq', 0);
+            $defaultcm = hotpot::ACTIVITY_NONE;
+            $defaultgrade = 100;
+        } else {
+            $defaultcm = hotpot::ACTIVITY_SECTION_HOTPOT;
+            $defaultgrade = 0;
+        }
+        $mform->setDefault($type.'cm', get_user_preferences('hotpot_'.$type.'cm', $defaultcm));
+        $mform->setDefault($type.'grade', get_user_preferences('hotpot_'.$type.'grade', $defaultgrade));
+        $mform->disabledIf($type.'cm_elements', $type.'cm', 'eq', 0);
+        if ($type=='entry') {
             $mform->setAdvanced($type.'cm_elements');
-        } else { // exit
-            $mform->addElement('selectgroups', $type.'cm', get_string($type.'cm', 'hotpot'), $optgroups);
-            $mform->addHelpButton($type.'cm', $type.'cm', 'hotpot');
-            $mform->setDefault($type.'cm', get_user_preferences('hotpot_'.$type.'cm', hotpot::ACTIVITY_SECTION_HOTPOT));
-            $mform->setAdvanced($type.'cm');
         }
 
         // add module icons, if possible
         if ($modinfo) {
-            if ($type=='entry') {
-                $element = reset($mform->getElement($type.'cm_elements')->getElements());
-            } else {
-                $element = $mform->getElement($type.'cm');
-            }
+            $element = reset($mform->getElement($type.'cm_elements')->getElements());
             for ($i=0; $i<count($element->_optGroups); $i++) {
                 $optgroup = &$element->_optGroups[$i];
                 for ($ii=0; $ii<count($optgroup['options']); $ii++) {
@@ -635,17 +651,18 @@ class mod_hotpot_mod_form extends moodleform_mod {
             }
 
             // setup custom wysiwyg editor
+            $draftitemid = 0;
             if ($this->is_add()) {
                 // adding a new hotpot instance
                 $data[$type.'editor'] = array(
-                    'text'   => file_prepare_draft_area($itemid, null, 'mod_hotpot', $type, 0), // $this->context is course context
+                    'text'   => file_prepare_draft_area($draftitemid, $contextid, 'mod_hotpot', $type, 0),
                     'format' => editors_get_preferred_format(),
                     'itemid' => file_get_submitted_draft_itemid($type)
                 );
             } else {
                 // editing an existing hotpot
                 $data[$type.'editor'] = array(
-                    'text'   => file_prepare_draft_area($itemid, $this->context->id, 'mod_hotpot', $type, 0, $options, $data[$type.'text']),
+                    'text'   => file_prepare_draft_area($draftitemid, $contextid, 'mod_hotpot', $type, 0, $options, $data[$type.'text']),
                     'format' => $data[$type.'format'],
                     'itemid' => file_get_submitted_draft_itemid($type)
                 );

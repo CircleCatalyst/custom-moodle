@@ -10,7 +10,7 @@
 // Moodle is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
+// GNU General Public License for more detail.
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
@@ -36,20 +36,38 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Returns the information if the module supports a feature
  *
- * maybe this function should be called "mod_hotpot_supports"
+ * the very latest Moodle 2.x expects "mod_hotpot_supports"
+ * but since this module may also be run in early Moodle 2.x
+ * we leave this function with its legacy name "hotpot_supports"
  *
  * @see plugin_supports() in lib/moodlelib.php
+ * @see init_features() in course/moodleform_mod.php
  * @param string $feature FEATURE_xx constant for requested feature
  * @return mixed true if the feature is supported, null if unknown
  */
 function hotpot_supports($feature) {
     switch($feature) {
+        // enable features whose default is "false"
         case FEATURE_GRADE_HAS_GRADE:   return true;
         case FEATURE_GROUPINGS:         return true;
         case FEATURE_GROUPMEMBERSONLY:  return true;
         case FEATURE_BACKUP_MOODLE2:    return true;
+
+        // use default for these features whose default is "false"
+        //case FEATURE_RATE:              return false;
+        //case FEATURE_GRADE_HAS_GRADE:   return false;
+        //case FEATURE_COMPLETION_TRACKS_VIEWS: return false;
+
         // disable features whose default is "true"
         case FEATURE_MOD_INTRO:         return false;
+
+        // use default for these features whose default is "true"
+        //case FEATURE_GROUPS:            return true;
+        //case FEATURE_IDNUMBER:          return true;
+        //case FEATURE_GRADE_OUTCOMES:    return true;
+        //case FEATURE_MODEDIT_DEFAULT_COMPLETION: return true;
+
+        // otherwise, this is some feature we do not know about
         default:                        return null;
     }
 }
@@ -73,6 +91,9 @@ function hotpot_add_instance(stdclass $data, $mform) {
     // insert the new record so we get the id
     $data->id = $DB->insert_record('hotpot', $data);
 
+    // update calendar events
+    hotpot_update_events_wrapper($data);
+
     // update gradebook item
     hotpot_grade_item_update($data);
 
@@ -94,6 +115,9 @@ function hotpot_update_instance(stdclass $data, $mform) {
 
     $data->id = $data->instance;
     $DB->update_record('hotpot', $data);
+
+    // update calendar events
+    hotpot_update_events_wrapper($data);
 
     // update gradebook item
     if ($data->grademethod==$mform->get_original_value('grademethod', 0)) {
@@ -329,13 +353,12 @@ function hotpot_delete_instance($id) {
     // delete all associated hotpot questions
     $DB->delete_records('hotpot_questions', array('hotpotid' => $id));
 
-
     // delete all associated hotpot attempts, details and responses
     if ($attempts = $DB->get_records('hotpot_attempts', array('hotpotid' => $id), '', 'id, id')) {
         $ids = array_keys($attempts);
-        $DB->delete_records_list('hotpot_attempts',  'id',        $ids);
         $DB->delete_records_list('hotpot_details',   'attemptid', $ids);
         $DB->delete_records_list('hotpot_responses', 'attemptid', $ids);
+        $DB->delete_records_list('hotpot_attempts',  'id',        $ids);
     }
 
     // remove records from the hotpot cache
@@ -844,6 +867,7 @@ function hotpot_get_participants($hotpotid) {
  * @return bool
  */
 function hotpot_scale_used($hotpotid, $scaleid) {
+    return false;
 }
 
 /**
@@ -857,6 +881,7 @@ function hotpot_scale_used($hotpotid, $scaleid) {
  * @return bool
  */
 function hotpot_scale_used_anywhere($scaleid) {
+    return false;
 }
 
 /**
@@ -873,7 +898,7 @@ function hotpot_get_extra_capabilities() {
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Creates or updates grade items for the give hotpot instance
+ * Creates or updates grade items for the given hotpot instance
  *
  * Needed by grade_update_mod_grades() in lib/gradelib.php.
  * Also used by {@link hotpot_update_grades()}.
@@ -890,22 +915,26 @@ function hotpot_grade_item_update($hotpot, $grades=null) {
         return;
     }
 
-    $item = array(
+    $params = array(
         'itemname' => $hotpot->name
     );
+    if ($grades==='reset') {
+        $params['reset'] = true;
+        $grades = null;
+    }
     if (property_exists($hotpot, 'cmidnumber')) {
         //cmidnumber may not be always present
-        $item['idnumber'] = $hotpot->cmidnumber;
+        $params['idnumber'] = $hotpot->cmidnumber;
     }
     if ($hotpot->gradeweighting > 0) {
-        $item['gradetype'] = GRADE_TYPE_VALUE;
-        $item['grademax']  = $hotpot->gradeweighting;
-        $item['grademin']  = 0;
+        $params['gradetype'] = GRADE_TYPE_VALUE;
+        $params['grademax']  = $hotpot->gradeweighting;
+        $params['grademin']  = 0;
 
     } else {
-        $item['gradetype'] = GRADE_TYPE_NONE;
+        $params['gradetype'] = GRADE_TYPE_NONE;
     }
-    return grade_update('mod/hotpot', $hotpot->course, 'mod', 'hotpot', $hotpot->id, 0, $grades, $item);
+    return grade_update('mod/hotpot', $hotpot->course, 'mod', 'hotpot', $hotpot->id, 0, $grades, $params);
 }
 
 /**
@@ -919,7 +948,9 @@ function hotpot_grade_item_update($hotpot, $grades=null) {
  */
 function hotpot_update_grades($hotpot, $userid=0, $nullifnone=true) {
     global $CFG, $DB;
-    require_once($CFG->dirroot.'/lib/gradelib.php');
+
+    // get hotpot object
+    require_once($CFG->dirroot.'/mod/hotpot/locallib.php');
 
     // sanity check on $hotpot->id
     if (! isset($hotpot->id)) {
@@ -985,7 +1016,7 @@ function hotpot_update_grades($hotpot, $userid=0, $nullifnone=true) {
 
     } else {
         // no grades and no userid
-        hotpot_grade_item_update($hotpot->to_stdclass());
+        hotpot_grade_item_update($hotpot);
     }
 }
 
@@ -1006,9 +1037,9 @@ function hotpot_update_grades($hotpot, $userid=0, $nullifnone=true) {
  */
 function hotpot_get_file_areas($course, $cm, $context) {
     return array(
-        'sourcefile' => get_string('sourcefile', 'hotpot'),
-        'entry' => get_string('entrytext', 'hotpot'),
-        'exit' => get_string('exittext', 'hotpot')
+        'entry'      => get_string('entrytext',  'hotpot'),
+        'exit'       => get_string('exittext',   'hotpot'),
+        'sourcefile' => get_string('sourcefile', 'hotpot')
     );
 }
 
@@ -1032,8 +1063,8 @@ function mod_hotpot_pluginfile($course, $cm, $context, $filearea, array $args, $
 
     switch ($filearea) {
         case 'entry':      $capability = 'mod/hotpot:view'; break;
-        case 'sourcefile': $capability = 'mod/hotpot:attempt'; break;
         case 'exit':       $capability = 'mod/hotpot:attempt'; break;
+        case 'sourcefile': $capability = 'mod/hotpot:attempt'; break;
         default: send_file_not_found(); // invalid $filearea !!
     }
 
@@ -1155,4 +1186,269 @@ function hotpot_extend_navigation(navigation_node $hotpotnode, stdclass $course,
  * @param navigation_node $hotpotnode {@link navigation_node}
  */
 function hotpot_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $hotpotnode=null) {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Reset API                                                                  //
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * hotpot_reset_course_form_definition
+ *
+ * @param xxx $mform (passed by reference)
+ */
+function hotpot_reset_course_form_definition(&$mform) {
+    $mform->addElement('header', 'hotpotheader', get_string('modulenameplural', 'hotpot'));
+    $mform->addElement('checkbox', 'reset_hotpot_deleteallattempts', get_string('deleteallattempts', 'hotpot'));
+}
+
+/**
+ * hotpot_reset_course_form_defaults
+ *
+ * @param xxx $course
+ * @return xxx
+ */
+function hotpot_reset_course_form_defaults($course) {
+    return array('reset_hotpot_deleteallattempts' => 1);
+}
+
+/**
+ * hotpot_reset_gradebook
+ *
+ * @param xxx $courseid
+ * @param xxx $type (optional, default='')
+ */
+function hotpot_reset_gradebook($courseid, $type='') {
+    global $DB;
+    $sql = ''
+        .'SELECT h.*, cm.idnumber AS cmidnumber, cm.course AS courseid '
+        .'FROM {hotpot} h, {course_modules} cm, {modules} m '
+        ."WHERE m.name='hotpot' AND m.id=cm.module AND cm.instance=h.id AND h.course=?"
+    ;
+    if ($hotpots = $DB->get_records_sql($sql, array($courseid))) {
+        foreach ($hotpots as $hotpot) {
+            hotpot_grade_item_update($hotpot, 'reset');
+        }
+    }
+}
+
+/**
+ * hotpot_reset_userdata
+ *
+ * @param xxx $data
+ * @return xxx
+ */
+function hotpot_reset_userdata($data) {
+    global $DB;
+
+    if (empty($data->reset_hotpot_deleteallattempts)) {
+        return array();
+    }
+
+    if ($hotpots = $DB->get_records('hotpot', array('course' => $data->courseid), 'id', 'id, id')) {
+        foreach ($hotpots as $hotpot) {
+            if ($attempts = $DB->get_records('hotpot_attempts', array('hotpotid' => $hotpot->id), 'id', 'id, id')) {
+                $ids = array_keys($attempts);
+                $DB->delete_records_list('hotpot_details',   'attemptid', $ids);
+                $DB->delete_records_list('hotpot_responses', 'attemptid', $ids);
+                $DB->delete_records_list('hotpot_attempts',  'id',        $ids);
+            }
+        }
+    }
+
+    return array(array(
+        'component' => get_string('modulenameplural', 'hotpot'),
+        'item' => get_string('deleteallattempts', 'hotpot'),
+        'error' => false
+    ));
+}
+
+/*
+* This standard function will check all instances of this module
+* and make sure there are up-to-date events created for each of them.
+* If courseid = 0, then every hotpot event in the site is checked, else
+* only hotpot events belonging to the course specified are checked.
+* This function is used, in its new format, by restore_refresh_events()
+* in backup/backuplib.php
+*
+* @param int $courseid : relative path (below $CFG->dirroot) of folder holding class definitions
+*/
+function hotpot_refresh_events($courseid=0) {
+    global $CFG, $DB;
+
+    if ($courseid && is_numeric($courseid)) {
+        $params = array('course'=>$courseid);
+    } else {
+        $params = array();
+    }
+    if (! $hotpots = $DB->get_records('hotpot', $params)) {
+        return true; // no hotpots
+    }
+
+    // get previous ids for events for these hotpots
+    list($filter, $params) = $DB->get_in_or_equal(array_keys($hotpots));
+    if ($eventids = $DB->get_records_select('event', "modulename='hotpot' AND instance $filter", $params, 'id', 'id, id AS eventid')) {
+        $eventids = array_keys($eventids);
+    } else {
+        $eventids = array();
+    }
+
+    // we're going to count the hotpots so we can detect the last one
+    $i = 0;
+    $count = count($hotpots);
+
+    // add events for these hotpot units
+    // eventids will be reused where possible
+    foreach ($hotpots as $hotpot) {
+        $i++;
+        $delete = ($i==$count);
+        hotpot_update_events($hotpot, $eventids, $delete);
+    }
+
+    // all done
+    return true;
+}
+
+/**
+ * Update calendar events for a single HotPot activity
+ * This function is intended to be called just after
+ * a HotPot activity has been created or edited.
+ *
+ * @param xxx $hotpot
+ */
+function hotpot_update_events_wrapper($hotpot) {
+    global $DB;
+    if ($eventids = $DB->get_records('event', array('modulename'=>'hotpot', 'instance'=>$hotpot->id), 'id', 'id, id AS eventid')) {
+        $eventids = array_keys($eventids);
+    } else {
+        $eventids = array();
+    }
+    hotpot_update_events($hotpot, $eventids, true);
+}
+
+/**
+ * hotpot_update_events
+ *
+ * @param xxx $hotpot (passed by reference)
+ * @param xxx $eventids (passed by reference)
+ * @param xxx $delete
+ */
+function hotpot_update_events(&$hotpot, &$eventids, $delete) {
+    global $CFG, $DB;
+    require_once($CFG->dirroot.'/calendar/lib.php');
+
+    static $stropens = '';
+    static $strcloses = '';
+    static $maxduration = null;
+
+    // cache text strings and max duration (first time only)
+    if (is_null($maxduration)) {
+        if (isset($CFG->hotpot_maxeventlength)) {
+            $maxeventlength = $CFG->hotpot_maxeventlength;
+        } else {
+            $maxeventlength = 5; // 5 days is default
+        }
+        // set $maxduration (secs) from $maxeventlength (days)
+        $maxduration = $maxeventlength * 24 * 60 * 60;
+
+        $stropens = get_string('activityopens', 'hotpot');
+        $strcloses = get_string('activitycloses', 'hotpot');
+    }
+
+    // array to hold events for this hotpot
+    $events = array();
+
+    // set duration
+    if ($hotpot->timeclose && $hotpot->timeopen) {
+        $duration = max(0, $hotpot->timeclose - $hotpot->timeopen);
+    } else {
+        $duration = 0;
+    }
+
+    if ($duration > $maxduration) {
+        // long duration, two events
+        $events[] = (object)array(
+            'name' => $hotpot->name.' ('.$stropens.')',
+            'eventtype' => 'open',
+            'timestart' => $hotpot->timeopen,
+            'timeduration' => 0
+        );
+        $events[] = (object)array(
+            'name' => $hotpot->name.' ('.$strcloses.')',
+            'eventtype' => 'close',
+            'timestart' => $hotpot->timeclose,
+            'timeduration' => 0
+        );
+    } else if ($duration) {
+        // short duration, just a single event
+        if ($duration < DAYSECS) {
+            // less than a day (1:07 p.m.)
+            $fmt = get_string('strftimetime');
+        } else if ($duration < WEEKSECS) {
+            // less than a week (Thu, 13:07)
+            $fmt = get_string('strftimedaytime');
+        } else if ($duration < YEARSECS) {
+            // more than a week (2 Feb, 13:07)
+            $fmt = get_string('strftimerecent');
+        } else {
+            // more than a year (Thu, 2 Feb 2012, 01:07 pm)
+            $fmt = get_string('strftimerecentfull');
+        }
+        $events[] = (object)array(
+            'name' => $hotpot->name.' ('.userdate($hotpot->timeopen, $fmt).' - '.userdate($hotpot->timeclose, $fmt).')',
+            'eventtype' => 'open',
+            'timestart' => $hotpot->timeopen,
+            'timeduration' => $duration,
+        );
+    } else if ($hotpot->timeopen) {
+        // only an open date
+        $events[] = (object)array(
+            'name' => $hotpot->name.' ('.$stropens.')',
+            'eventtype' => 'open',
+            'timestart' => $hotpot->timeopen,
+            'timeduration' => 0,
+        );
+    } else if ($hotpot->timeclose) {
+        // only a closing date
+        $events[] = (object)array(
+            'name' => $hotpot->name.' ('.$strcloses.')',
+            'eventtype' => 'close',
+            'timestart' => $hotpot->timeclose,
+            'timeduration' => 0,
+        );
+    }
+
+    // cache description and visiblity (saves doing it twice for long events)
+    if (empty($hotpot->entrytext)) {
+        $description = '';
+    } else {
+        $description = $hotpot->entrytext;
+    }
+    $visible = instance_is_visible('hotpot', $hotpot);
+
+    foreach ($events as $event) {
+        $event->groupid = 0;
+        $event->userid = 0;
+        $event->courseid = $hotpot->course;
+        $event->modulename = 'hotpot';
+        $event->instance = $hotpot->id;
+        $event->description = $description;
+        $event->visible = $visible;
+        if (count($eventids)) {
+            $event->id = array_shift($eventids);
+            $calendarevent = calendar_event::load($event->id);
+            $calendarevent->update($event);
+        } else {
+            calendar_event::create($event);
+        }
+    }
+
+    // delete surplus events, if required
+    if ($delete) {
+        while (count($eventids)) {
+            $id = array_shift($eventids);
+            $event = calendar_event::load($id);
+            $event->delete();
+        }
+    }
 }

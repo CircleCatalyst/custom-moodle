@@ -54,7 +54,11 @@ $hotpot = hotpot::create($hotpot, $cm, $course, $PAGE->context);
 // delete attempts, if requested
 $action    = optional_param('action', '', PARAM_ALPHA);
 $confirmed = optional_param('confirmed', 0, PARAM_INT);
-$selected  = optional_param('selected', 0, PARAM_INT);
+if (function_exists('optional_param_array')) {
+    $selected  = optional_param_array('selected', 0, PARAM_INT);
+} else {
+    $selected  = optional_param('selected', 0, PARAM_INT);
+}
 
 if ($action=='deleteselected') {
     require_sesskey();

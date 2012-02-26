@@ -90,7 +90,7 @@ class mod_hotpot_storage {
 
                 // make sure the timezone has a "+" sign
                 // Note: sometimes it gets stripped (by optional_param?)
-                $time = preg_replace('/(?<= )\d{4}$/', '+\\0', trim($time));
+                $time = preg_replace('/(?<= )\d{4}$/', '+$0', trim($time));
 
                 // convert $time to numeric date stamp
                 // PHP4 gives -1 on error, whereas PHP5 give false

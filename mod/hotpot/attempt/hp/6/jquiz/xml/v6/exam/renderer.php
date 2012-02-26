@@ -40,20 +40,11 @@ class mod_hotpot_attempt_hp_6_jquiz_xml_v6_exam_renderer extends mod_hotpot_atte
 
     // to faciliate autoadvance to next question, pass QNum to ShowMessage()
     public $searchShowMessage = '/(?<=ShowMessage)\(([^)]*)\)/';
-    public $replaceShowMessage = '(\\1, QNum)';
+    public $replaceShowMessage = '($1, QNum)';
 
     // to facilitate autoplay of media, call PlaySound() every time we advance to a new question
     public $searchSetQNumReadout = '/(\s*)SetQNumReadout\(\);/';
-    public $replaceSetQNumReadout = '\\1PlaySound(CurrQNum,0);\\0';
-
-    /**
-     * init
-     *
-     * @param xxx $hotpot (passed by reference)
-     */
-    function init($hotpot)  {
-        parent::hotpot_attempt_hp_6_jquiz_xml_v6($hotpot);
-    }
+    public $replaceSetQNumReadout = '$1PlaySound(CurrQNum,0);$0';
 
     /**
      * List of source types which this renderer can handle
@@ -86,13 +77,13 @@ class mod_hotpot_attempt_hp_6_jquiz_xml_v6_exam_renderer extends mod_hotpot_atte
     function fix_js_StartUp(&$str, $start, $length)  {
         $substr = substr($str, $start, $length);
         $search = '/(\s*)strInstructions = [^;]*;/';
-        $replace = "\\1"
-            ."var obj = document.getElementById('Instructions');\\1"
-            ."if (obj==null || obj.innerHTML=='') {\\1"
-            ."	var obj = document.getElementById('InstructionsDiv');\\1"
-            ."	if (obj) {\\1"
-            ."		obj.style.display = 'none';\\1"
-            ."	}\\1"
+        $replace = '$1'
+            ."var obj = document.getElementById('Instructions');".'$1'
+            ."if (obj==null || obj.innerHTML=='') {".'$1'
+            ."	var obj = document.getElementById('InstructionsDiv');".'$1'
+            ."	if (obj) {".'$1'
+            ."		obj.style.display = 'none';".'$1'
+            ."	}".'$1'
             ."}"
         ;
         $substr = preg_replace($search, $replace, $substr, 1);
@@ -213,23 +204,23 @@ class mod_hotpot_attempt_hp_6_jquiz_xml_v6_exam_renderer extends mod_hotpot_atte
         $substr = substr($str, $start, $length);
 
         $search = "/(\s*)document\.getElementById\('InstructionsDiv'\)\.innerHTML = Feedback;/";
-        $replace = "\\1"
-            ."var AllDone = true;\\1"
-            ."for (var QNum=0; QNum<State.length; QNum++){\\1"
-            ."	if (State[QNum]){\\1"
-            ."		if (State[QNum][0] < 0){\\1"
-            ."			AllDone = false;\\1"
-            ."		}\\1"
-            ."	}\\1"
-            ."}\\1"
-            ."if (AllDone) {\\1"
-            ."	var obj = document.getElementById('InstructionsDiv');\\1"
-            ."	if (obj) {\\1"
-            ."		obj.innerHTML = Feedback;\\1"
-            ."		obj.style.display = '';\\1"
-            ."	}\\1"
-            ."	Finished = true;\\1"
-            ."	ShowMessage(Feedback);\\1"
+        $replace = '$1'
+            ."var AllDone = true;".'$1'
+            ."for (var QNum=0; QNum<State.length; QNum++){".'$1'
+            ."	if (State[QNum]){".'$1'
+            ."		if (State[QNum][0] < 0){".'$1'
+            ."			AllDone = false;".'$1'
+            ."		}".'$1'
+            ."	}".'$1'
+            ."}".'$1'
+            ."if (AllDone) {".'$1'
+            ."	var obj = document.getElementById('InstructionsDiv');".'$1'
+            ."	if (obj) {".'$1'
+            ."		obj.innerHTML = Feedback;".'$1'
+            ."		obj.style.display = '';".'$1'
+            ."	}".'$1'
+            ."	Finished = true;".'$1'
+            ."	ShowMessage(Feedback);".'$1'
             ."}"
         ;
         $substr = preg_replace($search, $replace, $substr, 1);
@@ -253,7 +244,7 @@ class mod_hotpot_attempt_hp_6_jquiz_xml_v6_exam_renderer extends mod_hotpot_atte
 
         // set all answers to be treated as correct
         $search = '/(\s*)if \(I\[QNum\]\[3\]\[ANum\]\[1\]\.length < 1\)\{/';
-        $replace = '\\1'.'I[QNum][3][ANum][2] = 1;'.'\\0';
+        $replace = '$1'.'I[QNum][3][ANum][2] = 1;'.'$0';
         $substr = preg_replace($search, $replace, $substr, 1);
 
         $str = substr_replace($str, $substr, $start, $length);

@@ -25,6 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+//  get Moodle's standard xmlize library
+require_once($CFG->dirroot.'/lib/xmlize.php');
+
 /**
  * hotpot_source
  *
@@ -147,7 +150,8 @@ class hotpot_source {
      * Creates a hotpot_source object and can optionally prepare the file contents
      * ready to be passed to a HotPot output format classs.
      *
-     * @param stdclass $file Moodle stored_file object representing the file
+     * @param stdclass $file_or_string either Moodle stored_file object representing the file, or the contents of a file
+     * @param xxx $hotpot
      */
     public function __construct($file_or_string, $hotpot) {
         global $CFG;
@@ -704,6 +708,31 @@ class hotpot_source {
         if (isset($this->filecontents)) {
             $this->filecontents = preg_replace('/(?<=>)'.'\s+'.'(?=<)/s', '', $this->filecontents);
         }
+    }
+
+    /**
+     * get_sibling_filecontents
+     *
+     * @param xxx $filename
+     * @param xxx $xmlize (optional, default=false)
+     * @return xxx
+     */
+    function get_sibling_filecontents($filename, $xmlize=false) {
+        $content = '';
+        if (is_object($this->file)) {
+            $fs = get_file_storage();
+            if ($file = $fs->get_file($this->file->get_contextid(), $this->file->get_component(), $this->file->get_filearea(), 0, $this->file->get_filepath(), $filename)) {
+                $content = $file->get_content();
+            }
+        }
+        if ($xmlize) {
+            if (empty($content)) {
+                $content = array();
+            } else {
+                $content = xmlize($content, 0);
+            }
+        }
+        return $content;
     }
 
     // return best output format for this file type

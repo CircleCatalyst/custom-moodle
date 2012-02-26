@@ -139,6 +139,7 @@ class mod_hotpot_attempt_hp_6_sequitur_renderer extends mod_hotpot_attempt_hp_6_
         $str = substr_replace($str, $substr, $start, $length);
     }
 
+
     /**
      * fix_js_CheckAnswer
      *

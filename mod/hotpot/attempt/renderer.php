@@ -161,6 +161,20 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
             case hotpot::NAVIGATION_MOODLE:
             case hotpot::NAVIGATION_TOPBAR:
             default:
+                // using any of the following elements as "themecontainer",
+                // results in incorrect calculation of ViewportSize in themes
+                // that use the CSS "overflow: hidden":
+                //   - region-main
+                //   - region-main-wrap
+                //   - region-post-box
+                //   - region-main-box
+                //   - page-content
+                // using any of the following elements as "themecontainer" is OK:
+                //   - page-content-wrapper
+                //   - wrapper
+                //   - page (doesn't work)
+                //   - my-page-wrapper (doesn't work)
+                //   - page-mod-hotpot-attempt (doesn't work)
                 $this->usemoodletheme = true;
                 $this->themecontainer = 'region-main';
                 break;
@@ -759,6 +773,8 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
      * @return xxx
      */
     function get_title()  {
+        $format_string = false;
+
         switch ($this->hotpot->title & hotpot::TITLE_SOURCE) {
             case hotpot::TEXTSOURCE_FILE:
                 $title = $this->hotpot->source->get_title();
@@ -772,17 +788,20 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
             case hotpot::TEXTSOURCE_SPECIFIC:
             default:
                 $title = $this->hotpot->name;
+                $title = format_string($title); // this will strip tags
         }
+
         if ($this->hotpot->title & hotpot::TITLE_UNITNAME) {
             $title = $this->hotpot->name.': '.$title;
         }
         if ($this->hotpot->title & hotpot::TITLE_SORTORDER) {
             $title .= ' ('.$this->sortorder.')';
         }
-        if (method_exists($this->hotpot->source, 'utf8_to_entities')) {
-            $title = $this->hotpot->source->utf8_to_entities($title);
-        }
-        return format_string($title);
+
+        $textlib = textlib_get_instance();
+        $title = $textlib->utf8_to_entities($title);
+
+        return $title;
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -895,7 +914,7 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
      */
     function remove_blank_lines($str)  {
         // standardize line endings and remove trailing white space and blank lines
-        $str = preg_replace('/\s+[\n\r]/s', "\n", $str);
+        $str = preg_replace('/\s+[\r\n]/s', "\n", $str);
         return $str;
     }
 
@@ -948,18 +967,14 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
     /**
      * fix_css_definitions
      *
-     * @param xxx $container
-     * @param xxx $css_selector
-     * @param xxx $css_definition
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    function fix_css_definitions($container, $css_selector, $css_definition, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $css_selector = str_replace('\\'.$quote, $quote, $css_selector);
-            $css_definition = str_replace('\\'.$quote, $quote, $css_definition);
-        }
+    function fix_css_definitions($match)  {
+
+        $container = '#'.$this->themecontainer;
+        $css_selector = $match[1];
+        $css_definition = $match[2];
 
         // additional CSS for list items
         $listitem_css = '';
@@ -973,11 +988,21 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
                         $selectors[] = "$selector";
                         break;
                     case preg_match('/^body\b/i', $selector):
+                        // currently we do nothing here, so that
+                        // these styles do not affect the Moodle theme
+
                         // replace "body" with the container element
-                        $selectors[] = "$container";
-                        // remove font, backgroud and color from the css definition
-                        //$search = "/\b(font-family|background-color|color)\b[^;]*;/";
-                        //$css_definition = preg_replace($search, '/* \\0 */', $css_definition);
+                        //$selectors[] = "$container";
+
+                        // disable entire css definition
+                        //$css_definition = "\n"
+                        //    ."\t/".str_repeat('*', 20)."\n"."\t".'Hot Potatoes page styles are disabled'."\n"
+                        //    ."\t".str_repeat('*', 21)."\n".$css_definition."\t".str_repeat('*', 20)."/\n"
+                        //;
+
+                        // remove font, margin, backgroud and color from the css definition
+                        //$search = "/\b(font-[a-z]+|margin-[a-z]+|background-color|color)\b[^;]*;/";
+                        //$css_definition = preg_replace($search, '/* $0 */', $css_definition);
                         break;
                     default:
                         // we need to do some special processing of CSS for list items
@@ -994,7 +1019,11 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
                 }
             }
         }
-        return implode(",\n", $selectors)."\n".'{'.$css_definition.'}'.$listitem_css;
+        if (empty($selectors)) {
+            return '';
+        } else {
+            return implode(",\n", $selectors)."\n".'{'.$css_definition.'}'.$listitem_css;
+        }
     }
 
     /**
@@ -1008,19 +1037,23 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
         static $count = 0;
         $onload_temp  = 'onload_'.sprintf('%02d', (++$count));
 
+        $onload_oneline = preg_replace('/\s+/s', ' ', $onload);
+        $onload_nospace = str_replace(' ', '', $onload_oneline);
+
         $str = '';
         if ($script_tags) {
             $str .= "\n".'<script type="text/javascript">'."\n"."//<![CDATA[\n";
         }
         $str .= ''
-            .'if (typeof(window.onload)!="function"){'."\n"
-            .'	window.onload = new Function("'.$onload.'");'."\n"
-            .'} else {'."\n"
+            .'if (typeof(window.onload)=="function"){'."\n"
             .'	var s = onload.toString();'."\n"
-            .'	if (s.indexOf("'.$onload.'")<0){'."\n"
+            .'	s = s.replace(new RegExp("\\\\s+", "g"), "");'."\n"
+            .'	if (s.indexOf("'.$onload_nospace.'")<0){'."\n"
             .'		window.'.$onload_temp.' = onload;'."\n"
-            .'		window.onload = new Function("window.'.$onload_temp.'();"+"'.$onload.';");'."\n"
+            .'		window.onload = new Function("window.'.$onload_temp.'();"+"'.$onload_oneline.';");'."\n"
             .'	}'."\n"
+            .'} else {'."\n"
+            .'	window.onload = new Function("'.$onload_oneline.'");'."\n"
             .'}'."\n"
         ;
         if ($script_tags) {
@@ -1047,13 +1080,13 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
         $mediafilterclass = 'hotpot_mediafilter_'.$this->hotpot->usemediafilter;
         $mediafilter = new $mediafilterclass($this);
 
-        $mediafilter->fix($this, 'headcontent');
-        $mediafilter->fix($this, 'bodycontent');
+        $mediafilter->fix('headcontent', $this);
+        $mediafilter->fix('bodycontent', $this);
 
         if ($mediafilter->js_inline) {
             // remove the internal </script><script ... > joins from the inline javascripts (js_inline)
-            $search = '/(?:\/\/\]\]>\s*)?'.'<\/script>\s*<script type="text\/javascript">\s*'.'(?:\/\/<!\[CDATA\[[ \t]*[\n\r]*)?/is';
-            $mediafilter->js_inline = preg_replace($search, "\n", $mediafilter->js_inline);
+            $search = '/(?:\s*\/\/\]\]>)?'.'\s*<\/script>\s*<script type="text\/javascript">'.'(?:\s*\/\/<!\[CDATA\[[ \t]*)?/is';
+            $mediafilter->js_inline = preg_replace($search, '', $mediafilter->js_inline);
 
             // extract urls of deferred scripts from $mediafilter->js_external
             if (preg_match_all($this->tagpattern('script'), $mediafilter->js_external, $scripts, PREG_OFFSET_CAPTURE)) {
@@ -1069,11 +1102,14 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
                             } else {
                                 $inhead = false;
                             }
-                            if (substr($matches[1], 0, $strlen_wwwroot)==$CFG->wwwroot) {
-                                $this->page->requires->js(substr($matches[1], $strlen_wwwroot), $inhead);
-                                $remove = true;
-                            } else if ($inhead) {
-                                // leave this script where it is
+                            // we do not add scripts with $this->page->requires->js() because
+                            // they will not then be added when content is retrieved from cache
+                            //if (substr($matches[1], 0, $strlen_wwwroot)==$CFG->wwwroot) {
+                            //    $this->page->requires->js(substr($matches[1], $strlen_wwwroot), $inhead);
+                            //    $remove = true;
+                            //} else
+                            if ($inhead) {
+                                // leave this script where it is (i.e. in the head)
                             } else {
                                 array_unshift($deferred_js, '"'.addslashes_js($matches[1]).'"');
                                 $remove = true;
@@ -1117,17 +1153,17 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
             // which also loads up any deferred js, and force this function to be run when the page has loaded
             $onload = 'hotpot_mediafilter_loader()';
             $search = '/(\/\/<!\[CDATA\[)(.*)(\/\/\]\]>)/s';
-            $replace = '\\1'."\n"
+            $replace = '$1'."\n"
                 .$functions
                 .'function '.$onload.'{'
-                .'\\2'
-                ."\n"
+                .'$2'
+                //."\n"
                 .$deferred_js // load deferred scripts, if any
                 .$this->fix_mediafilter_onload_extra()
                 .'} // end function '.$onload."\n"
                 ."\n"
                 .$this->fix_onload($onload)
-                .'\\3'
+                .'$3'
             ;
             $mediafilter->js_inline = preg_replace($search, $replace, $mediafilter->js_inline, 1);
 
@@ -1167,9 +1203,6 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
         $quoteopen = '("|\\\\"|&quot;|&amp;quot;'."|'|\\\\'|&apos;|&amp;apos;".')'; // open quote
         $quoteclose = '\\6'; //  close quote (to match open quote)
 
-        // the replacement expression for the URLs
-        $replace = '$this->convert_url_relative("\\1","\\7","\\8")';
-
         // define which attributes of which HTML tags to search for URLs
         $tags = array(
             // tag  =>  attribute containing url
@@ -1181,22 +1214,29 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
             'param'  => 'value',
             'object' => 'data',
             'embed'  => 'src',
-            'input'  => 'src' // <input type="image" src="..." >
+            'input'  => 'src', // <input type="image" src="..." >
+            '[a-z]+' => 'style',
+            '(?:table|th|td)' => 'background'
         );
 
         // replace relative URLs in attributes of certain HTML tags
         foreach ($tags as $tag=>$attribute) {
             if ($tag=='param') {
-                $url = '\S+?\.\S+?'; // must include a filename and have no spaces
+                $url = '[^ =]+?\.[^ ]+?'; // must include a filename and have no spaces
             } else {
                 $url = '.*?';
             }
-            $search = "/($tagopen$tag$space$anychar$attribute=$quoteopen)($url)($quoteclose$anychar$tagclose)/ise";
-            if (is_string($str)) {
-                $str = preg_replace($search, $replace, $str);
+            $search = "/($tagopen$tag$space$anychar$attribute=$quoteopen)($url)($quoteclose$anychar$tagclose)/is";
+            if ($attribute=='style') {
+                $callback = array($this, 'convert_urls_css');
             } else {
-                $this->headcontent = preg_replace($search, $replace, $this->headcontent);
-                $this->bodycontent = preg_replace($search, $replace, $this->bodycontent);
+                $callback = array($this, 'convert_url_relative');
+            }
+            if (is_string($str)) {
+                $str = preg_replace_callback($search, $callback, $str);
+            } else {
+                $this->headcontent = preg_replace_callback($search, $callback, $this->headcontent);
+                $this->bodycontent = preg_replace_callback($search, $callback, $this->bodycontent);
             }
         }
 
@@ -1205,53 +1245,48 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
         }
 
         // replace relative URLs in stylesheets
-        $search = '/'.'(<style[^>]*>)'.'(.*?)'.'(<\/style>)'.'/ise';
-        $replace = '"\\1".$this->convert_urls_stylesheets("\\2")."\\3"';
-        $this->headcontent = preg_replace($search, $replace, $this->headcontent);
-        $this->bodycontent = preg_replace($search, $replace, $this->bodycontent);
+        $search = '/'.'(<style[^>]*>)'.'(.*?)'.'(<\/style>)'.'/is';
+        $callback = array($this, 'convert_urls_css');
+        $this->headcontent = preg_replace_callback($search, $callback, $this->headcontent);
+        $this->bodycontent = preg_replace_callback($search, $callback, $this->bodycontent);
 
         // replace relative URLs in <a ... onclick="window.open('...')...">...</a>
-        $search = '/'.'(?<='.'onclick="'."window.open\('".')'."([^']*)".'(?='."'\);return false;".'")'.'/ise';
-        $replace = '$this->convert_url("\\1")';
-        $this->bodycontent = preg_replace($search, $replace, $this->bodycontent);
+        $search = '/'.'('.'onclick="'."window.open\('".')'."([^']*)".'('."'\);return false;".'")'.'/is';
+        $callback = array($this, 'convert_url');
+        $this->bodycontent = preg_replace_callback($search, $callback, $this->bodycontent);
     }
 
     /**
-     * convert_urls_stylesheets
+     * convert_urls_css
      *
-     * @param xxx $baseurl
-     * @param xxx $sourcefile
-     * @param xxx $css
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    function convert_urls_stylesheets($css, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $css = str_replace('\\'.$quote, $quote, $css);
-        }
-        $search = '/'.'(?<='.'url'.'\('.')'."(.+?)".'(?='.'\)'.')'.'/ise';
-        $replace = '$this->convert_url("\\1")';
-        return preg_replace($search, $replace, $css);
+    function convert_urls_css($match)  {
+        $before = $match[1];
+        $css    = $match[count($match) - 2];
+        $after  = $match[count($match) - 1];
+
+        $search = '/(url\(['."'".'"]?)(.+?)(['."'".'"]?\))/is';
+        $callback = array($this, 'convert_url');
+        return $before.preg_replace_callback($search, $callback, $css).$after;
     }
 
     /**
      * convert_url_relative
      *
-     * @param xxx $baseurl
-     * @param xxx $sourcefile
-     * @param xxx $opentag
-     * @param xxx $url
-     * @param xxx $closetag
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    function convert_url_relative($opentag, $url, $closetag, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $opentag = str_replace('\\'.$quote, $quote, $opentag);
-            $url = str_replace('\\'.$quote, $quote, $url);
-            $closetag = str_replace('\\'.$quote, $quote, $closetag);
+    function convert_url_relative($match)  {
+        if (is_string($match)) {
+            $before = '';
+            $url    = $match;
+            $after  = '';
+        } else {
+            $before = $match[1];
+            $url    = $match[count($match) - 2];
+            $after  = $match[count($match) - 1];
         }
 
         switch (true) {
@@ -1281,39 +1316,41 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
 
         // convert the filepath part of the url
         if ($url) {
-            $url = $this->convert_url($url, false);
+            $url = $this->convert_url($url);
         }
 
         // convert urls, if any, in the query string
         if ($query) {
-            $search = '/'.'(file|src|thesound|mp3)='."([^&]+)".'/ise';
-            $replace = '"\\1=".$this->convert_url("\\2")';
-            $query = preg_replace($search, $replace, $query);
+            $search = '/'.'((?:file|src|thesound|mp3)=)([^&]+)(&|$)/is';
+            $callback = array($this, 'convert_url');
+            $query = preg_replace_callback($search, $callback, $query);
         }
 
         // return the reconstructed tag (with converted url)
-        return $opentag.$url.$query.$fragment.$closetag;
+        return $before.$url.$query.$fragment.$after;
     }
 
     /**
      * convert_url
      *
-     * @param xxx $baseurl
-     * @param xxx $sourcefile
-     * @param xxx $url
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    function convert_url($url, $quote="'")  {
+    function convert_url($match)  {
         global $CFG;
+
+        if (is_string($match)) {
+            $before = '';
+            $url    = $match;
+            $after  = '';
+        } else {
+            $before = $match[1];
+            $url    = $match[count($match) - 2];
+            $after  = $match[count($match) - 1];
+        }
 
         $baseurl = $this->hotpot->source->baseurl;
         $sourcefile = $this->hotpot->source->filepath;
-
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $url = str_replace('\\'.$quote, $quote, $url);
-        }
 
         if ($CFG->slasharguments) {
             $file_php = 'file.php';
@@ -1347,7 +1384,7 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
 
         if (preg_match('/^(?:\/|(?:[a-zA-Z0-9]+:))/', $url)) {
             // no processing  - this is already an absolute url (http:, mailto:, javascript:, etc)
-            return $url;
+            return $before.$url.$after;
         }
 
         // get the subdirectory, $dir, of the quiz $sourcefile
@@ -1371,6 +1408,6 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
             $url = "$baseurl/$url";
         }
 
-        return $url;
+        return $before.$url.$after;
     } // end function : convert_url
 }

@@ -40,6 +40,7 @@ class hotpot_mediaplayer_image extends hotpot_mediaplayer {
         'quality' => '', 'majorversion' => '', 'flashvars' => ''
     );
     public $spantext = '';
+    public $removelink = false;
 
     /**
      * generate

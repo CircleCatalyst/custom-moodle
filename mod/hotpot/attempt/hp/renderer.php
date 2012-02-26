@@ -177,7 +177,7 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
         }
 
         if ($this->templatestrings) {
-            $this->expand_strings($this->htmlcontent, '/\[('.$this->templatestrings.')\]/ise');
+            $this->expand_strings($this->htmlcontent, '/\[('.$this->templatestrings.')\]/is');
         }
 
         // all done
@@ -220,7 +220,7 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
             if (preg_match($this->tagpattern('!DOCTYPE','',false), $this->htmlcontent, $matches)) {
                 $this->doctype = $this->single_line($matches[0])."\n";
                 // convert short dtd to full dtd (short dtd not allowed in xhtml 1.1)
-                $this->doctype = preg_replace('/"xhtml(\d+)(-\w+)?.dtd"/i', '"http://www.w3.org/TR/xhtml\\1/DTD/xhtml\\1\\2.dtd"', $this->doctype, 1);
+                $this->doctype = preg_replace('/"xhtml(\d+)(-\w+)?.dtd"/i', '"http://www.w3.org/TR/xhtml$1/DTD/xhtml$1$2.dtd"', $this->doctype, 1);
             }
             if (preg_match($this->tagpattern('html','',false), $this->htmlcontent, $matches)) {
                 $this->htmlattributes = ' '.$this->single_line($matches[1])."\n";
@@ -241,12 +241,12 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
 
             // restrict scope of Hot Potatoes styles, so they affect only the quiz's containing element (i.e. the middle column)
             if ($this->usemoodletheme) {
-                $search = '/([a-z0-9_\#\.\-\,\: ]+){(.*?)}/ise';
-                $replace = '$this->fix_css_definitions("#'.$this->themecontainer.'","\\1","\\2")';
-                $this->styles = preg_replace($search, $replace, $this->styles);
+                $search = '/([a-z0-9_\#\.\-\,\: ]+){(.*?)}/is';
+                $callback = array($this, 'fix_css_definitions');
+                $this->styles = preg_replace_callback($search, $callback, $this->styles);
 
                 // the following is not necessary for standard HP styles, but may required to handle some custom styles
-                $this->styles = str_replace('TheBody', 'mod-hotpot-view', $this->styles);
+                $this->styles = str_replace('TheBody', $this->themecontainer, $this->styles);
             }
 
             $this->styles = $this->remove_blank_lines($this->styles);
@@ -261,7 +261,7 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
                 $this->headcontent = substr_replace($this->headcontent, '', $match[1], strlen($match[0]));
             }
             if ($this->usemoodletheme) {
-                $this->scripts = str_replace('TheBody', 'mod-hotpot-view', $this->scripts);
+                $this->scripts = str_replace('TheBody', $this->themecontainer, $this->scripts);
             }
             // fix various javascript functions
             $names = $this->get_js_functionnames();
@@ -276,25 +276,20 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
             $this->scripts = $this->remove_blank_lines($this->scripts);
 
             // standardize "} else {" and "} else if" formatting
-            $this->scripts = preg_replace('/\}\s*else\s*(\{|if)/s', '} else \\1', $this->scripts);
+            $this->scripts = preg_replace('/\}\s*else\s*(\{|if)/s', '} else $1', $this->scripts);
 
             // standardize indentation to use tabs
             $this->scripts = str_replace('        ', "\t", $this->scripts);
-
-            // add external javascript libraries (to the top of the page)
-            foreach ($this->javascripts as $script) {
-                $this->page->requires->js('/'.$script, true);
-            }
         }
 
         // remove blank lines
         $this->headcontent = $this->remove_blank_lines($this->headcontent);
 
         // put each <meta> tag on its own line
-        $this->headcontent = preg_replace('/'.'([^\n])'.'(<\w+)'.'/', "\\1\n\\2", $this->headcontent);
+        $this->headcontent = preg_replace('/'.'([^\n])'.'(<\w+)'.'/', '$1'."\n".'$2', $this->headcontent);
 
         // convert self closing tags to explictly closed tags (self-closing not allowed in xhtml 1.1)
-        // $this->headcontent = preg_replace('/<((\w+)[^>]*?)\s*\/>/i', '<\\1></\\2>', $this->headcontent);
+        // $this->headcontent = preg_replace('/<((\w+)[^>]*?)\s*\/>/i', '<$1></$2>', $this->headcontent);
 
         // append styles and scripts to the end of the $this->headcontent
         $this->headcontent .= $this->styles.$this->scripts;
@@ -338,16 +333,16 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
         }
         if ($onbeforeunload) {
             $search = "/(\s*)window.onunload = new Function[^\r\n]*;/s";
-            $replace = "\\0\\1"
-                ."window.hotpotbeforeunload = function(){\\1"
-                ."	return '".$this->hotpot->source->js_value_safe($onbeforeunload, true)."';\\1"
-                ."}\\1"
-                ."if (window.opera) {\\1"
+            $replace = '$0$1'
+                ."window.hotpotbeforeunload = function(){".'$1'
+                ."	return '".$this->hotpot->source->js_value_safe($onbeforeunload, true)."';".'$1'
+                ."}".'$1'
+                ."if (window.opera) {".'$1'
                 // user scripts (this is here for reference only)
-                // ."	opera.setOverrideHistoryNavigationMode('compatible');\\1"
+                // ."	opera.setOverrideHistoryNavigationMode('compatible');".'$1'
                 // web page scripts
-                ."	history.navigationMode = 'compatible';\\1"
-                ."}\\1"
+                ."	history.navigationMode = 'compatible';".'$1'
+                ."}".'$1'
                 ."window.onbeforeunload = window.hotpotbeforeunload;"
             ;
             $this->headcontent = preg_replace($search, $replace, $this->headcontent, 1);
@@ -518,7 +513,7 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
         $this->bodycontent = $this->remove_blank_lines($matches[5]);
 
        // where necessary, add single space before javascript event handlers to make the syntax compatible with strict XHTML
-        $this->bodycontent = preg_replace('/"(on(?:blur|click|focus|mouse(?:down|out|over|up)))/', '" \\1', $this->bodycontent);
+        $this->bodycontent = preg_replace('/"(on(?:blur|click|focus|mouse(?:down|out|over|up)))/', '" $1', $this->bodycontent);
 
         // ensure javascript onload routine for quiz is always executed
         // $this->bodyattributes will only be inserted into the <body ...> tag
@@ -771,29 +766,23 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
         //  [1] the full block name (including optional leading 'str' or 'incl')
         //  [2] the short block name (without optional leading 'str' or 'incl')
         //  [3] the content of the block
-        $search = '/'.'\[((?:incl|str)?((?:\w|\.)+))\]'.'(.*?)'.'\[\/\\1\]'.'/ise';
-        $replace = '$this->expand_block("\\2","\\3")';
-        $template = preg_replace($search, $replace, $template);
+        $search = '/'.'\[((?:incl|str)?((?:\w|\.)+))\]'.'(.*?)'.'\[\/\\1\]'.'/is';
+        $callback = array($this, 'expand_block');
+        $template = preg_replace_callback($search, $callback, $template);
     }
 
     /**
      * expand_block
      *
-     * @param xxx $blockname
-     * @param xxx $blockcontent
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    public function expand_block($blockname, $blockcontent, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $blockname = str_replace('\\'.$quote, $quote, $blockname);
-            $blockcontent = str_replace('\\'.$quote, $quote, $blockcontent);
-        }
-
-        $method = 'expand_'.str_replace('.', '', $blockname);
+    public function expand_block($match)  {
+        $blockname = $match[2];
+        $blockcontent = $match[3];
 
         // check expand method exists
+        $method = 'expand_'.str_replace('.', '', $blockname);
         if (! method_exists($this, $method)) {
             debugging('expand block method not found: '.$method, DEBUG_DEVELOPER);
             return '';
@@ -818,26 +807,22 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
     public function expand_strings(&$template, $search='')  {
         if ($search=='') {
             // default search string
-            $search = '/\[(?:bool|int|str)(\w+)\]/ise';
+            $search = '/\[(?:bool|int|str)(\w+)\]/is';
         }
-        $replace = '$this->expand_string("\\0","\\1")';
-        $template = preg_replace($search, $replace, $template);
+        $callback = array($this, 'expand_string');
+        $template = preg_replace_callback($search, $callback, $template);
     }
 
     /**
      * expand_string
      *
-     * @param xxx $originalstring
-     * @param xxx $stringname
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    public function expand_string($originalstring, $stringname, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $originalstring = str_replace('\\'.$quote, $quote, $originalstring);
-            $stringname = str_replace('\\'.$quote, $quote, $stringname);
-        }
+    public function expand_string($match)  {
+        $originalstring = $match[0];
+        $stringname = $match[1];
+
         $method = 'expand_'.$stringname;
         if (method_exists($this, $method)) {
             return $this->$method();
@@ -890,46 +875,38 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
         // do standard fixes relative urls in $this->headcontent and $this->bodycontent
         parent::fix_relativeurls();
 
-        // now we do special fixes for HP relative urls
-
         // replace relative URLs in "PreloadImages(...);"
-        $search = '/'.'(?<='.'PreloadImages'.'\('.')'."([^)]+?)".'(?='.'\);'.')'.'/ise';
-        $replace = '$this->convert_urls_preloadimages("\\1")';
-        $this->headcontent = preg_replace($search, $replace, $this->headcontent);
-        $this->bodycontent = preg_replace($search, $replace, $this->bodycontent);
+        $search = '/(PreloadImages\()'.'([^)]+?)'.'(\);)/is';
+        $callback = array($this, 'convert_urls_preloadimages');
+        $this->headcontent = preg_replace_callback($search, $callback, $this->headcontent);
+        $this->bodycontent = preg_replace_callback($search, $callback, $this->bodycontent);
     }
 
     /**
      * convert_urls_preloadimages
      *
-     * @param xxx $urls
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    public function convert_urls_preloadimages($urls, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $urls = str_replace('\\'.$quote, $quote, $urls);
-        }
-        $search = '/'.'(?<='.'"'.'|'."'".')'."([^'".'",]+?)'.'(?='.'"'.'|'."'".')'.'/ise';
-        $replace = '$this->convert_url("\\1")';
-        return preg_replace($search, $replace, $urls);
+    public function convert_urls_preloadimages($match)  {
+        $before = $match[1];
+        $urls   = $match[2];
+        $after  = $match[3];
+        $search = '/('.'"'.'|'."'".')'."([^'".'",]+?)'.'('.'"'.'|'."'".')/is';
+        $callback = array($this, 'convert_url');
+        return $before.preg_replace_callback($search, $callback, $urls).$after;
     }
 
     /**
      * convert_url_navbutton
      *
-     * @param xxx $url
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    public function convert_url_navbutton($url, $quote="'")  {
+    public function convert_url_navbutton($match)  {
         global $CFG, $DB;
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $url = str_replace('\\'.$quote, $quote, $url);
-        }
-        $url = $this->convert_url($url, false);
+
+        $url = $this->convert_url($match[1]);
 
         // is this a $url for another HotPot in this course ?
         if (strpos($url, $this->hotpot->source->baseurl.'/')===0) {
@@ -940,6 +917,7 @@ class mod_hotpot_attempt_hp_renderer extends mod_hotpot_attempt_renderer {
                 $url = new moodle_url('/mod/hotpot/view.php', array('id' => $record->id));
             }
         }
+
         return $url;
     }
 }

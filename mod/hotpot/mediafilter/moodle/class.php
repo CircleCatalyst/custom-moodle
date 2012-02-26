@@ -61,11 +61,11 @@ class hotpot_mediafilter_moodle extends hotpot_mediafilter {
                 // 1st quiz - eolas_fix.js was added by filter/mediaplugin/filter.php
             } else {
                 // 2nd (or later) quiz - e.g. we are being called by hotpot_cron()
-                $PAGE->requires->js('/filter/mediaplugin/eolas_fix.js');
-                //$newtext .= '<script defer="defer" src="'.$CFG->wwwroot.'/filter/mediaplugin/eolas_fix.js" type="text/javascript"></script>';
+                $PAGE->requires->js('/mod/hotpot/mediafilter/eolas_fix.js');
+                //$newtext .= '<script defer="defer" src="'.$CFG->wwwroot.'/mod/hotpot/mediafilter/eolas_fix.js" type="text/javascript"></script>';
             }
-            $PAGE->requires->js('/lib/ufo.js', true);
-            //$newtext .= '<script type="text/javascript" src="'.$CFG->wwwroot.'/lib/ufo.js"></script>';
+            $PAGE->requires->js('/mod/hotpot/mediafilter/ufo.js', true);
+            //$newtext .= '<script type="text/javascript" src="'.$CFG->wwwroot.'/mod/hotpot/mediafilter/ufo.js"></script>';
             $eolas_fix_applied = $hotpot->id;
         }
 

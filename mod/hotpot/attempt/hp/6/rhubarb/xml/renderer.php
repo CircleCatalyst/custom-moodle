@@ -39,15 +39,6 @@ require_once($CFG->dirroot.'/mod/hotpot/attempt/hp/6/rhubarb/renderer.php');
 class mod_hotpot_attempt_hp_6_rhubarb_xml_renderer extends mod_hotpot_attempt_hp_6_rhubarb_renderer {
 
     /**
-     * init
-     *
-     * @param xxx $quiz (passed by reference)
-     */
-    function init(&$quiz)  {
-        parent::init($quiz);
-    }
-
-    /**
      * expand_JSRhubarb6
      *
      * @return xxx
@@ -110,8 +101,8 @@ class mod_hotpot_attempt_hp_6_rhubarb_xml_renderer extends mod_hotpot_attempt_hp
         $str = '';
 
         $space = ' \\x09\\x0A\\x0C\\x0D'; // " \t\n\r\l"
-        $punc = preg_quote('!"#$%&()*+,-./:+<=>?@[]\\^_`{|}~', '/'); // not apostrophe \'
-        $search = '/([^'.$space.$punc.']+)|(['.$punc.'])/s';
+        $punc = preg_quote('!"#$%&()*+,-./:;+<=>?@[]\\^_`{|}~', '/'); // not apostrophe \'
+        $search = '/([^'.$punc.$space.']+)|(['.$punc.']['.$punc.$space.']*)/s';
 
         if (preg_match_all($search, $this->hotpot->source->xml_value('data,rhubarb-text'), $matches)) {
             foreach ($matches[0] as $i => $word) {

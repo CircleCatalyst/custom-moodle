@@ -39,17 +39,6 @@ require_once($CFG->dirroot.'/mod/hotpot/attempt/hp/6/sequitur/renderer.php');
 class mod_hotpot_attempt_hp_6_sequitur_xml_renderer extends mod_hotpot_attempt_hp_6_sequitur_renderer {
 
     /**
-     * init
-     *
-     * @param xxx $hotpot
-     */
-    function init($hotpot)  {
-        parent::init($hotpot);
-    }
-
-    // functions to expand Sequitur XML
-
-    /**
      * expand_JSSequitur6
      */
     function expand_JSSequitur6() {
@@ -62,7 +51,8 @@ class mod_hotpot_attempt_hp_6_sequitur_xml_renderer extends mod_hotpot_attempt_h
      * @return xxx
      */
     function expand_NumberOfOptions()  {
-        return $this->hotpot->source->xml_value_int($this->hotpot->source->hbs_software.'-config-file,'.$this->hotpot->source->hbs_quiztype.',number-of-options');
+        $tags = $this->hotpot->source->hbs_software.'-config-file,'.$this->hotpot->source->hbs_quiztype.',number-of-options';
+        return $this->hotpot->source->xml_value_int($tags);
     }
 
     /**
@@ -71,7 +61,8 @@ class mod_hotpot_attempt_hp_6_sequitur_xml_renderer extends mod_hotpot_attempt_h
      * @return xxx
      */
     function expand_PartText()  {
-        return $this->hotpot->source->xml_value($this->hotpot->source->hbs_software.'-config-file,'.$this->hotpot->source->hbs_quiztype.',show-part-text');
+        $tags = $this->hotpot->source->hbs_software.'-config-file,'.$this->hotpot->source->hbs_quiztype.',show-part-text';
+        return $this->hotpot->source->xml_value($tags);
     }
 
     /**
@@ -80,7 +71,18 @@ class mod_hotpot_attempt_hp_6_sequitur_xml_renderer extends mod_hotpot_attempt_h
      * @return xxx
      */
     function expand_Solution()  {
-        return $this->hotpot->source->xml_value_int($this->hotpot->source->hbs_software.'-config-file,'.$this->hotpot->source->hbs_quiztype.',include-solution');
+        $tags = $this->hotpot->source->hbs_software.'-config-file,'.$this->hotpot->source->hbs_quiztype.',include-solution';
+        return $this->hotpot->source->xml_value_int($tags);
+    }
+
+    /**
+     * expand_SolutionCaption
+     *
+     * @return xxx
+     */
+    function expand_SolutionCaption() {
+        $tags = $this->hotpot->source->hbs_software.'-config-file,global,solution-caption';
+        return $this->hotpot->source->xml_value($tags);
     }
 
     /**
@@ -89,7 +91,8 @@ class mod_hotpot_attempt_hp_6_sequitur_xml_renderer extends mod_hotpot_attempt_h
      * @return xxx
      */
     function expand_Score()  {
-        return $this->hotpot->source->xml_value_js($this->hotpot->source->hbs_software.'-config-file,global,your-score-is');
+        $tags = $this->hotpot->source->hbs_software.'-config-file,global,your-score-is';
+        return $this->hotpot->source->xml_value_js($tags);
     }
 
     /**
@@ -98,7 +101,8 @@ class mod_hotpot_attempt_hp_6_sequitur_xml_renderer extends mod_hotpot_attempt_h
      * @return xxx
      */
     function expand_WholeText()  {
-        return $this->hotpot->source->xml_value($this->hotpot->source->hbs_software.'-config-file,'.$this->hotpot->source->hbs_quiztype.',show-whole-text');
+        $tags = $this->hotpot->source->hbs_software.'-config-file,'.$this->hotpot->source->hbs_quiztype.',show-whole-text';
+        return $this->hotpot->source->xml_value($tags);
     }
 
     /**

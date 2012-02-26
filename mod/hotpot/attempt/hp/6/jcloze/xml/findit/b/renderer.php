@@ -85,9 +85,9 @@ class mod_hotpot_attempt_hp_6_jcloze_xml_findit_b_renderer extends mod_hotpot_at
         );
         $replace = array(
             'if (NumOfVisibleGaps){',
-            '\\1}\\0',
-            'if (NumOfVisibleGaps) \\0',
-            'if (NumOfVisibleGaps) \\0'
+            '$1}$0',
+            'if (NumOfVisibleGaps) $0',
+            'if (NumOfVisibleGaps) $0'
         );
         $substr = preg_replace($search, $replace, $substr, 1);
 

@@ -35,7 +35,7 @@ defined('MOODLE_INTERNAL') || die();
 class hotpot_mediaplayer_pyg_mp3_player extends hotpot_mediaplayer {
     public $aliases = array('pyg');
     public $playerurl = 'pyg_mp3_player/pyg_mp3_player.swf';
-    public $flashvars_mediaurl = 'file';
+    public $flashvars_paramname = 'file';
     public $more_options = array(
         'width' => 180, 'height' => 30, 'my_BackgroundColor' => '0xE6E6FA', 'autolaunch' => 'false'
     );

@@ -37,13 +37,4 @@ require_once($CFG->dirroot.'/mod/hotpot/attempt/hp/6/jmatch/renderer.php');
  * @since     Moodle 2.0
  */
 class mod_hotpot_attempt_hp_6_jmatch_xml_renderer extends mod_hotpot_attempt_hp_6_jmatch_renderer {
-
-    /**
-     * init
-     *
-     * @param xxx $hotpot
-     */
-    function init($hotpot)  {
-        parent::init($hotpot);
-    }
 }

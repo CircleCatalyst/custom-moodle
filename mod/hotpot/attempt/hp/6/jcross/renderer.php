@@ -1,4 +1,4 @@
-<?php
+        <?php
 
 // This file is part of Moodle - http://moodle.org/
 //
@@ -94,7 +94,7 @@ class mod_hotpot_attempt_hp_6_jcross_renderer extends mod_hotpot_attempt_hp_6_re
     function fix_bodycontent()  {
         // we must add a false return value to clue links in order not to trigger the onbeforeunload event handler
         $search = '/(?<='.'<a href="javascript:void\(0\);" class="GridNum" onclick="'.')'.'ShowClue\([^)]*\)'.'(?='.'">'.')/';
-        $replace = '\\0'.'; return false;';
+        $replace = '$0; return false;';
         $this->bodycontent = preg_replace($search, $replace, $this->bodycontent);
 
         parent::fix_bodycontent();

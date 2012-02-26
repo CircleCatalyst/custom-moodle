@@ -39,15 +39,6 @@ require_once($CFG->dirroot.'/mod/hotpot/attempt/hp/6/sequitur/html/renderer.php'
 class mod_hotpot_attempt_hp_6_sequitur_html_incremental_renderer extends mod_hotpot_attempt_hp_6_sequitur_html_renderer {
 
     /**
-     * init
-     *
-     * @param xxx $hotpot
-     */
-    function init($hotpot)  {
-        parent::init($hotpot);
-    }
-
-    /**
      * get_js_functionnames
      */
     function get_js_functionnames() {

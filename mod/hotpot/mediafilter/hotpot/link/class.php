@@ -34,11 +34,12 @@ defined('MOODLE_INTERNAL') || die();
  */
 class hotpot_mediaplayer_link extends hotpot_mediaplayer {
     public $aliases = array('a');
-    public $img = array(
+    public $options = array(
         'width' => 0, 'height' => 0, 'build' => 0,
         'quality' => '', 'majorversion' => '', 'flashvars' => ''
     );
     public $spantext = '';
+    public $removelink = false;
     public $media_filetypes = array('...'); // 'htm','html','pdf'
 
     /**
@@ -52,6 +53,9 @@ class hotpot_mediaplayer_link extends hotpot_mediaplayer {
      */
     function generate($filetype, $link, $mediaurl, $options)  {
         $a = '<a href="'.$mediaurl.'"';
+        if (array_key_exists('player', $options)) {
+            unset($options['player']);
+        }
         if (array_key_exists('onclick', $options)) {
             $a .= ' onclick="'.$options['onclick'].'"';
             unset($options['onclick']);
@@ -65,7 +69,9 @@ class hotpot_mediaplayer_link extends hotpot_mediaplayer {
             $text = $mediaurl;
         }
         foreach ($options as $name => $value) {
-            $a .= ' '.$name.'="'.$value.'"';
+            if ($value) {
+                $a .= ' '.$name.'="'.$value.'"';
+            }
         }
         return $a.'>'.$text.'</a>';
     }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/hotpot/db" VERSION="20100906" COMMENT="XMLDB file for Moodle mod/hotpot"
+<XMLDB PATH="mod/hotpot/db" VERSION="20110829" COMMENT="XMLDB file for Moodle mod/hotpot"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -10,12 +10,10 @@
         <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
         <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="course" NEXT="sourcefile"/>
         <FIELD NAME="sourcefile" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="name" NEXT="sourcetype"/>
-        <FIELD NAME="sourcetype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="sourcefile" NEXT="sourceitemid"/>
-        <FIELD NAME="sourceitemid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="sourcetype" NEXT="sourcelocation"/>
-        <FIELD NAME="sourcelocation" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="sourceitemid" NEXT="configfile"/>
-        <FIELD NAME="configfile" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="sourcelocation" NEXT="configitemid"/>
-        <FIELD NAME="configitemid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="configfile" NEXT="configlocation"/>
-        <FIELD NAME="configlocation" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="configitemid" NEXT="entrycm"/>
+        <FIELD NAME="sourcetype" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="sourcefile" NEXT="sourcelocation"/>
+        <FIELD NAME="sourcelocation" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="sourcetype" NEXT="configfile"/>
+        <FIELD NAME="configfile" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" PREVIOUS="sourcelocation" NEXT="configlocation"/>
+        <FIELD NAME="configlocation" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="configfile" NEXT="entrycm"/>
         <FIELD NAME="entrycm" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="false" DEFAULT="0" SEQUENCE="false" PREVIOUS="configlocation" NEXT="entrygrade"/>
         <FIELD NAME="entrygrade" TYPE="int" LENGTH="6" NOTNULL="true" UNSIGNED="true" DEFAULT="100" SEQUENCE="false" PREVIOUS="entrycm" NEXT="entrypage"/>
         <FIELD NAME="entrypage" TYPE="int" LENGTH="2" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="entrygrade" NEXT="entrytext"/>

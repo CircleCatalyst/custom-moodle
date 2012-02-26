@@ -58,7 +58,7 @@ class mod_hotpot_attempt_hp_6_jquiz_renderer extends mod_hotpot_attempt_hp_6_ren
      */
     function init($hotpot)  {
         parent::init($hotpot);
-         array_push($this->javascripts, 'mod/hotpot/attempt/hp/6/jquiz/jquiz.js');
+        array_push($this->javascripts, 'mod/hotpot/attempt/hp/6/jquiz/jquiz.js');
     }
 
     /**
@@ -70,14 +70,29 @@ class mod_hotpot_attempt_hp_6_jquiz_renderer extends mod_hotpot_attempt_hp_6_ren
         if (preg_match_all($search, $this->bodycontent, $matches, PREG_OFFSET_CAPTURE)) {
             $i_max = count($matches[0]) - 1;
             for ($i=$i_max; $i>=0; $i--) {
-                $match = $matches[1][$i][0];
-                $start = $matches[1][$i][1];
+                list($match, $start) = $matches[1][$i];
                 if (strpos($match, 'autocomplete')===false) {
-                    $this->bodycontent = substr_replace($this->bodycontent, $match.' autocomplete="off"', $start, strlen($match));
+                    $start += strlen($match);
+                    $this->bodycontent = substr_replace($this->bodycontent, ' autocomplete="off"', $start, 0);
                 }
             }
         }
         parent::fix_bodycontent();
+    }
+
+    /**
+     * fix_headcontent
+     */
+    function fix_headcontent() {
+        if ($pos = strrpos($this->headcontent, '</style>')) {
+            $insert = ''
+                .'ol.QuizQuestions{'."\n"
+                .'	margin-bottom:0px;'."\n"
+                .'}'."\n"
+            ;
+            $this->headcontent = substr_replace($this->headcontent, $insert, $pos, 0);
+        }
+        parent::fix_headcontent();
     }
 
     /**
@@ -253,11 +268,11 @@ class mod_hotpot_attempt_hp_6_jquiz_renderer extends mod_hotpot_attempt_hp_6_ren
         // intercept Check
         if ($pos = strpos($substr, '{')) {
             $insert = "\n"
-            ."	// intercept this Check\n"
-            ."	if(!Finished && State[QNum].length && State[QNum][0]<0) {\n"
-            ."		var args = new Array(QNum, I[QNum][3][ANum][0]);\n"
-            ."		HP.onclickCheck(args);\n"
-            ."	}\n"
+                ."	// intercept this Check\n"
+                ."	if(!Finished && State[QNum].length && State[QNum][0]<0) {\n"
+                ."		var args = new Array(QNum, I[QNum][3][ANum][0]);\n"
+                ."		HP.onclickCheck(args);\n"
+                ."	}\n"
             ;
             $substr = substr_replace($substr, $insert, $pos+1, 0);
         }
@@ -278,12 +293,12 @@ class mod_hotpot_attempt_hp_6_jquiz_renderer extends mod_hotpot_attempt_hp_6_ren
         // intercept Check
         if ($pos = strpos($substr, '{')) {
             $insert = "\n"
-            ."	// intercept this Check\n"
-            ."	if(!Finished && State[QNum].length && State[QNum][0]<0) {\n"
-            ."		var obj = document.getElementById('Q_'+QNum+'_Guess');\n"
-            ."		var args = new Array(QNum, obj.value);\n"
-            ."		HP.onclickCheck(args);\n"
-            ."	}\n"
+                ."	// intercept this Check\n"
+                ."	if(!Finished && State[QNum].length && State[QNum][0]<0) {\n"
+                ."		var obj = document.getElementById('Q_'+QNum+'_Guess');\n"
+                ."		var args = new Array(QNum, obj.value);\n"
+                ."		HP.onclickCheck(args);\n"
+                ."	}\n"
             ;
             $substr = substr_replace($substr, $insert, $pos+1, 0);
         }
@@ -304,16 +319,16 @@ class mod_hotpot_attempt_hp_6_jquiz_renderer extends mod_hotpot_attempt_hp_6_ren
         // intercept Check
         if ($pos = strpos($substr, '{')) {
             $insert = "\n"
-            ."	// intercept this Check\n"
-            ."	if(!Finished && State[QNum].length && State[QNum][0]<0) {\n"
-            ."		var g='';\n"
-            ."		for (var ANum=0; ANum<I[QNum][3].length; ANum++){\n"
-            ."			var obj = document.getElementById('Q_'+QNum+'_'+ANum+'_Chk');\n"
-            ."			if (obj.checked) g += (g ? '+' : '') + I[QNum][3][ANum][0];\n"
-            ."		}\n"
-            ."		var args = new Array(QNum, g);\n"
-            ."		HP.onclickCheck(args);\n"
-            ."	}\n"
+                ."	// intercept this Check\n"
+                ."	if(!Finished && State[QNum].length && State[QNum][0]<0) {\n"
+                ."		var g='';\n"
+                ."		for (var ANum=0; ANum<I[QNum][3].length; ANum++){\n"
+                ."			var obj = document.getElementById('Q_'+QNum+'_'+ANum+'_Chk');\n"
+                ."			if (obj.checked) g += (g ? '+' : '') + I[QNum][3][ANum][0];\n"
+                ."		}\n"
+                ."		var args = new Array(QNum, g);\n"
+                ."		HP.onclickCheck(args);\n"
+                ."	}\n"
             ;
             $substr = substr_replace($substr, $insert, $pos+1, 0);
         }
@@ -351,9 +366,9 @@ class mod_hotpot_attempt_hp_6_jquiz_renderer extends mod_hotpot_attempt_hp_6_ren
     function fix_js_CalculateOverallScore(&$str, $start, $length)  {
         $substr = substr($str, $start, $length);
 
-        $substr = preg_replace('/(\s*)var TotalScore = 0;/s', '\\0\\1'.'var TotalCount = 0;', $substr, 1);
-        $substr = preg_replace('/(\s*)TotalScore \+= [^;]*;/s', '\\0\\1'.'TotalCount ++;', $substr, 1);
-        $substr = preg_replace('/(\s*)\}\s*else\s*\{/s', '\\1} else if (TotalCount==0) {\\1'."\t".'Score = 0;'.'\\0', $substr, 1);
+        $substr = preg_replace('/(\s*)var TotalScore = 0;/s', '$0$1'.'var TotalCount = 0;', $substr, 1);
+        $substr = preg_replace('/(\s*)TotalScore \+= [^;]*;/s', '$0$1'.'TotalCount ++;', $substr, 1);
+        $substr = preg_replace('/(\s*)\}\s*else\s*\{/s', '$1} else if (TotalCount==0) {$1'."\t".'Score = 0;'.'$0', $substr, 1);
 
         $str = substr_replace($str, $substr, $start, $length);
     }

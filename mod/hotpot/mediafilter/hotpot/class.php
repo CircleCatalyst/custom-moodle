@@ -59,7 +59,7 @@ class hotpot_mediafilter_hotpot extends hotpot_mediafilter {
         }
         $newtext = $text; // fullclone is slow and not needed here
 
-        foreach ($this->media_filetypes as $filetype) {
+        foreach (array_keys($this->media_filetypes) as $filetype) {
 
             // set $adminsetting, the name of the $CFG setting, if any, which enables/disables filtering of this file type
             $adminsetting = '';
@@ -75,17 +75,17 @@ class hotpot_mediafilter_hotpot extends hotpot_mediafilter {
             }
 
             // set $search and $replace strings
-            $search = '/<a.*?href="([^"?>]*\.'.$filetype.'[^">]*)"[^>]*>.*?<\/a>/ise';
+            $search = '/<a.*?href="([^"?>]*\.'.$filetype.'[^">]*)"[^>]*>.*?<\/a>/is';
             if ($adminsetting=='' || $CFG->$adminsetting) {
                 // filtering of this file type is allowed
-                $replace = '$this->hotpot_mediaplugin_filter($filetype, "\\0", "\\1", $options)';
+                $callback = array($this, 'hotpot_mediaplugin_filter');
+                $callback = partial($callback, $filetype, $options);
+                $newtext = preg_replace_callback($search, $callback, $newtext, -1, $count);
             } else {
                 // filtering of this file type is disabled
-                $replace = '"\\1<br />".get_string("error_disabledfilter", "hotpot", "'.$adminsetting.'")';
+                $replace = '$1<br />'.get_string('error_disabledfilter', 'hotpot', $adminsetting);
+                $newtext = preg_replace($search, $replace, $newtext, -1, $count);
             }
-
-            // replace $search text with $replace text
-            $newtext = preg_replace($search, $replace, $newtext, -1, $count);
 
             if ($count>0) {
                 break;
@@ -100,10 +100,10 @@ class hotpot_mediafilter_hotpot extends hotpot_mediafilter {
         if ($eolas_fix_applied==$hotpot->id) {
             // do nothing - the external javascripts have already been included for this quiz
         } else {
-            $PAGE->requires->js('/lib/ufo.js', true);
-            $PAGE->requires->js('/filter/mediaplugin/eolas_fix.js');
-            //$newtext .= "\n".'<script type="text/javascript" src="'.$CFG->wwwroot.'/lib/ufo.js"></script>';
-            //$newtext .= "\n".'<script type="text/javascript" src="'.$CFG->wwwroot.'/filter/mediaplugin/eolas_fix.js" defer="defer"></script>';
+            $PAGE->requires->js('/mod/hotpot/mediafilter/ufo.js', true);
+            $PAGE->requires->js('/mod/hotpot/mediafilter/eolas_fix.js');
+            //$newtext .= "\n".'<script type="text/javascript" src="'.$CFG->wwwroot.'/mod/hotpot/mediafilter/ufo.js"></script>';
+            //$newtext .= "\n".'<script type="text/javascript" src="'.$CFG->wwwroot.'/mod/hotpot/mediafilter/eolas_fix.js" defer="defer"></script>';
             $eolas_fix_applied = $hotpot->id;
         }
 
@@ -113,19 +113,14 @@ class hotpot_mediafilter_hotpot extends hotpot_mediafilter {
     /**
      * hotpot_mediaplugin_filter
      *
+     * @param xxx $match
      * @param xxx $filetype
-     * @param xxx $link
-     * @param xxx $mediaurl
      * @param xxx $options
-     * @param xxx $quote (optional, default="'")
      * @return xxx
      */
-    function hotpot_mediaplugin_filter($filetype, $link, $mediaurl, $options, $quote="'")  {
-        if ($quote) {
-            // fix quotes that were escaped by preg_replace
-            $link = str_replace('\\'.$quote, $quote, $link);
-            $mediaurl = str_replace('\\'.$quote, $quote, $mediaurl);
-        }
+    function hotpot_mediaplugin_filter($filetype, $options, $match)  {
+        $link = $match[0];
+        $mediaurl = $match[1];
 
         // get a valid $player name
         if (isset($options['player'])) {

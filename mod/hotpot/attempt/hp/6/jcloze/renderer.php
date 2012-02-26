@@ -44,7 +44,7 @@ class mod_hotpot_attempt_hp_6_jcloze_renderer extends mod_hotpot_attempt_hp_6_re
     public $templatestrings = 'PreloadImageList';
 
     // Glossary autolinking settings
-    public $headcontent_strings = 'Feedback|Correct|Incorrect|GiveHint|YourScoreIs|Guesses|I';
+    public $headcontent_strings = 'Feedback|Correct|Incorrect|GiveHint|YourScoreIs|Guesses|(?:I\[\d+\]\[1\]\[\d+\]\[2\])';
     public $headcontent_arrays = '';
 
     /**
@@ -134,6 +134,7 @@ class mod_hotpot_attempt_hp_6_jcloze_renderer extends mod_hotpot_attempt_hp_6_re
         //   GapId   : Find It (a) + (b) + ANCT-Scan
         //   ClueNum : JCross (has its own fix function)
         // so it is safest to refer to it using "ShowClue.arguments[0]"
+
 
         // intercept Clues
         if ($pos = strpos($substr, '{')) {
@@ -350,6 +351,19 @@ class mod_hotpot_attempt_hp_6_jcloze_renderer extends mod_hotpot_attempt_hp_6_re
         $substr = str_replace('if (TextBody != null)', 'if (TextBody)', $substr);
         $substr = str_replace('TextBody', 'ClozeBody', $substr);
 
+        // add "try {...} catch(err) {...}" around error-prone removeChild statement (in DropDown)
+        $search = "/([\r\n]+[ \t]+)(GSpan\.removeChild\(GSpan\.getElementsByTagName\('input'\)\[0\]\);)/";
+        // [1] : indent
+        // [2] : javascript
+        $replace = ''
+            .'\\1'.'try {'."\n"
+            .'\\1'.'	\\2'."\n"
+            .'\\1'.'} catch(err) {'."\n"
+            .'\\1'.'	//do nothing'."\n"
+            .'\\1'.'}'
+        ;
+        $substr = preg_replace($search, $replace, $substr, 1);
+
         if ($endpos = strrpos($substr, '}')) {
             // optimize gap creation and unhide Cloze text when gaps have been set up
             $search = "var ClozeBody = document.getElementById('ClozeBody');";
@@ -377,6 +391,78 @@ class mod_hotpot_attempt_hp_6_jcloze_renderer extends mod_hotpot_attempt_hp_6_re
                 ."	}\n"
             ;
             $substr = substr_replace($substr, $replace, $pos, $len);
+        }
+
+         if ($this->expand_CaseSensitive()) {
+            $search = 'SelectorList = Shuffle(SelectorList);';
+            $replace = 'SelectorList = AlphabeticalSort(SelectorList, x);';
+            $substr = str_replace($search, $replace, $substr);
+            $substr .= "\n"
+                ."function AlphabeticalSort(SelectorList, x) {\n"
+                ."	if (MakeIndividualDropdowns) {\n"
+                ."		var y_max = I[x][1].length - 1;\n"
+                ."	} else {\n"
+                ."		var y_max = I.length - 1;\n"
+                ."	}\n"
+                ."	var sorted = false;\n"
+                ."	while (! sorted) {\n"
+                ."		sorted = true;\n"
+                ."		for (var y=0; y<y_max; y++) {\n"
+                ."			var y1 = SelectorList[y];\n"
+                ."			var y2 = SelectorList[y + 1];\n"
+                ."			if (MakeIndividualDropdowns) {\n"
+                ."				var s1 = I[x][1][y1][0].toLowerCase();\n"
+                ."				var s2 = I[x][1][y2][0].toLowerCase();\n"
+                ."			} else {\n"
+                ."				var s1 = I[y1][1][0][0].toLowerCase();\n"
+                ."				var s2 = I[y2][1][0][0].toLowerCase();\n"
+                ."			}\n"
+                ."			if (s1 > s2) {\n"
+                ."				sorted = false;\n"
+                ."				SelectorList[y] = y2;\n"
+                ."				SelectorList[y + 1] = y1;\n"
+                ."			}\n"
+                ."		}\n"
+                ."	}\n"
+                ."	return SelectorList;\n"
+                ."}\n"
+            ;
+        }
+
+        if ($this->expand_CaseSensitive()) {
+            $search = 'SelectorList = Shuffle(SelectorList);';
+            $replace = 'SelectorList = AlphabeticalSort(SelectorList, x);';
+            $substr = str_replace($search, $replace, $substr);
+            $substr .= "\n"
+                ."function AlphabeticalSort(SelectorList, x) {\n"
+                ."	if (MakeIndividualDropdowns) {\n"
+                ."		var y_max = I[x][1].length - 1;\n"
+                ."	} else {\n"
+                ."		var y_max = I.length - 1;\n"
+                ."	}\n"
+                ."	var sorted = false;\n"
+                ."	while (! sorted) {\n"
+                ."		sorted = true;\n"
+                ."		for (var y=0; y<y_max; y++) {\n"
+                ."			var y1 = SelectorList[y];\n"
+                ."			var y2 = SelectorList[y + 1];\n"
+                ."			if (MakeIndividualDropdowns) {\n"
+                ."				var s1 = I[x][1][y1][0].toLowerCase();\n"
+                ."				var s2 = I[x][1][y2][0].toLowerCase();\n"
+                ."			} else {\n"
+                ."				var s1 = I[y1][1][0][0].toLowerCase();\n"
+                ."				var s2 = I[y2][1][0][0].toLowerCase();\n"
+                ."			}\n"
+                ."			if (s1 > s2) {\n"
+                ."				sorted = false;\n"
+                ."				SelectorList[y] = y2;\n"
+                ."				SelectorList[y + 1] = y1;\n"
+                ."			}\n"
+                ."		}\n"
+                ."	}\n"
+                ."	return SelectorList;\n"
+                ."}\n"
+            ;
         }
 
         $str = substr_replace($str, $substr, $start, $length);
@@ -477,10 +563,10 @@ class mod_hotpot_attempt_hp_6_jcloze_renderer extends mod_hotpot_attempt_hp_6_re
 
         // make sure GapId is valid
         $search = '/'.'(\s*)(GapList[^;]*;)(.*)(Show_GapSolution[^;]*;)/s';
-        $replace = '\\1'
-            ."if (typeof(GapId)=='number' && GapList[GapId]){".'\\1'
-            .'	\\2\\3'
-            .'	\\4\\1'
+        $replace = '$1'
+            ."if (typeof(GapId)=='number' && GapList[GapId]){".'$1'
+            .'	$2$3'
+            .'	$4$1'
             .'}'
         ;
         $substr = preg_replace($search, $replace, $substr, 1);

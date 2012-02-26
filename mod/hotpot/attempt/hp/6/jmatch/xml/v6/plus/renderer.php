@@ -40,15 +40,6 @@ class mod_hotpot_attempt_hp_6_jmatch_xml_v6_plus_renderer extends mod_hotpot_att
     public $templatefile = 'djmatch6.ht_';
 
     /**
-     * init
-     *
-     * @param xxx $hotpot
-     */
-    function init($hotpot)  {
-        parent::init($hotpot);
-    }
-
-    /**
      * fix_bodycontent
      */
     function fix_bodycontent()  {

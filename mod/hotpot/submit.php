@@ -82,10 +82,19 @@ require_once($CFG->dirroot.'/mod/hotpot/'.$subdir.'/storage.php');
 $class = 'mod_hotpot_'.$subtype.'_storage';
 $storage = call_user_func(array($class, 'store'), $hotpot);
 
-// if we don't need an exit page, go straight back to the course page
+// if we don't need an exit page, go straight back to the next activity or course page (or retry this hotpot)
 if (empty($hotpot->exitpage)) {
-    // go straight to attempt.php
-    redirect($hotpot->course_url());
+    if ($hotpot->require_exitgrade() && $hotpot->attempt->score < $hotpot->exitgrade) {
+        // score was not good enough, so do automatic retry
+        redirect($hotpot->attempt_url());
+    }
+    if ($cm = $hotpot->get_cm('exit')) {
+        // display next activity
+        redirect($hotpot->view_url($cm));
+    } else {
+        // return to course page
+        redirect($hotpot->course_url());
+    }
 }
 
 // create the renderer for this attempt

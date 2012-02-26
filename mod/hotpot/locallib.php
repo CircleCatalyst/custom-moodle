@@ -174,18 +174,12 @@ class hotpot {
     public $sourcetype;
 
     /** @var int the file itemid of the sourcefile for this HotPot instance */
-    public $sourceitemid;
-
-    /** @var int the file itemid of the sourcefile for this HotPot instance */
     public $sourcelocation;
 
     /** @var string url or path of the config file for this HotPot instance */
     public $configfile;
 
-    /** @var int the file itemid of the configfile for this HotPot instance */
-    public $configitemid;
-
-    /** @var int the file itemid of the configfile for this HotPot instance */
+    /** @var int the location of the configfile for this HotPot instance */
     public $configlocation;
 
     /** @var xxx */
@@ -220,6 +214,9 @@ class hotpot {
 
     /** @var xxx */
     public $exitcm;
+
+    /** @var xxx */
+    public $exitgrade;
 
     /** @var string the output format to be used when generating browser content */
     public $outputformat;
@@ -365,8 +362,8 @@ class hotpot {
                 $this->$field = $value;
             }
         }
-        $this->cm    = $cm;
-        $this->course= $course;
+        $this->cm = $cm;
+        $this->course = $course;
         if (is_null($context)) {
             $this->context = get_context_instance(CONTEXT_MODULE, $this->cm->id);
         } else {
@@ -431,10 +428,10 @@ class hotpot {
     public static function available_feedbacks_list() {
         global $CFG;
         $list = array (
-            self::FEEDBACK_NONE            => get_string('none'),
-            self::FEEDBACK_WEBPAGE         => get_string('feedbackwebpage',  'hotpot'),
-            self::FEEDBACK_FORMMAIL        => get_string('feedbackformmail', 'hotpot'),
-            self::FEEDBACK_MOODLEFORUM     => get_string('feedbackmoodleforum', 'hotpot')
+            self::FEEDBACK_NONE        => get_string('none'),
+            self::FEEDBACK_WEBPAGE     => get_string('feedbackwebpage',  'hotpot'),
+            self::FEEDBACK_FORMMAIL    => get_string('feedbackformmail', 'hotpot'),
+            self::FEEDBACK_MOODLEFORUM => get_string('feedbackmoodleforum', 'hotpot')
         );
         if ($CFG->messaging) {
             $list[self::FEEDBACK_MOODLEMESSAGING] = get_string('feedbackmoodlemessaging', 'hotpot');
@@ -485,6 +482,10 @@ class hotpot {
                     $outputformats[$outputformat] = get_string('outputformat_'.$outputformat, 'hotpot');
                 }
             }
+            // remove "best" if there is only one compatible output format
+            // if (count($outputformats)==2) {
+            //     unset($outputformats[0]);
+            // }
         }
         return $outputformats;
     }
@@ -585,12 +586,10 @@ class hotpot {
         $classes = self::get_classes('hotpotsource');
 
         // loop through the classes checking to see if this file is recognized
-        // use eval() to prevent syntax error in PHP 5.2.x
+        // use call_user_func() to prevent syntax error in PHP 5.2.x
         foreach ($classes as $class) {
-            eval('$is_quizfile = '.$class.'::is_quizfile($sourcefile);');
-            if ($is_quizfile) {
-                eval('$sourcetype = '.$class.'::get_type($class);');
-                return $sourcetype;
+            if (call_user_func(array($class, 'is_quizfile'), $sourcefile)) {
+                return call_user_func(array($class, 'get_type'), $class);
             }
         }
 
@@ -735,7 +734,7 @@ class hotpot {
             // entry/exit pages
             'entrypage','entryformat','entryoptions',
             'exitpage','exitformat','exitoptions',
-            'entrycm','entrygrade','exitcm',
+            'entrycm','entrygrade','exitcm','exitgrade',
 
             // display
             'outputformat','navigation','title','stopbutton','stoptext',
@@ -756,15 +755,38 @@ class hotpot {
      * @param xxx $field_value
      * @return xxx
      */
-    public static function string_ids($field_value)  {
+    public static function string_ids($field_value, $max_field_length=255)  {
         $ids = array();
+
         $strings = explode(',', $field_value);
         foreach($strings as $str) {
             if ($id = self::string_id($str)) {
                 $ids[] = $id;
             }
         }
-        return implode(',', $ids);
+        $ids = implode(',', $ids);
+
+        // we have to make sure that the list of $ids is no longer
+        // than the maximum allowable length for this field
+        if (strlen($ids) > $max_field_length) {
+
+            // truncate $ids just before last comma in allowable field length
+            // Note: largest possible id is something like 9223372036854775808
+            //       so we must leave space for that in the $ids string
+            $ids = substr($ids, 0, $max_field_length - 20);
+            $ids = substr($ids, 0, strrpos($ids, ','));
+
+            // create single $str(ing) containing all $strings not included in $ids
+            $str = implode(',', array_slice($strings, substr_count($ids, ',') + 1));
+
+            // append the id of the string containing all the strings not yet in $ids
+            if ($id = self::string_id($str)) {
+                $ids .= ','.$id;
+            }
+        }
+
+        // return comma separated list of string $ids
+        return $ids;
     }
 
     /**
@@ -842,11 +864,9 @@ class hotpot {
      */
     public function view_url($cm=null) {
         if (is_null($cm)) {
-            $id = $this->cm->id;
-        } else {
-            $id = $cm->id;
+            $cm = $this->cm;
         }
-        return new moodle_url('/mod/hotpot/view.php', array('id' => $id));
+        return new moodle_url('/mod/'.$cm->modname.'/view.php', array('id' => $cm->id));
     }
 
     /**
@@ -854,11 +874,9 @@ class hotpot {
      */
     public function report_url($mode='', $cm=null) {
         if (is_null($cm)) {
-            $id = $this->cm->id;
-        } else {
-            $id = $cm->id;
+            $cm = $this->cm;
         }
-        $params = array('id' => $id);
+        $params = array('id' => $cm->id);
         if ($mode) {
             $params['mode'] = $mode;
         }
@@ -870,11 +888,9 @@ class hotpot {
      */
     public function attempt_url($framename='', $cm=null) {
         if (is_null($cm)) {
-            $id = $this->cm->id;
-        } else {
-            $id = $cm->id;
+            $cm = $this->cm;
         }
-        $params = array('id' => $id);
+        $params = array('id' => $cm->id);
         if ($framename) {
             $params['framename'] = $framename;
         }
@@ -886,11 +902,9 @@ class hotpot {
      */
     public function submit_url($attempt=null) {
         if (is_null($attempt)) {
-            $id = $this->attempt->id;
-        } else {
-            $id = $attempt->id;
+            $attempt = $this->attempt;
         }
-        return new moodle_url('/mod/hotpot/submit.php', array('id' => $id));
+        return new moodle_url('/mod/hotpot/submit.php', array('id' => $attempt->id));
     }
 
     /**
@@ -898,11 +912,9 @@ class hotpot {
      */
     public function review_url($attempt=null) {
         if (is_null($attempt)) {
-            $id = $this->attempt->id;
-        } else {
-            $id = $attempt->id;
+            $attempt = $this->attempt;
         }
-        return new moodle_url('/mod/hotpot/review.php', array('id' => $id));
+        return new moodle_url('/mod/hotpot/review.php', array('id' => $attempt->id));
     }
 
     /**
@@ -910,11 +922,9 @@ class hotpot {
      */
     public function index_url($course=null) {
         if (is_null($course)) {
-            $id = $this->course->id;
-        } else {
-            $id = $course->id;
+            $course = $this->course;
         }
-        return new moodle_url('/mod/hotpot/index.php', array('id' => $id));
+        return new moodle_url('/mod/hotpot/index.php', array('id' => $course->id));
     }
 
     /**
@@ -922,11 +932,9 @@ class hotpot {
      */
     public function course_url($course=null) {
         if (is_null($course)) {
-            $id = $this->course->id;
-        } else {
-            $id = $course->id;
+            $course = $this->course;
         }
-        return new moodle_url('/course/view.php', array('id' => $id));
+        return new moodle_url('/course/view.php', array('id' => $course->id));
     }
 
     /**
@@ -934,11 +942,9 @@ class hotpot {
      */
     public function grades_url($course=null) {
         if (is_null($course)) {
-            $id = $this->course->id;
-        } else {
-            $id = $course->id;
+            $course = $this->course;
         }
-        return new moodle_url('/grade/index.php', array('id' => $id));
+        return new moodle_url('/grade/index.php', array('id' => $course->id));
     }
 
     /**
@@ -1729,6 +1735,11 @@ class hotpot {
                     $select = 'cmid=? AND userid=? AND action=?';
                     $params = array($cm->id, $this->userid, 'view');
                     break;
+                case 'lesson':
+                    $table = 'lesson_grades';
+                    $select = 'userid=? AND lessonid==? AND completed>?';
+                    $params = array($this->userid, $cm->instance, 0);
+                    break;
                 default:
                     $table = '';
                     $select = '';
@@ -1742,6 +1753,19 @@ class hotpot {
         }
 
         return false;
+    }
+
+    /**
+     * require_exitgrade
+     *
+     * @return xxx
+     */
+    function require_exitgrade() {
+        if ($this->exitcm==0 || $this->exitgrade==0 || empty($this->attempt)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     /**
@@ -1859,7 +1883,7 @@ class hotpot {
                 $modname = 'hotpot';
             }
             if ($cmid==self::ACTIVITY_SECTION_ANY || $cmid==self::ACTIVITY_SECTION_HOTPOT) {
-                $sectionnum = $modinfo[$this->cm->id]->sectionnum;
+                $sectionnum = $modinfo->get_cm($this->cm->id)->sectionnum;
             }
         }
 

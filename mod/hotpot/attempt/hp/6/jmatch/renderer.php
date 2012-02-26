@@ -321,7 +321,7 @@ class mod_hotpot_attempt_hp_6_jmatch_renderer extends mod_hotpot_attempt_hp_6_re
 
         $substr = substr($str, $start, $length);
 
-        $substr = preg_replace('/(\s*)'.'return;/', '\\1'.'HP.onunload(4,0);'.'\\0', $substr);
+        $substr = preg_replace('/(\s*)return;/', '$1'.'HP.onunload(4,0);$0', $substr);
 
         if ($pos = strrpos($substr, '}')) {
             $append = "\n"
@@ -374,14 +374,14 @@ class mod_hotpot_attempt_hp_6_jmatch_renderer extends mod_hotpot_attempt_hp_6_re
 
         // replace code for hiding elements
         $search = '/(\s*)if \(is\.ie\){.*?}.*?}.*?}/s';
-        $replace = '\\1'
-            ."ShowElements(false, 'input');\\1"
-            ."ShowElements(false, 'select');\\1"
-            ."ShowElements(false, 'object');\\1"
-            ."ShowElements(true, 'object', 'FeedbackContent');\\1"
-            ."if (navigator.userAgent.indexOf('Chrome')>=0) {\\1"
-            ."	ShowElements(false, 'embed');\\1"
-            ."	ShowElements(true, 'embed', 'FeedbackContent');\\1"
+        $replace = '$1'
+            ."ShowElements(false, 'input');".'$1'
+            ."ShowElements(false, 'select');".'$1'
+            ."ShowElements(false, 'object');".'$1'
+            ."ShowElements(true, 'object', 'FeedbackContent');".'$1'
+            ."if (navigator.userAgent.indexOf('Chrome')>=0) {".'$1'
+            ."	ShowElements(false, 'embed');".'$1'
+            ."	ShowElements(true, 'embed', 'FeedbackContent');".'$1'
             ."}"
         ;
         $substr = preg_replace($search, $replace, $substr, 1);
@@ -437,14 +437,14 @@ class mod_hotpot_attempt_hp_6_jmatch_renderer extends mod_hotpot_attempt_hp_6_re
 
         // replace code for showing elements
         $search = '/(\s*)if \(is\.ie\){.*?}.*?}.*?}/s';
-        $replace = '\\1'
-            ."ShowElements(true, 'input');\\1"
-            ."ShowElements(true, 'select');\\1"
-            ."ShowElements(true, 'object');\\1"
-            ."ShowElements(false, 'object', 'FeedbackContent');\\1"
-            ."if (navigator.userAgent.indexOf('Chrome')>=0) {\\1"
-            ."	ShowElements(true, 'embed');\\1"
-            ."	ShowElements(false, 'embed', 'FeedbackContent');\\1"
+        $replace = '$1'
+            ."ShowElements(true, 'input');".'$1'
+            ."ShowElements(true, 'select');".'$1'
+            ."ShowElements(true, 'object');".'$1'
+            ."ShowElements(false, 'object', 'FeedbackContent');".'$1'
+            ."if (navigator.userAgent.indexOf('Chrome')>=0) {".'$1'
+            ."	ShowElements(true, 'embed');".'$1'
+            ."	ShowElements(false, 'embed', 'FeedbackContent');".'$1'
             ."}"
         ;
         $substr = preg_replace($search, $replace, $substr, 1);
@@ -484,7 +484,7 @@ class mod_hotpot_attempt_hp_6_jmatch_renderer extends mod_hotpot_attempt_hp_6_re
 
         // surround main body of function with if (id>=0) { ... }
         $search = '/(?<={)(.*)(?=if \(Pairs == F\.length\))/s';
-        $replace = "\n\t".'if (id>=0) {\\1}'."\n\t";
+        $replace = "\n\t".'if (id>=0) {$1}'."\n\t";
         $substr = preg_replace($search, $replace, $substr, 1);
 
         parent::fix_js_CheckAnswers($substr, 0, strlen($substr));

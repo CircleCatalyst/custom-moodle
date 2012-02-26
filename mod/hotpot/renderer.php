@@ -59,11 +59,7 @@ class mod_hotpot_renderer extends plugin_renderer_base {
 
         $hiddenfields = '';
         foreach ($params as $name => $value) {
-            if ($value===0 || $value==='' || $value===false) {
-                // do nothing
-            } else {
-                $hiddenfields .= html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>$name, 'value'=>$value))."\n";
-            }
+            $hiddenfields .= html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>$name, 'value'=>$value))."\n";
         }
         if ($hiddenfields) {
             // xhtml strict requires a container for the hidden input elements
@@ -144,13 +140,13 @@ class mod_hotpot_renderer extends plugin_renderer_base {
     function print_commands($types, $hotpotscriptname, $id, $params, $popup=false, $return=false)  {
         // $types : array('add', 'update', 'delete', 'deleteall')
         // $params : array('name' => 'value') for url query string
-        // $popup : true, false or array('width' => 999, 'height' => 999)
+        // $popup : true, false or array('name' => 'something', 'width' => 999, 'height' => 999)
 
-        $commands = '<span class="commands">';
+        $commands = html_writer::start_tag('span', array('class'=>'commands'))."\n";
         foreach ($types as $type) {
             $commands .= $this->print_command($type, $hotpotscriptname, $id, $params, $popup, $return);
         }
-        $commands .= '</span>'."\n";
+        $commands .= html_writer::end_tag('form')."\n";
 
         if ($return) {
             return $commands;
@@ -215,14 +211,21 @@ class mod_hotpot_renderer extends plugin_renderer_base {
         }
 
         if ($popup) {
+            if (is_bool($popup)) {
+                $popup = array();
+            } else if (is_string($popup)) {
+                $popup = array('name' => $popup);
+            }
+            $name  = (isset($popup['name']) ? $popup['name'] : '');
             $width  = (isset($popup['width']) ? $popup['width'] : 650);
             $height = (isset($popup['height']) ? $popup['height'] : 400);
             $command = element_to_popup_window(
                 // $type, $url, $name, $linktext, $height, $width, $title, $options, $return, $id, $class
-                'link', $url, '', $linktext, $height, $width, $str->$type, '', true, '', ''
+                'link', $url, $name, $linktext, $height, $width, $str->$type, '', true, '', ''
             );
         } else {
-            $command = '<a title="'.$str->$type.'" href="'.$url.'">'.$linktext.'</a>';
+            $command = html_writer::link($url, $linktext, array('title' => $str->$type))."\n";
+
         }
 
         if (! $icon) {
@@ -584,9 +587,10 @@ class mod_hotpot_renderer extends plugin_renderer_base {
                 ."}"
                 ."return x;"
             ;
-            $output .= $this->form_start('view.php', array('id' => $hotpot->cm->id), array('onsubmit' => $onsubmit))."\n";
-            $output .= html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'confirmed', 'value'=>'0'))."\n";
-            $output .= html_writer::empty_tag('input', array('type'=>'hidden', 'name'=>'action', 'value'=>'deleteselected'))."\n";
+            $params = array(
+                'id' => $hotpot->cm->id, 'sesskey' => sesskey(), 'confirmed' => 0, 'action' => 'deleteselected'
+            );
+            $output .= $this->form_start('view.php', $params, array('onsubmit' => $onsubmit))."\n";
        }
 
         // echo the summary of attempts
@@ -859,8 +863,14 @@ class mod_hotpot_renderer extends plugin_renderer_base {
         $table->attributes['class'] = 'hotpotexitlinks';
 
         if ($hotpot->attempt->status==hotpot::STATUS_COMPLETED) {
-            // next activity, if there is one
-            if ($cm = $hotpot->get_cm('exit')) {
+            if ($hotpot->require_exitgrade() && $hotpot->attempt->score < $hotpot->exitgrade) {
+                // insufficient grade to show link to next activity
+                $cm = false;
+            } else {
+                // get next activity, if there is one
+                $cm = $hotpot->get_cm('exit');
+            }
+            if ($cm) {
                 $url = new moodle_url('/mod/'.$cm->modname.'/view.php', array('id' => $cm->id));
                 $table->data[] = new html_table_row(array(
                     new html_table_cell(html_writer::link($url, get_string('exit_next', 'hotpot'))),

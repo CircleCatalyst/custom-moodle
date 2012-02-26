@@ -39,21 +39,17 @@ require_once($CFG->dirroot.'/mod/hotpot/attempt/hp/6/jmix/xml/v6/plus/renderer.p
 class mod_hotpot_attempt_hp_6_jmix_xml_v6_plus_keypress_renderer extends mod_hotpot_attempt_hp_6_jmix_xml_v6_plus_renderer {
 
     /**
-     * init
-     *
-     * @param xxx $hotpot
-     */
-    function init($hotpot)  {
-        parent::init($hotpot);
-    }
-
-    /**
      * fix_bodycontent
      *
      * @return xxx
      */
-    function fix_bodycontent()  {
+    function fix_bodycontent() {
         parent::$this->fix_bodycontent_DragAndDrop();
+
+        $search = 'onclick="location.reload()"';
+        $replace = 'onclick="quizport_jmix_restart()"';
+        $this->bodycontent = str_replace($search, $replace, $this->bodycontent);
+
         $this->bodycontent .= "\n"
             .'<script type="text/javascript">'."\n"
             ."//<![CDATA[\n"
@@ -95,14 +91,19 @@ class mod_hotpot_attempt_hp_6_jmix_xml_v6_plus_keypress_renderer extends mod_hot
             ."	}\n"
             ."	var i_max = array.length;\n"
             ."	for (var i=i_min; i<i_max; i++) {\n"
-            ."		if (array[i][property]==value) {\n"
+            ."		if (typeof(array[i][property])=='string' && typeof(value)=='string') {\n"
+            ."			var len = Math.min(value.length, array[i][property].length);\n"
+            ."			if (len && value.substr(0, len)==array[i][property].substr(0, len)) {\n"
+            ."				return i;\n"
+            ."			}\n"
+            ."		} else if (array[i][property]==value) {\n"
             ."			return i;\n"
             ."		}\n"
             ."	}\n"
             ."	return i_max;\n"
             ."}\n"
 
-            ."function hotpot_jmix_get_unicode(e) {\n"
+            ."function quizport_jmix_get_unicode(e) {\n"
             ."	if (typeof(e)=='undefined' && window.event) {\n"
             ."		e = window.event;\n"
             ."	}\n"
@@ -119,8 +120,8 @@ class mod_hotpot_attempt_hp_6_jmix_xml_v6_plus_keypress_renderer extends mod_hot
             ."	return unicode;\n"
             ."}\n"
 
-            ."function hotpot_jmix_onkeypress(e) {\n"
-            ."	var unicode = hotpot_jmix_get_unicode(e);\n"
+            ."function quizport_jmix_onkeypress(e) {\n"
+            ."	var unicode = quizport_jmix_get_unicode(e);\n"
             ."	if (unicode) {\n"
             ."		var char = String.fromCharCode(unicode);\n"
             ."		var LastLine_Bottom = L[L.length - 1].GetB();\n"
@@ -148,7 +149,7 @@ class mod_hotpot_attempt_hp_6_jmix_xml_v6_plus_keypress_renderer extends mod_hot
             ."			var LastCard = GetLastCard();\n"
             ."			if (LastCard) {\n"
             ."				var l = LastCard.GetR() + 4;\n"
-            ."				if (window.hotpot_jmix_whitespace) {\n"
+            ."				if (window.quizport_jmix_whitespace) {\n"
             ."					l += LastCard.GetW();\n"
             ."				}\n"
             ."				var t = LastCard.GetT();\n"
@@ -158,35 +159,40 @@ class mod_hotpot_attempt_hp_6_jmix_xml_v6_plus_keypress_renderer extends mod_hot
             ."			}\n"
             ."			Cds[ThisCard_i].SetL(l);\n"
             ."			Cds[ThisCard_i].SetT(t);\n"
-            ."			window.hotpot_jmix_whitespace = false;\n"
-            ."			window.hotpot_jmix_checkresults = true;\n"
+            ."			window.quizport_jmix_whitespace = false;\n"
+            ."			window.quizport_jmix_checkresults = true;\n"
+            ."			// adjust css top of ThisCard in standard HP way (required for Mac FF)\n"
+            ."			CurrDrag = ThisCard_i;"
+            ."			onEndDrag();"
+            ."			CurrDrag = -1;"
+            ."			// all done\n"
             ."			return false;\n"
             ."		}\n"
 
             ."		// 10=Enter, 13=Return\n"
             ."		if (unicode==10 || unicode==13) {\n"
-            ."			window.hotpot_jmix_whitespace = false;\n"
-            ."			if (window.hotpot_jmix_checkresults) {\n"
+            ."			window.quizport_jmix_whitespace = false;\n"
+            ."			if (window.quizport_jmix_checkresults) {\n"
             ."				CheckResults(0);\n"
-            ."				window.hotpot_jmix_checkresults = false;\n"
+            ."				window.quizport_jmix_checkresults = false;\n"
             ."				return false;\n"
             ."			}\n"
             ."		}\n"
 
             ."		// 32=Space\n"
             ."		if (unicode==32) {\n"
-            ."			window.hotpot_jmix_whitespace = true;\n"
-            ."			window.hotpot_jmix_checkresults = true;\n"
+            ."			window.quizport_jmix_whitespace = true;\n"
+            ."			window.quizport_jmix_checkresults = true;\n"
             ."			return false;\n"
             ."		}\n"
 
             ."	}\n"
             ."	return true;\n"
             ."}\n"
-            ."document.onkeydown = hotpot_jmix_onkeydown;\n"
+            ."document.onkeypress = quizport_jmix_onkeypress;\n"
 
-            ."function hotpot_jmix_onkeydown(e) {\n"
-            ."	var unicode = hotpot_jmix_get_unicode(e);\n"
+            ."function quizport_jmix_onkeydown(e) {\n"
+            ."	var unicode = quizport_jmix_get_unicode(e);\n"
             ."	if (unicode) {\n"
             ."		// 8=Backspace, 46=Delete\n"
             ."		if (unicode==8 || unicode==46) {\n"
@@ -194,14 +200,28 @@ class mod_hotpot_attempt_hp_6_jmix_xml_v6_plus_keypress_renderer extends mod_hot
             ."			if (LastCard) {\n"
             ."				LastCard.GoHome();\n"
             ."			}\n"
-            ."			window.hotpot_jmix_whitespace = false;\n"
-            ."			window.hotpot_jmix_checkresults = true;\n"
+            ."			window.quizport_jmix_whitespace = false;\n"
+            ."			window.quizport_jmix_checkresults = true;\n"
+            ."			return false;\n"
+            ."		}\n"
+            ."		// 27=Esc\n"
+            ."		if (unicode==27) {\n"
+            ."			quizport_jmix_restart();\n"
             ."			return false;\n"
             ."		}\n"
             ."	}\n"
             ."	return true;\n"
             ."}\n"
-            ."document.onkeypress = hotpot_jmix_onkeypress;\n"
+            ."document.onkeydown = quizport_jmix_onkeydown;\n"
+
+            ."function quizport_jmix_restart() {\n"
+            ."	for (var i=0; i<Cds.length; i++){\n"
+            ."		Cds[i].GoHome();\n"
+            ."	}\n"
+            ."	window.quizport_jmix_whitespace = false;\n"
+            ."	window.quizport_jmix_checkresults = true;\n"
+            ."	return true;\n"
+            ."}\n"
 
             ."//]]>\n"
             .'</script>'

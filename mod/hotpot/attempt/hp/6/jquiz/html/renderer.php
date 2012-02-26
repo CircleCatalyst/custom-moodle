@@ -39,15 +39,6 @@ require_once($CFG->dirroot.'/mod/hotpot/attempt/hp/6/jquiz/renderer.php');
 class mod_hotpot_attempt_hp_6_jquiz_html_renderer extends mod_hotpot_attempt_hp_6_jquiz_renderer {
 
     /**
-     * init
-     *
-     * @param xxx $hotpot
-     */
-    function init($hotpot)  {
-        parent::init($hotpot);
-    }
-
-    /**
      * List of source types which this renderer can handle
      *
      * @return array of strings

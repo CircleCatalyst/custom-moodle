@@ -69,7 +69,7 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
     function fix_headcontent()  {
         $this->fix_headcontent_DragAndDrop();
 
-        // change number of drop lines if required (there is now setting for
+        // change number of drop lines if required (there is no setting for
         // this in the JMix application but it can be set in a cfg file)
         if ($drop_total = $this->expand_DropTotal()) {
             $this->headcontent = preg_replace('/(?<=var DropTotal = )\d+(?=;)/', $drop_total, $this->headcontent, 1);
@@ -78,14 +78,17 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
         // we must add a false return value to segment links in order not to trigger the onbeforeunload event handler
         // (this is only really required on v6 output format)
         $search = '/(?<='.'onclick="'.')'.'AddSegment\(\[SegmentNumber\]\)'.'(?='.'"'.')/';
-        $replace = '\\0'.'; return false;';
+        $replace = '$0'.'; return false;';
         $this->headcontent = preg_replace($search, $replace, $this->headcontent);
     }
 
     /**
      * fix_bodycontent_DragAndDrop
+     *
+     * @param xxx $prefix (optional, default='')
+     * @param xxx $suffix (optional, default='')
      */
-    function fix_bodycontent_DragAndDrop()  {
+    function fix_bodycontent_DragAndDrop($prefix='', $suffix='') {
         $search = '/for \(var i=0; i<DropTotal; i\+\+\)\{.*?\}/s';
         $replace = ''
             ."var myParentNode = null;\n"
@@ -114,7 +117,22 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
         $this->bodycontent = preg_replace($search, $replace, $this->bodycontent, 1);
 
         $search = '/for \(var i=0; i<Segments\.length; i\+\+\)\{.*?\}/s';
-        $replace = ''
+        $replace = '';
+        if ($prefix) {
+            $prefix = $this->hotpot->source->js_value_safe($prefix);
+            $replace .= ''
+                ."if (myParentNode){\n"
+                ."	var div = document.createElement('div');\n"
+                ."	div.setAttribute('id', 'JMixPrefix');\n"
+                ."	div.setAttribute('class', 'CardStyle');\n"
+                ."	div.innerHTML = '$prefix';\n"
+                ."	myParentNode.appendChild(div);\n"
+                ."} else {\n"
+                ."	document.write('".'<div id="JMixPrefix" class="CardStyle"'.">$prefix</div>');\n"
+                ."}\n"
+            ;
+        }
+        $replace .= ''
             ."for (var i=0; i<Segments.length; i++){\n"
             ."	if (myParentNode){\n"
             ."		var div = document.createElement('div');\n"
@@ -126,8 +144,24 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
             ."		document.write('".'<div id="'."D' + i + '".'" class="CardStyle" onmousedown="'."beginDrag(event, ' + i + ')".'"'."></div>');\n"
             ."	}\n"
             ."}\n"
-            ."m = div = myParentNode = null;"
-       ;
+        ;
+        if ($suffix) {
+            $suffix = $this->hotpot->source->js_value_safe($suffix);
+            $replace .= ''
+                ."if (myParentNode){\n"
+                ."	var div = document.createElement('div');\n"
+                ."	div.setAttribute('id', 'JMixSuffix');\n"
+                ."	div.setAttribute('class', 'CardStyle');\n"
+                ."	div.innerHTML = '$suffix';\n"
+                ."	myParentNode.appendChild(div);\n"
+                ."} else {\n"
+                ."	document.write('".'<div id="JMixsuffix" class="CardStyle"'.">$suffix</div>');\n"
+                ."}\n"
+            ;
+        }
+        $replace .= ''
+            ."myParentNode = div = null;"
+        ;
         $this->bodycontent = preg_replace($search, $replace, $this->bodycontent, 1);
     }
 
@@ -139,7 +173,7 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
     function get_js_functionnames()  {
         // start list of function names
         $names = parent::get_js_functionnames();
-        $names .= ($names ? ',' : '').'CheckAnswer,TimesUp';
+        $names .= ($names ? ',' : '').'CheckAnswer,TimesUp,WriteToGuess';
         return $names;
     }
 
@@ -152,6 +186,18 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
      */
     function fix_js_TimesUp(&$str, $start, $length)  {
         $substr = substr($str, $start, $length);
+
+        // make sure we get the latest GuessSequence
+        $search = '	CheckAnswer(0);';
+        if ($pos = strpos($substr, $search)) {
+            $insert = ''
+                ."	if (window.GetGuessSequence){\n"
+                ."		GetGuessSequence();\n"
+                ."		CompiledOutput = CompileString(GuessSequence);\n"
+                ."	}\n"
+            ;
+            $substr = substr_replace($substr, $insert, $pos, 0);
+        }
 
         $search = "/\s*document\.getElementById\('Timer'\)\.innerHTML = '([^']*)';/s";
         if (preg_match($search, $substr, $matches, PREG_OFFSET_CAPTURE)) {
@@ -199,7 +245,7 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
             .'(\s*\})' // $3
             .'/s'
         ;
-        $substr = preg_replace($search, '\\1\\2\\3', $substr, 1);
+        $substr = preg_replace($search, '$1$2$3', $substr, 1);
 
         // encapsulate the main body of the function code in an "if" block
         $search = ''
@@ -212,7 +258,7 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
         if (preg_match($search, $substr, $matches, PREG_OFFSET_CAPTURE)) {
             $replace = "\n"
                 .'	if (GuessSequence.length){'
-                .preg_replace('/[\\n\\r]+/', '\\0	', $matches[1][0])."\n"
+                .preg_replace('/[\\n\\r]+/', '$0	', $matches[1][0])."\n"
                 ."	}\n"
             ;
             $substr = substr_replace($substr, $replace, $matches[1][1], strlen($matches[1][0]));
@@ -220,6 +266,32 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
 
         // add other changes as per CheckAnswers in other type of HP quiz
         $this->fix_js_CheckAnswers($substr, 0, strlen($substr));
+
+        // this must come after call to $this->fix_js_CheckAnswers()
+        $search = 'TimeOver == true';
+        if ($pos = strpos($substr, $search)) {
+            $replace = $search.' || ForceQuizStatus';
+            $substr = substr_replace($substr, $replace, $pos, strlen($search));
+        }
+
+        $str = substr_replace($str, $substr, $start, $length);
+    }
+
+    /**
+     * fix_js_WriteToGuess
+     *
+     * @param xxx $str (passed by reference)
+     * @param xxx $start
+     * @param xxx $length
+     * @return xxx
+     */
+    function fix_js_WriteToGuess(&$str, $start, $length)  {
+        $substr = substr($str, $start, $length);
+
+        if ($pos = strrpos($substr, '}')) {
+            $insert = '	StretchCanvasToCoverContent(true);'."\n";
+            $substr = substr_replace($substr, $insert, $pos, 0);
+        }
 
         $str = substr_replace($str, $substr, $start, $length);
     }
@@ -235,9 +307,37 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
         $this->fix_js_StartUp_DragAndDrop_DragArea($substr);
 
         // restrict width of drop lines
-        $search = "L[i] = new Card('Drop' + i, 0);";
+        $search = 'L[i].SetL(LeftColPos);';
         if ($pos = strpos($substr, $search)) {
-            $insert = "\n\t\t"."L[i].SetW(pg.W * 0.8);";
+            $insert = "\n\t\t".'L[i].SetW(DivWidth - 40);';
+            $substr = substr_replace($substr, $insert, $pos + strlen($search), 0);
+        }
+
+        // position the prefix tile on the left of the top drop line
+        // and the suffix tile on the right of the bottom drop line
+        $search = 'SetInitialPositions();';
+        if ($pos = strpos($substr, $search)) {
+            $insert = "\n"
+                ."	var div = document.getElementById('JMixPrefix');\n"
+                ."	if (div) {\n"
+                ."		div.style.top = L[0].GetT() + 'px';\n"
+                ."		div.style.left = (Cds[0].GetL() - parseInt(div.offsetWidth) - 10) + 'px';\n"
+                ."		div.style.color = Cds[0].css.color;\n"
+                ."		div.style.backgroundColor = Cds[0].css.backgroundColor;\n"
+                ."		div.style.zIndex = ++topZ;\n"
+                ."	}\n"
+                ."	var div = document.getElementById('JMixSuffix');\n"
+                ."	if (div) {\n"
+                ."		var x = Math.min(L.length, CRows.length) - 1;\n"
+                ."		div.style.top = L[x].GetT() + 'px';\n"
+                ."		var x = Cds.length - 1;\n"
+                ."		div.style.left = (Cds[x].GetR() + 10) + 'px';\n"
+                ."		div.style.color = Cds[x].css.color;\n"
+                ."		div.style.backgroundColor = Cds[x].css.backgroundColor;\n"
+                ."		div.style.zIndex = ++topZ;\n"
+                ."	}\n"
+                ."	div = null;\n"
+            ;
             $substr = substr_replace($substr, $insert, $pos + strlen($search), 0);
         }
 
@@ -269,8 +369,25 @@ class mod_hotpot_attempt_hp_6_jmix_renderer extends mod_hotpot_attempt_hp_6_rend
             ."		}\n"
             ."	}\n"
             ;
-            $substr = substr_replace($substr, $insert, $pos, 0);
+            //$substr = substr_replace($substr, $insert, $pos, 0);
         }
+    }
+
+    /**
+     * get_stop_onclick
+     *
+     * @return xxx
+     */
+    function get_stop_onclick() {
+        return ''
+            .'if('.$this->get_stop_function_confirm().'){'
+                .'if (window.GetGuessSequence){'
+                    .'GetGuessSequence();'
+                    .'CompiledOutput=CompileString(GuessSequence);'
+                .'}'
+                .$this->get_stop_function_name().'('.$this->get_stop_function_args().')'
+            .'}'
+        ;
     }
 
     /**

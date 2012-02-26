@@ -26,9 +26,6 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-// get the standard XML parser supplied with Moodle
-require_once($CFG->dirroot.'/lib/xmlize.php');
-
 // get parent class
 require_once($CFG->dirroot.'/mod/hotpot/source/class.php');
 
@@ -51,7 +48,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function is_html()  {
+    function is_html() {
         return preg_match('/\.html?$/', $this->file->get_filename());
     }
 
@@ -60,7 +57,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function get_name()  {
+    function get_name() {
         if ($this->is_html()) {
             return $this->html_get_name();
         } else {
@@ -73,7 +70,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function get_title()  {
+    function get_title() {
         if ($this->is_html()) {
             return $this->html_get_name(false);
         } else {
@@ -86,7 +83,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function get_entrytext()  {
+    function get_entrytext() {
         if ($this->is_html()) {
             return $this->html_get_entrytext();
         } else {
@@ -99,7 +96,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function get_nextquiz()  {
+    function get_nextquiz() {
         if ($this->is_html()) {
             return $this->html_get_nextquiz();
         } else {
@@ -115,7 +112,7 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $textonly (optional, default=true)
      * @return xxx
      */
-    function html_get_name($textonly=true)  {
+    function html_get_name($textonly=true) {
         if (! isset($this->name)) {
             $this->name = '';
             $this->title = '';
@@ -136,8 +133,9 @@ class hotpot_source_hp extends hotpot_source {
                     }
                 }
             }
-            $this->name = $this->html_entity_decode($this->name);
-            $this->title = $this->html_entity_decode($this->title);
+            $textlib = textlib_get_instance();
+            $this->name = $textlib->entities_to_utf8($this->name, true);
+            $this->title = $textlib->entities_to_utf8($this->title, true);
         }
         if ($textonly) {
             return $this->name;
@@ -151,7 +149,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function html_get_entrytext()  {
+    function html_get_entrytext() {
         if (! isset($this->entrytext)) {
             $this->entrytext = '';
 
@@ -174,7 +172,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function html_get_nextquiz()  {
+    function html_get_nextquiz() {
         if (! isset($this->nextquiz)) {
             $this->nextquiz = false;
 
@@ -203,7 +201,7 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $textonly (optional, default=true)
      * @return xxx
      */
-    function xml_get_name($textonly=true)  {
+    function xml_get_name($textonly=true) {
         if (! isset($this->name)) {
             $this->name = '';
             $this->title = '';
@@ -212,8 +210,9 @@ class hotpot_source_hp extends hotpot_source {
                 // could not detect Hot Potatoes quiz type - shouldn't happen !!
                 return false;
             }
+            $textlib = textlib_get_instance();
             $this->title = $this->xml_value('data,title');
-            $this->title = $this->html_entity_decode($this->title);
+            $this->title = $textlib->entities_to_utf8($this->title, true);
             $this->name = trim(strip_tags($this->title)); // sanitize
         }
         if ($textonly) {
@@ -228,7 +227,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function xml_get_entrytext()  {
+    function xml_get_entrytext() {
         if (! isset($this->entrytext)) {
             $this->entrytext = '';
 
@@ -251,7 +250,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function xml_get_nextquiz()  {
+    function xml_get_nextquiz() {
         if (! isset($this->nextquiz)) {
             $this->nextquiz = false;
 
@@ -283,7 +282,7 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $filetypes (optional, default=null)
      * @return xxx
      */
-    function xml_locate_file($file, $filetypes=null)  {
+    function xml_locate_file($file, $filetypes=null) {
         if (preg_match('/^https?:\/\//', $file)) {
             return $file;
         }
@@ -323,7 +322,7 @@ class hotpot_source_hp extends hotpot_source {
      *
      * @return xxx
      */
-    function xml_get_filecontents()  {
+    function xml_get_filecontents() {
         if (! isset($this->xml)) {
             $this->xml = false;
             $this->xml_root = '';
@@ -334,6 +333,8 @@ class hotpot_source_hp extends hotpot_source {
             }
 
             $this->compact_filecontents();
+            $this->pre_xmlize_filecontents();
+
             if (! $this->xml = xmlize($this->filecontents, 0)) {
                 debugging('Could not parse XML file: '.$this->filepath);
             }
@@ -381,6 +382,19 @@ class hotpot_source_hp extends hotpot_source {
     }
 
     /**
+     * pre_xmlize_filecontents
+     */
+    function pre_xmlize_filecontents() {
+        if ($this->filecontents) {
+            // encode all ampersands that are not part of HTML entities
+            // http://stackoverflow.com/questions/310572/regex-in-php-to-match-that-arent-html-entities
+            // Note: we could also use '<![CDATA[&]]>' as the replace string
+            $search = '/&(?!(?:[a-zA-Z]+|#[0-9]+|#x[0-9a-fA-F]+);)/';
+            $this->filecontents = preg_replace($search, '&amp;', $this->filecontents);
+        }
+    }
+
+    /**
      * xml_value
      *
      * @param xxx $tags
@@ -388,7 +402,7 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $default (optional, default='')
      * @return xxx
      */
-    function xml_value($tags, $more_tags=null, $default='')  {
+    function xml_value($tags, $more_tags=null, $default='', $nl2br=true) {
         global $CFG;
         static $block_elements = null;
 
@@ -408,7 +422,7 @@ class hotpot_source_hp extends hotpot_source {
         }
         $all_tags = explode('][', str_replace("'", '', substr($all_tags, 1, -1)));
 
-        $value = &$this->xml;
+        $value = $this->xml;
         foreach ($all_tags as $tag) {
             if (! is_array($value)) {
                 return null;
@@ -416,13 +430,10 @@ class hotpot_source_hp extends hotpot_source {
             if(! array_key_exists($tag, $value)) {
                 return null;
             }
-            $value = &$value[$tag];
+            $value = $value[$tag];
         }
 
         if (is_string($value)) {
-            if (empty($CFG->unicodedb)) {
-                $value = utf8_decode($value);
-            }
 
             // decode angle brackets
             $value = strtr($value, array('&#x003C;'=>'<', '&#x003E;'=>'>', '&#x0026;'=>'&'));
@@ -445,26 +456,30 @@ class hotpot_source_hp extends hotpot_source {
                 $block_elements = '/'.$space.'(<(?:'.$block_elements.')[^>]*>)'.$space.'/is';
                 //.'(?='.'<)' // followed by the start of another tag
             }
-            $value = preg_replace($block_elements, '\\1', $value);
+            $value = preg_replace($block_elements, '$1', $value);
 
             // standardize whitespace within tags
-            // $1 : chars before whitespace
-            // $2 : whitespace (including <br />)
-            $search = '/<(\w+)((?:(?:<br\s*\/?>)|[^>])*)>/ise';
-            $replace = '"<\\1".$this->single_line("\\2").">"';
-            $value = preg_replace($search, $replace, $value);
+            // $1 : start of tag i.e. "<"
+            // $2 : chars in tag (including whitespace and <br />)
+            // $3 : end of tag i.e. ">"
+            $search = '/(<)([^>]*)(>)/is';
+            $callback = array($this, 'single_line');
+            $value = preg_replace_callback($search, $callback, $value);
 
             // replace remaining newlines with <br /> but not in <script> or <style> blocks
             // $1 : chars before open text
             // $2 : text to be converted
             // $3 : chars following text
-            $search = '/(^|(?:<\/(?:script|style)>\s?))(.*?)((?:\s?<(?:script|style)[^>]*>)|$)/ise';
-            $replace = '$this->xml_value_nl2br("\\1", "\\2", "\\3")';
-            $value = preg_replace($search, $replace, $value);
+            if ($nl2br) {
+                $search = '/(^|(?:<\/(?:script|style)>\s?))(.*?)((?:\s?<(?:script|style)[^>]*>)|$)/is';
+                $callback = array($this, 'xml_value_nl2br');
+                $value = preg_replace_callback($search, $callback, $value);
+            }
 
             // encode unicode characters as HTML entities
             // (in particular, accented charaters that have not been encoded by HP)
-            $value = $this->utf8_to_entities($value);
+            $textlib = textlib_get_instance();
+            $value = $textlib->utf8_to_entities($value);
         }
         return $value;
     }
@@ -472,32 +487,32 @@ class hotpot_source_hp extends hotpot_source {
     /**
      * single_line
      *
-     * @param xxx $str
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    function single_line($str, $quote="'")  {
-        if ($quote) {
-            $str = str_replace('\\'.$quote, $quote, $str);
+    function single_line($match) {
+        if (is_string($match)) {
+            $before = '';
+            $text   = $match;
+            $after  = '';
+        } else {
+            $before = $match[1];
+            $text   = $match[2];
+            $after  = $match[3];
         }
-        return preg_replace('/(?:(?:<br\s*\/?>)|\s)+/i', ' ', $str);
+        return $before.preg_replace('/(?:(?:<br[^>]*>)|\s)+/is', ' ', $text).$after;
     }
 
     /**
      * xml_value_nl2br
      *
-     * @param xxx $before
-     * @param xxx $text
-     * @param xxx $after
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    function xml_value_nl2br($before, $text, $after, $quote="'")  {
-        if ($quote) {
-            $before = str_replace('\\'.$quote, $quote, $before);
-            $text = str_replace('\\'.$quote, $quote, $text);
-            $after = str_replace('\\'.$quote, $quote, $after);
-        }
+    function xml_value_nl2br($match) {
+        $before = $match[1];
+        $text   = $match[2];
+        $after  = $match[3];
         return $before.str_replace("\n", '<br />', $text).$after;
     }
 
@@ -509,8 +524,8 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $default (optional, default='')
      * @return xxx
      */
-    function xml_value_bool($tags, $more_tags=null, $default='')  {
-        $value = $this->xml_value($tags, $more_tags, $default);
+    function xml_value_bool($tags, $more_tags=null, $default=false) {
+        $value = $this->xml_value($tags, $more_tags, $default, false);
         if (empty($value)) {
             return 'false';
         } else {
@@ -526,13 +541,17 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $default (optional, default='')
      * @return xxx
      */
-    function xml_value_int($tags, $more_tags=null, $default='')  {
-        $value = $this->xml_value($tags, $more_tags, $default);
+    function xml_value_int($tags, $more_tags=null, $default=0) {
+        $value = $this->xml_value($tags, $more_tags, $default, false);
         return intval($value);
     }
 
     /**
      * xml_value_js
+     *
+     * Note: html entities in captions (e.g. messages and button text)
+     * do not need to be converted to javascript "\u" encoding
+     * but those in question/answer arrays, generally do
      *
      * @param xxx $tags
      * @param xxx $more_tags (optional, default=null)
@@ -540,8 +559,8 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $convert_to_unicode (optional, default=false)
      * @return xxx
      */
-    function xml_value_js($tags, $more_tags=null, $default='', $convert_to_unicode=true)  {
-        $value = $this->xml_value($tags, $more_tags, $default);
+    function xml_value_js($tags, $more_tags=null, $default='', $nl2br=true, $convert_to_unicode=true) {
+        $value = $this->xml_value($tags, $more_tags, $default, $nl2br);
         return $this->js_value_safe($value, $convert_to_unicode);
     }
 
@@ -552,7 +571,7 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $convert_to_unicode (optional, default=false)
      * @return xxx
      */
-    function js_value_safe($str, $convert_to_unicode=false)  {
+    function js_value_safe($str, $convert_to_unicode=false) {
         // encode a string for javascript
         static $replace_pairs = array(
             // backslashes and quotes
@@ -566,129 +585,25 @@ class hotpot_source_hp extends hotpot_source {
 
         // convert (hex and decimal) html entities to javascript unicode, if required
         if ($convert_to_unicode) {
-            $str = $this->utf8_to_entities($str, 1);
-            $str = preg_replace('/&#x([0-9A-F]+);/i', '\\u\\1', $str);
-            $str = preg_replace('/&#(\d+);/e', "'\\u'.sprintf('%04X', '\\1')", $str);
+            $textlib = textlib_get_instance();
+            $str = $textlib->utf8_to_entities($str, false, true);
+
+            $search = '/&#x([0-9A-F]+);/i';
+            $callback = array($this, 'js_unicode_char');
+            $str = preg_replace_callback($search, $callback, $str);
         }
         return $str;
     }
 
     /**
-     * utf8_to_entities
+     * js_unicode_char
      *
-     * @param xxx $str
-     * @param xxx $entity_type (optional, default=2)
+     * @param xxx $match
      * @return xxx
      */
-    function utf8_to_entities($str, $entity_type=2)  {
-        // $entity_type: see utf8_to_entity (below)
-        // unicode characters can be detected by checking the hex value of a character
-        //  00 - 7F : ascii char (roman alphabet + punctuation)
-        //  80 - BF : byte 2, 3 or 4 of a unicode char
-        //  C0 - DF : 1st byte of 2-byte char
-        //  E0 - EF : 1st byte of 3-byte char
-        //  F0 - FF : 1st byte of 4-byte char
-        // if the string doesn't match any of the above, it might be
-        //  80 - FF : single-byte, non-ascii char
-        $search = '/'.'[\xc0-\xdf][\x80-\xbf]'.'|'.'[\xe0-\xef][\x80-\xbf]{2}'.'|'.'[\xf0-\xff][\x80-\xbf]{3}'.'|'.'[\x80-\xff]'.'/e';
-        return preg_replace($search, '$this->utf8_to_entity("\\0", $entity_type)', $str);
+    function js_unicode_char($match) {
+        return sprintf('\\u%04s', $match[1]);
     }
-
-    /**
-     * utf8_to_entity
-     *
-     * @param xxx $char
-     * @param xxx $entity_type (optional, default=0)
-     * @return xxx
-     */
-    function utf8_to_entity($char, $entity_type=0)  {
-        // $entity_type:
-        //   2 : html hex entity e.g. &#x12FE;
-        //   1 : javascript entity e.g. \u12FE
-        //   0 : decimal number e.g. 28001
-
-        // many thanks for the ideas from ...
-        // http://www.zend.com/codex.php?id=835&single=1
-
-        // array used to figure out what number to decrement from character order value
-        // according to the number of characters used to map unicode to ascii by utf-8
-        static $UTF8_DECREMENT = array(
-            1=>0, 2=>192, 3=>224, 4=>240 // hex : 1=>0, 2=>0xB, 3=>0xD, 4=>0xE
-        );
-
-        // the number of bits to shift each character by
-        static $UTF8_SHIFT = array(
-            1 => array(0=>0),
-            2 => array(0=>6,  1=>0),
-            3 => array(0=>12, 1=>6,  2=>0),
-            4 => array(0=>18, 1=>12, 2=>6, 3=>0)
-        );
-
-        $dec = 0;
-        $len = strlen($char);
-        for ($pos=0; $pos<$len; $pos++) {
-            $ord = ord ($char{$pos});
-            $ord -= ($pos ? 128 : $UTF8_DECREMENT[$len]);
-            $dec += ($ord << $UTF8_SHIFT[$len][$pos]);
-        }
-        switch ($entity_type) {
-            case 2: return '&#x'.sprintf('%04X', $dec).';';
-            case 1 : return '\\u'.sprintf('%04X', $dec);
-            default: return $dec;
-        }
-    }
-
-    /**
-     * html_entity_decode
-     *
-     * @param xxx $str
-     * @return xxx
-     */
-    function html_entity_decode($str)  {
-        static $entities_table;
-
-        if (floatval(PHP_VERSION)>=5.0 && function_exists('html_entity_decode')) {
-            return html_entity_decode($str, ENT_QUOTES, 'utf-8');
-        } else {
-            // get html entities table (first time only)
-            if (! isset($entities_table)) {
-                $entities_table = get_html_translation_table(HTML_ENTITIES);
-                $entities_table = array_flip($entities_table);
-            }
-
-            // convert numeric html entities
-            $str = preg_replace('/&#x([0-9a-f]+);/ie', '$this->dec_to_utf8(hexdec("\\1"))', $str);
-            $str = preg_replace('/&#([0-9]+);/e', '$this->dec_to_utf8("\\1")', $str);
-
-            // convert named html entities
-            return strtr($str, $entities_table);
-        }
-    }
-
-    /**
-     * dec_to_utf8
-     *
-     * @param xxx $dec
-     * @return xxx
-     */
-    function dec_to_utf8($dec)  {
-        // thanks to Miguel Perez: http://jp2.php.net/chr (19-Sep-2007)
-        if ($dec <= 0x7F) {
-            return chr($dec);
-        }
-        if ($dec <= 0x7FF) {
-            return chr(0xC0 | $dec >> 6).chr(0x80 | $dec & 0x3F);
-        }
-        if ($dec <= 0xFFFF) {
-            return chr(0xE0 | $dec >> 12).chr(0x80 | $dec >> 6 & 0x3F).chr(0x80 | $dec & 0x3F);
-        }
-        if ($dec <= 0x10FFFF) {
-            return chr(0xF0 | $dec >> 18).chr(0x80 | $dec >> 12 & 0x3F).chr(0x80 | $dec >> 6 & 0x3F).chr(0x80 | $dec & 0x3F);
-        }
-        return '';
-    }
-
-    // synchonize file and Moodle settings
 
     /**
      * synchronize_moodle_settings
@@ -696,7 +611,7 @@ class hotpot_source_hp extends hotpot_source {
      * @param xxx $hotpot (passed by reference)
      * @return xxx
      */
-    function synchronize_moodle_settings(&$hotpot)  {
+    function synchronize_moodle_settings(&$hotpot) {
         $name = $this->get_name();
         if ($name=='' || $name==$hotpot->name) {
             return false;

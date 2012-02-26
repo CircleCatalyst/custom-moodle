@@ -26,7 +26,7 @@
 require_once(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
 
 require_login(SITEID);
-require_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM, SITEID), $USER->id);
+require_capability('moodle/site:config', get_context_instance(CONTEXT_SYSTEM, SITEID));
 
 // $SCRIPT is set by initialise_fullme() in "lib/setuplib.php"
 // it is the path below $CFG->wwwroot of this script

@@ -57,8 +57,8 @@ class hotpot_report_table extends table_sql {
      *
      * @param int $uniqueid
      */
-    function hotpot_report_table($uniqueid, $output) {
-        parent::table_sql($uniqueid);
+    function __construct($uniqueid, $output) {
+        parent::__construct($uniqueid);
         $this->output = $output;
         $this->strtimeformat = get_string($this->timeformat);
     }

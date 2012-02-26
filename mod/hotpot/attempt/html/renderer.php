@@ -113,12 +113,12 @@ class mod_hotpot_attempt_html_renderer extends mod_hotpot_attempt_renderer {
             }
             if ($this->usemoodletheme) {
                 // restrict scope of page styles, so they affect only the quiz's containing element (i.e. the middle column)
-                $search = '/([a-z0-9_\#\.\-\,\: ]+){(.*?)}/ise';
-                $replace = '$this->fix_css_definitions("#'.$this->themecontainer.'","\\1","\\2")';
-                $this->styles = preg_replace($search, $replace, $this->styles);
+                $search = '/([a-z0-9_\#\.\-\,\: ]+){(.*?)}/is';
+                $callback = array($this, 'fix_css_definitions');
+                $this->styles = preg_replace_callback($search, $callback, $this->styles);
 
                 // the following is not necessary for standard HP styles, but may required to handle some custom styles
-                $this->styles = str_replace('TheBody', 'mod-hotpot-view', $this->styles);
+                $this->styles = str_replace('TheBody', $this->themecontainer, $this->styles);
             }
             $this->styles = $this->remove_blank_lines($this->styles);
         }
@@ -131,10 +131,12 @@ class mod_hotpot_attempt_html_renderer extends mod_hotpot_attempt_renderer {
                 $this->scripts = $match[0]."\n".$this->scripts;
                 $this->headcontent = substr_replace($this->headcontent, '', $match[1], strlen($match[0]));
             }
-            // remove block and single-line comments - except <![CDATA[ + ]]>> and  <!-- + --> and http(s)://
+            // remove block and single-line comments - except <![CDATA[ + ]]> and  <!-- + --> and http(s)://
             if ($CFG->debug <= DEBUG_DEVELOPER) {
                 $this->scripts = preg_replace('/\s*\/\*.*?\*\//s', '', $this->scripts);
-                $this->scripts = preg_replace('/\s*([a-z]+:)?\/\/[^\n\r]*/ise', '$this->fix_js_comment("\\0","\\1")', $this->scripts);
+                $search = '/\s*([a-z]+:)?\/\/[^\r\n]*/is';
+                $callback = array($this, 'fix_js_comment');
+                $this->scripts = preg_replace_callback($search, $callback, $this->scripts);
             }
             $this->scripts = $this->remove_blank_lines($this->scripts);
 
@@ -146,7 +148,7 @@ class mod_hotpot_attempt_html_renderer extends mod_hotpot_attempt_renderer {
         $this->headcontent = $this->remove_blank_lines($this->headcontent);
 
         // put each <meta> tag on its own line
-        $this->headcontent = preg_replace('/'.'([^\n])'.'(<\w+)'.'/', "\\1\n\\2", $this->headcontent);
+        $this->headcontent = preg_replace('/'.'([^\n])'.'(<\w+)'.'/', '$1'."\n".'$2', $this->headcontent);
 
         // append styles and scripts to the end of the $this->headcontent
         $this->headcontent .= $this->styles.$this->scripts;
@@ -160,7 +162,7 @@ class mod_hotpot_attempt_html_renderer extends mod_hotpot_attempt_renderer {
         $this->bodycontent = $this->remove_blank_lines($matches[2]);
 
         // fix self-closing <script /> tags, as they cause several browsers to ignore following content
-        $this->bodycontent = preg_replace('/(<script[^>]*)\/>/is', '\\1></script>', $this->bodycontent);
+        $this->bodycontent = preg_replace('/(<script[^>]*)\/>/is', '$1></script>', $this->bodycontent);
 
         if (preg_match('/\s*onload="([^"]*)"/is', $this->bodyattributes, $matches, PREG_OFFSET_CAPTURE)) {
             $this->bodyattributes = substr_replace($this->bodyattributes, '', $matches[0][1], strlen($matches[0][0]));
@@ -181,22 +183,18 @@ class mod_hotpot_attempt_html_renderer extends mod_hotpot_attempt_renderer {
     /**
      * fix_js_comment
      *
-     * @param xxx $comment
-     * @param xxx $protocol
-     * @param xxx $quote (optional, default="'")
+     * @param xxx $match
      * @return xxx
      */
-    function fix_js_comment($comment, $protocol, $quote="'")  {
-        if ($quote) {
-            // fix quotes escaped by preg_replace
-            $comment = str_replace('\\'.$quote, $quote, $comment);
-            $protocol = str_replace('\\'.$quote, $quote, $protocol);
+    function fix_js_comment($match)  {
+        $comment = $match[0];
+        if (isset($match[1]) && strlen($match[1])) {
+            return $comment; // $match is a URL
         }
-        if ($protocol || preg_match('/^\s*\/\/((?:<!\[CDATA\[)|(?:<!--)|(?:-->)|(?:\]\]>))/', $comment)) {
-            return $comment;
-        } else {
-            return '';
+        if (preg_match('/^\s*\/\/((?:<!\[CDATA\[)|(?:<!--)|(?:-->)|(?:\]\]>))/', $comment)) {
+            return $comment; // $match is start or end of a CDATA comment
         }
+        return '';
     }
 
     /**
@@ -209,27 +207,59 @@ class mod_hotpot_attempt_html_renderer extends mod_hotpot_attempt_renderer {
         global $DB;
 
         if ($quickfix) {
+            //$search = '/(?<=sesskey=)\w+/';
+            //$this->bodycontent = preg_replace($search, sesskey(), $this->bodycontent);
             $search = '/(?<=["\/]attempt\.php\?id=)[0-9]+/';
-            $this->bodycontent = preg_replace($search, $this->hotpot->attempt->id, $this->bodycontent);
+            $this->bodycontent = preg_replace($search, $this->hotpot->create_attempt(), $this->bodycontent);
             return true;
         }
 
-        if (! preg_match_all('/<a[^>]*href="([^"]*)"[^>]*>/is', $this->bodycontent, $matches, PREG_OFFSET_CAPTURE)) {
-            return false; // no links
+        $matches = array();
+
+        $search = '/<a[^>]*href="([^"]*)"[^>]*>/is';
+        // [0] : the complete <a ...>...</a> tag
+        // [1] : the link href
+        if (preg_match_all($search, $this->bodycontent, $match, PREG_OFFSET_CAPTURE)) {
+            for ($i=0; $i<count($match); $i++) {
+                if (empty($matches[$i])) {
+                    $matches[$i] = $match[$i];
+                } else {
+                    $matches[$i] = array_merge($matches[$i], $match[$i]);
+                }
+            }
+        }
+
+        $search = "/location='([^']*)'/i";
+        // [0] : the complete location="..." match
+        // [1] : the location href
+        if (preg_match_all($search, $this->bodycontent, $match, PREG_OFFSET_CAPTURE)) {
+            for ($i=0; $i<count($match); $i++) {
+                if (empty($matches[$i])) {
+                    $matches[$i] = $match[$i];
+                } else {
+                    $matches[$i] = array_merge($matches[$i], $match[$i]);
+                }
+            }
+        }
+
+        if (empty($matches[1])) {
+            return false; // no urls found
         }
 
         $urls = array();
         $strlen = strlen($this->hotpot->source->baseurl);
+
         foreach ($matches[1] as $i=>$match) {
-            $url = $this->convert_url_relative('', $match[0], '', '');
+            $url = $this->convert_url_relative($this->hotpot->source->baseurl, $this->hotpot->source->filepath, '', $match[0], '', '');
             if (strpos($url, $this->hotpot->source->baseurl.'/')===0) {
-                $urls[$i] = addslashes(substr($url, $strlen+1));
+                $urls[$i] = substr($url, $strlen + 1);
             }
         }
 
-        if (! count($urls)) {
+        if (empty($urls)) {
             return false; // no links to files in this course
         }
+
 
         list($select, $params) = $DB->get_in_or_equal($urls);
         $select = "course=? AND sourcefile $select";
@@ -243,7 +273,11 @@ class mod_hotpot_attempt_html_renderer extends mod_hotpot_attempt_renderer {
             foreach (array_reverse($matches[1]) as $match) {
                 // $match [0] old url, [1] offset [2] quizid
                 if (array_key_exists(2, $match)) {
-                    $newurl = 'view.php?id='.$this->hotpot->attempt->id.'&amp;status='.hotpot::STATUS_COMPLETED.'&amp;redirect='.$match[2];
+                    // it used to be possible to send the id of the next quiz back as the "redirect" parameter
+                    // but that doesn't work any more bacuse of changes to view.php
+                    // $params = array('quizattemptid'=>$QUIZPORT->quizattemptid, 'redirect'=>$match[2]);
+                    $params = array('id'=>$this->hotpot->attempt->id, 'status'=>STATUS_COMPLETED, 'redirect'=>$match[2]);
+                    $newurl = $this->format_url('view.php', '', $params);
                     $this->bodycontent = substr_replace($this->bodycontent, $newurl, $match[1], strlen($match[0]));
                 }
             }
@@ -276,19 +310,25 @@ class mod_hotpot_attempt_html_renderer extends mod_hotpot_attempt_renderer {
 
         // add scorefield to params, if necessary (usually it is necessary)
         if (! preg_match('/<(input|select)[^>]*name="'.$this->scorefield.'"[^>]*>/is', $this->bodycontent)) {
-            $params[$this->scorefield] = isset($this->hotpot->gradelimit) ? $this->hotpot->gradelimit : 100;
+            $params[$this->scorefield] = 100;
         }
 
         $attributes = array(
             'id' => $this->formid, 'autocomplete' => 'off'
         );
 
-        // prepare continue button
-        $continuebutton = html_writer::empty_tag('input', array('type'=>'submit', 'value'=>get_string('continue')));
-        if ($this->usemoodletheme) {
-            $continuebutton = html_writer::tag('div', $continuebutton, array('class'=>'continuebutton'));
+        // create submit button, if necessary
+        if (preg_match('/<input[^>]*type="submit"[^>]*>/is', $this->bodycontent)) {
+            // one or more (!) submit buttons already exist
+            $continuebutton = '';
         } else {
-            $continuebutton = html_writer::tag('div', $continuebutton, array('align'=>'center'));
+            // prepare continue button
+            $continuebutton = html_writer::empty_tag('input', array('type'=>'submit', 'value'=>get_string('continue')));
+            if ($this->usemoodletheme) {
+                $continuebutton = html_writer::tag('div', $continuebutton, array('class'=>'continuebutton'));
+            } else {
+                $continuebutton = html_writer::tag('div', $continuebutton, array('align'=>'center'));
+            }
         }
 
         // wrap submission form around main content

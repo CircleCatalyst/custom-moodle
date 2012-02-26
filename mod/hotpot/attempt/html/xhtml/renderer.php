@@ -37,4 +37,13 @@ require_once($CFG->dirroot.'/mod/hotpot/attempt/html/renderer.php');
  * @since     Moodle 2.0
  */
 class mod_hotpot_attempt_html_xhtml_renderer extends mod_hotpot_attempt_html_renderer {
+
+    /**
+     * List of source types which this renderer can handle
+     *
+     * @return array of strings
+     */
+    public static function sourcetypes()  {
+        return array('html_xhtml');
+    }
 }

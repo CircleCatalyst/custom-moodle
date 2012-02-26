@@ -39,15 +39,6 @@ require_once($CFG->dirroot.'/mod/hotpot/attempt/hp/6/jcloze/renderer.php');
 class mod_hotpot_attempt_hp_6_jcloze_html_renderer extends mod_hotpot_attempt_hp_6_jcloze_renderer {
 
     /**
-     * init
-     *
-     * @param xxx $hotpot
-     */
-    function init($hotpot)  {
-        parent::init($hotpot);
-    }
-
-    /**
      * the source file types with which this output format can be used
      *
      * @return array of source file types

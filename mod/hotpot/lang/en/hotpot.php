@@ -1,10 +1,17 @@
 <?php
-
 // essential strings
 $string['modulename'] = 'HotPot';
 $string['modulenameplural'] = 'HotPots';
 $string['pluginadministration'] = 'HotPot administration';
 $string['pluginname'] = 'HotPot module';
+
+// subplugin strings
+$string['subplugintype_hotpotattempt'] = 'Output format';
+$string['subplugintype_hotpotattempt_plural'] = 'Output formats';
+$string['subplugintype_hotpotreport'] = 'Report';
+$string['subplugintype_hotpotreport_plural'] = 'Reports';
+$string['subplugintype_hotpotsource'] = 'Source file';
+$string['subplugintype_hotpotsource_plural'] = 'Source files';
 
 // roles strings
 $string['hotpot:attempt'] = 'Attempt a HotPot activity and submit results';
@@ -19,7 +26,9 @@ $string['hotpot:view'] = 'View the entry page of a HotPot activity';
 
 // more strings
 $string['abandoned'] = 'Abandoned';
+$string['activitycloses'] = 'Activity closes';
 $string['activitygrade'] = 'Activity grade';
+$string['activityopens'] = 'Activity opens';
 $string['added'] = 'Added';
 $string['addquizchain'] = 'Add quiz chain';
 $string['addquizchain_help'] = 'Should all the quizzes in a quiz chain be added?
@@ -68,7 +77,7 @@ $string['configenableswf'] = 'Allow embedding of SWF files in HotPot activities.
 $string['configfile'] = 'Configuration file';
 $string['configframeheight'] = 'When a quiz is displayed within a frame, this value is the height (in pixels) of the top frame which contains the Moodle navigation bar.';
 $string['configlocation'] = 'Configuration file location';
-$string['configlockframe'] = 'If this setting is enabled, then the navagation frame, if used, will be locked so that it is not scrollable, not resizeable and has no border';
+$string['configlockframe'] = 'If this setting is enabled, then the navigation frame, if used, will be locked so that it is not scrollable, not resizeable and has no border';
 $string['configmaxeventlength'] = 'If a HotPot has both an open and a close time specified, and the difference between the two times is greater than the number of days specified here, then two separate calendar events will be added to the course calendar. For shorter durations, or when just one time is specified, only one calendar event will be added. If neither time is specified, no calendar event will be added.';
 $string['configstoredetails'] = 'If this setting is enabled, then the raw XML details of attempts at HotPot quizzes will be stored in the hotpot_details table. This allows quiz attempts to be regraded in the future to reflect changes in the HotPot quiz scoring system. However, enabling this option on a busy site will cause the hotpot_details table to grow very quickly.';
 $string['confirmdeleteattempts'] = 'Do you really want to delete these attempts?';
@@ -103,8 +112,9 @@ $string['delay3disable'] = 'Do not continue automatically';
 $string['delay3specific'] = 'Use specific time (in seconds)';
 $string['delay3summary'] = 'Time delay at the end of the quiz';
 $string['delay3template'] = 'Use settings in source/template file';
-$string['detailsrecords'] = 'HotPot details records';
+$string['deleteallattempts'] = 'Delete all attempts';
 $string['deleteattempts'] = 'Delete attempts';
+$string['detailsrecords'] = 'HotPot details records';
 $string['duration'] = 'Duration';
 $string['enablecache'] = 'Enable HotPot cache';
 $string['enablecron'] = 'Enable HotPot cron';
@@ -231,6 +241,7 @@ The teacher can select a specific activity, or a one of the following general pu
 If other exit page options are disabled, the student will go straight to next activity. Otherwise, the student will be shown a link to take them to the next activity when they are ready.';
 $string['exitcmcourse'] = 'Next activity in this course';
 $string['exitcmsection'] = 'Next activity in this course section';
+$string['exitgrade'] = 'Next activity grade';
 $string['exithotpotcourse'] = 'Next HotPot in this course';
 $string['exithotpotsection'] = 'Next HotPot in this course section';
 $string['exitoptions'] = 'Exit page options';
@@ -346,40 +357,42 @@ $string['outputformat_help'] = 'The output format specifies how the content will
 The output formats that are available depend on the type of the source file. Some types of source file have just one output format, while other types of source file have several output formats.
 
 The "best" setting will display the content using the optimal output format for the student\'s browser.';
-$string['outputformat_hp_6_jcloze_html'] = 'JCloze HP6 html: Standard';
-$string['outputformat_hp_6_jcloze_html_dropdown'] = 'JCloze HP6 html: Rottmeier DropDown';
-$string['outputformat_hp_6_jcloze_html_findit_a'] = 'JCloze HP6 html: Rottmeier FindIt (a)';
-$string['outputformat_hp_6_jcloze_html_findit_b'] = 'JCloze HP6 html: Rottmeier FindIt (b)';
-$string['outputformat_hp_6_jcloze_html_jgloss'] = 'JCloze HP6 html: Rottmeier JGloss';
-$string['outputformat_hp_6_jcloze_xml_anctscan'] = 'JCloze from HP6 xml: ANCT-Scan';
-$string['outputformat_hp_6_jcloze_xml_dropdown'] = 'JCloze from HP6 xml: Rottmeier DropDown';
-$string['outputformat_hp_6_jcloze_xml_findit_a'] = 'JCloze from HP6 xml: Rottmeier FindIt (a)';
-$string['outputformat_hp_6_jcloze_xml_findit_b'] = 'JCloze from HP6 xml: Rottmeier FindIt (b)';
-$string['outputformat_hp_6_jcloze_xml_jgloss'] = 'JCloze from HP6 xml: Rottmeier JGloss';
-$string['outputformat_hp_6_jcloze_xml_v6'] = 'JCloze from HP6 xml: Standard';
-$string['outputformat_hp_6_jcross_html'] = 'JCross HP6 html';
-$string['outputformat_hp_6_jcross_xml_v6'] = 'JCross from HP6 xml';
-$string['outputformat_hp_6_jmatch_html'] = 'JMatch from html';
-$string['outputformat_hp_6_jmatch_html_flashcard'] = 'JMatch from html: Flashcard';
-$string['outputformat_hp_6_jmatch_html_jmemori'] = 'JMatch from html: Rottmeier JMemori';
-$string['outputformat_hp_6_jmatch_xml_flashcard'] = 'JMatch from HP6 xml: Flashcard';
-$string['outputformat_hp_6_jmatch_xml_jmemori'] = 'JMatch from HP6 xml: Rottmeier JMemori';
-$string['outputformat_hp_6_jmatch_xml_v6'] = 'JMatch from HP6 xml: Standard';
-$string['outputformat_hp_6_jmatch_xml_v6_plus'] = 'JMatch from HP6 xml: Drag and Drop';
-$string['outputformat_hp_6_jmix_html'] = 'JMix from HP6 html';
-$string['outputformat_hp_6_jmix_xml_v6'] = 'JMix from HP6 xml: Standard';
-$string['outputformat_hp_6_jmix_xml_v6_plus'] = 'JMix from HP6 xml: Drag and Drop';
-$string['outputformat_hp_6_jmix_xml_v6_plus_keypress'] = 'JMix from HP6 xml: Drag and Drop with key press';
-$string['outputformat_hp_6_jquiz_html'] = 'JQuiz HP6 html';
-$string['outputformat_hp_6_jquiz_xml_v6'] = 'JQuiz from HP6 xml: Standard';
-$string['outputformat_hp_6_jquiz_xml_v6_autoadvance'] = 'JQuiz from HP6 xml: Auto-advance';
-$string['outputformat_hp_6_jquiz_xml_v6_exam'] = 'JQuiz from HP6 xml: Exam';
-$string['outputformat_hp_6_rhubarb_html'] = 'WebRhubarb (v6) from html';
-$string['outputformat_hp_6_rhubarb_xml'] = 'WebRhubarb (v6) from xml';
-$string['outputformat_hp_6_sequitur_html'] = 'WebSequitur (v6) from html';
-$string['outputformat_hp_6_sequitur_html_incremental'] = 'WebSequitur (v6) from html, incremental scoring';
-$string['outputformat_hp_6_sequitur_xml'] = 'WebSequitur (v6) from xml';
-$string['outputformat_hp_6_sequitur_xml_incremental'] = 'WebSequitur (v6) from xml, incremental scoring';
+
+$string['outputformat_html_xhtml'] = 'Standard HTML file';
+$string['outputformat_html_xerte'] = 'Xerte HTML file';
+$string['outputformat_html_ispring'] = 'iSpring HTML file';
+$string['outputformat_qedoc'] = 'Qedoc file';
+
+$string['outputformat_hp_6_jcloze_html'] = 'JCloze (v6) from html';
+$string['outputformat_hp_6_jcloze_xml_anctscan'] = 'ANCT-Scan from HP6 JCloze xml';
+$string['outputformat_hp_6_jcloze_xml_dropdown'] = 'DropDown from HP6 JCloze xml';
+$string['outputformat_hp_6_jcloze_xml_findit_a'] = 'FindIt (a) from HP6 JCloze xml';
+$string['outputformat_hp_6_jcloze_xml_findit_b'] = 'FindIt (b) from HP6 JCloze xml';
+$string['outputformat_hp_6_jcloze_xml_jgloss'] = 'JGloss from HP6 JCloze xml';
+$string['outputformat_hp_6_jcloze_xml_v6'] = 'JCloze (v6) from HP6 xml';
+$string['outputformat_hp_6_jcloze_xml_v6_autoadvance'] = 'JCloze (v6) from HP6 xml (Auto-advance)';
+$string['outputformat_hp_6_jcross_html'] = 'JCross (v6) from html';
+$string['outputformat_hp_6_jcross_xml_v6'] = 'JCross (v6) from xml';
+$string['outputformat_hp_6_jmatch_html'] = 'JMatch (v6) from html';
+$string['outputformat_hp_6_jmatch_xml_flashcard'] = 'JMatch (flashcard) from xml';
+$string['outputformat_hp_6_jmatch_xml_jmemori'] = 'JMemori from xml';
+$string['outputformat_hp_6_jmatch_xml_v6'] = 'JMatch (v6) from xml';
+$string['outputformat_hp_6_jmatch_xml_v6_plus'] = 'JMatch (v6+) from xml';
+$string['outputformat_hp_6_jmix_html'] = 'JMix (v6) from html';
+$string['outputformat_hp_6_jmix_xml_v6'] = 'JMix (v6) from xml';
+$string['outputformat_hp_6_jmix_xml_v6_plus'] = 'JMix (v6+) from xml';
+$string['outputformat_hp_6_jmix_xml_v6_plus_keypress'] = 'JMix (v6+ with key press) from xml';
+$string['outputformat_hp_6_jmix_xml_v6_plus_deluxe'] = 'JMix (v6+ with prefix, suffix with distractors) from xml';
+$string['outputformat_hp_6_jquiz_html'] = 'JQuiz (v6) from html';
+$string['outputformat_hp_6_jquiz_xml_v6'] = 'JQuiz (v6) from xml';
+$string['outputformat_hp_6_jquiz_xml_v6_autoadvance'] = 'JQuiz (v6) from xml (Auto-advance)';
+$string['outputformat_hp_6_jquiz_xml_v6_exam'] = 'JQuiz (v6) from xml (Exam)';
+$string['outputformat_hp_6_rhubarb_html'] = 'Rhubarb (v6) from html';
+$string['outputformat_hp_6_rhubarb_xml'] = 'Rhubarb (v6) from xml';
+$string['outputformat_hp_6_sequitur_html'] = 'Sequitur (v6) from html';
+$string['outputformat_hp_6_sequitur_html_incremental'] = 'Sequitur (v6) from html, incremental scoring';
+$string['outputformat_hp_6_sequitur_xml'] = 'Sequitur (v6) from xml';
+$string['outputformat_hp_6_sequitur_xml_incremental'] = 'Sequitur (v6) from xml, incremental scoring';
 $string['overviewreport'] = 'Overview';
 $string['penalties'] = 'Penalties';
 $string['percent'] = 'Percent';

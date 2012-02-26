@@ -188,21 +188,30 @@ class mod_hotpot_report_renderer extends mod_hotpot_renderer {
      * @return xxx
      */
     function count_sql($userid=0, $attemptid=0) {
+        $params = array();
+
         $select = 'COUNT(1)';
-        $from   = '{hotpot_attempts}';
-        $where  = 'hotpotid=?';
-        $params = array($this->hotpot->id);
+        $from   = '{hotpot_attempts} ha';
+        $where  = 'hotpotid=:hotpotid';
+        $params['hotpotid'] = $this->hotpot->id;
+
+        // add user details (if necessary)
+        if (in_array('fullname', $this->tablecolumns)) {
+            $select .= ', u.id AS userid, u.firstname, u.lastname, u.picture, u.imagealt, u.email';
+            $from   .= ', {user} u';
+            $where  .= ' AND ha.userid=u.id';
+        }
 
         // restrict to a specific user
         if ($userid) {
-            $where .= ' AND userid=?';
-            $params[] = $userid;
+            $where .= ' AND ha.userid=:userid';
+            $params['userid'] = $userid;
         }
 
         // restrict to a specific attempt
         if ($attemptid) {
-            $where = ' AND id=?';
-            $params[] = $attemptid;
+            $where = ' AND ha.id=:attemptid';
+            $params['attemptid'] = $attemptid;
         }
 
         return array($select, $from, $where, $params);
@@ -228,12 +237,19 @@ class mod_hotpot_report_renderer extends mod_hotpot_renderer {
         }
 
         // sql to select all attempts at this HotPot (and Moodle grade)
+        $params = array();
         $select = 'ha.*, (ha.timemodified - ha.timestart) AS duration, '.$select_questions.
                   'ROUND(gg.rawgrade, 0) AS grade';
         $from   = '{hotpot_attempts} ha, {grade_items} gi, {grade_grades} gg';
-        $where  = 'ha.hotpotid=? AND ha.userid=gg.userid AND gg.itemid=gi.id '.
-                  'AND gi.courseid=? AND gi.itemtype=? AND gi.itemmodule=? AND gi.iteminstance=?';
-        $params = array($this->hotpot->id, $this->hotpot->course->id, 'mod', 'hotpot', $this->hotpot->id);
+        $where  = 'ha.hotpotid=:hotpotid AND ha.userid=gg.userid AND gg.itemid=gi.id '.
+                  'AND gi.courseid=:courseid AND gi.itemtype=:itemtype AND gi.itemmodule=:itemmodule AND gi.iteminstance=:iteminstance';
+        $params = array(
+            'hotpotid' => $this->hotpot->id,
+            'courseid' => $this->hotpot->course->id,
+            'itemtype' => 'mod',
+            'itemmodule' => 'hotpot',
+            'iteminstance' => $this->hotpot->id
+        );
 
         // add user fields. if required
         if (in_array('fullname', $this->tablecolumns)) {
@@ -244,14 +260,14 @@ class mod_hotpot_report_renderer extends mod_hotpot_renderer {
 
         // restrict sql to a specific user
         if ($userid) {
-            $where .= ' AND ha.userid=?';
-            $params[] = $userid;
+            $where .= ' AND ha.userid=:userid';
+            $params['userid'] = $userid;
         }
 
         // restrict sql to a specific attempt
         if ($attemptid) {
-            $where = ' AND ha.id=?';
-            $params[] = $attemptid;
+            $where = ' AND ha.id=:attemptid';
+            $params['attemptid'] = $attemptid;
         }
 
         return array($select, $from, $where, $params);

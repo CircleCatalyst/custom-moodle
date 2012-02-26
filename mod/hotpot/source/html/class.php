@@ -54,7 +54,7 @@ class hotpot_source_html extends hotpot_source {
                 // empty file - shouldn't happen !!
                 return false;
             }
-            if (preg_match('/<h(\d)[^>]>(.*?)<\/h\\1>/is', $this->filecontents, $matches)) {
+            if (preg_match('/<h(\d)[^>]>(.*?)<\/h$1>/is', $this->filecontents, $matches)) {
                 $this->name = trim(strip_tags($this->title));
                 $this->title = trim($matches[1]);
             }
@@ -98,7 +98,7 @@ class hotpot_source_html extends hotpot_source {
                 // empty file - shouldn't happen !!
                 return false;
             }
-            if (preg_match('/<(div|p)[^>]*>\s*(.*?)\s*<\/\\1>/is', $this->filecontents, $matches)) {
+            if (preg_match('/<(div|p)[^>]*>\s*(.*?)\s*<\/$1>/is', $this->filecontents, $matches)) {
                 $this->entrytext .= '<'.$matches[1].'>'.$matches[2].'</'.$matches[1].'>';
             }
         }
