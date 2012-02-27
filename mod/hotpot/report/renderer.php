@@ -83,8 +83,11 @@ class mod_hotpot_report_renderer extends mod_hotpot_renderer {
      * @param xxx $hotpot
      */
     public function render_report($hotpot)  {
+        global $CFG;
         $this->init($hotpot);
         echo $this->header();
+        $currenttab = 'reports';
+        require($CFG->dirroot . '/mod/hotpot/tabs.php');
         echo $this->reportcontent();
         echo $this->footer();
     }

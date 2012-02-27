@@ -269,7 +269,7 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
             throw new moodle_exception('sourcefilenotfound', 'hotpot', '', $this->hotpot->sourcefile);
         }
 
-        echo $this->hotpot_header();
+        echo $this->hotpot_header($hotpot);
         echo $this->hotpot_content();
         echo $this->hotpot_footer();
     }
@@ -397,8 +397,11 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
      *
      * @return string $output
      */
-    function hotpot_header()  {
+    function hotpot_header($hotpot)  {
+        global $PAGE, $CFG;
         $header = $this->header();
+        $tabreturn = true;
+        require($CFG->dirroot . '/mod/hotpot/tabs.php');
         // $this->xmldeclaration
         // $this->doctype
         // $this->htmlattributes
@@ -407,7 +410,7 @@ class mod_hotpot_attempt_renderer extends mod_hotpot_renderer {
             $header = substr_replace($header, $this->headcontent, $pos, 0);
         }
         // $this->bodyattributes
-        return $header;
+        return $header.$taboutput;
     }
 
     /**

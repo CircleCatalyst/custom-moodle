@@ -81,6 +81,7 @@ $PAGE->set_url($hotpot->view_url());
 $PAGE->set_title($hotpot->name);
 $PAGE->set_heading($course->fullname);
 
+
 $output = $PAGE->get_renderer('mod_hotpot');
 
 ////////////////////////////////////////////////////////////////////////////////
