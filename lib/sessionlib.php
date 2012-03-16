@@ -55,9 +55,12 @@ function session_get_instance() {
                 $session_class = SESSION_CUSTOM_CLASS;
                 $session = new $session_class();
 
-            } else if ((!isset($CFG->dbsessions) or $CFG->dbsessions) and $DB->session_lock_supported()) {
+            } else if ($CFG->sessionhandler == 'database' and $DB->session_lock_supported()) {
                 // default recommended session type
                 $session = new database_session();
+
+            } else if ($CFG->sessionhandler == 'memcached') {
+               $session = new memcached_session();
 
             } else {
                 // legacy limited file based storage - some features and auth plugins will not work, sorry
@@ -1169,3 +1172,38 @@ function cron_setup_user($user = NULL, $course = NULL) {
     // TODO: it should be possible to improve perf by caching some limited number of users here ;-)
 
 }
+
+class memcached_session extends session_stub {
+    protected function init_session_storage() {
+        global $CFG;
+
+        ini_set('session.save_handler', 'memcache');
+
+        if (ini_get('session.gc_probability') == 0) {
+            ini_set('session.gc_probability', 1);
+        }
+
+        ini_set('session.gc_maxlifetime', $CFG->sessiontimeout);
+        ini_set('session.save_path', $CFG->sessionsavepath);
+    }
+
+    /**
+     * Check for existing session with id $sid
+     * @param unknown_type $sid
+     * @return boolean true if session found.
+     */
+    public function session_exists($sid){
+        global $CFG;
+
+        include_once($CFG->libdir . '/memcached.class.php');
+
+        $mcache = new memcached($CFG->sessionsavepath);
+
+        if (!$mcache->status()) {
+            return false;
+        }
+
+        return $mcache->_cache->get($sid) ? true : false;
+    }
+}
+

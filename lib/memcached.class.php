@@ -45,7 +45,12 @@ defined('MOODLE_INTERNAL') || die();
  **/
 class memcached {
 
-    function memcached() {
+    /**
+     * Constructor
+     *
+     * @param string hosts comma separated list of host addresses
+     */
+    function memcached($hosts=null) {
         global $CFG;
 
         if (!function_exists('memcache_connect')) {
@@ -54,7 +59,8 @@ class memcached {
         }
         $this->_cache = new Memcache;
 
-        $hosts = explode(',', $CFG->memcachedhosts);
+        $hosts = !empty($hosts) ? $hosts : $CFG->memcachedhosts;
+        $hosts = explode(',', $hosts);
         if (count($hosts) === 1 && !empty($CFG->memcachedpconn)) {
             // the faster pconnect is only available
             // for single-server setups

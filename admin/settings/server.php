@@ -37,7 +37,9 @@ $ADMIN->add('server', $temp);
 
 // "sessionhandling" settingpage
 $temp = new admin_settingpage('sessionhandling', get_string('sessionhandling', 'admin'));
-$temp->add(new admin_setting_configcheckbox('dbsessions', get_string('dbsessions', 'admin'), get_string('configdbsessions', 'admin'), 1));
+$temp->add(new admin_setting_configselect('sessionhandler', get_string('sessionhandler', 'admin'), get_string('configsessionhandler', 'admin'), 'database', array('database' => get_string('sessionhandlerdatabase', 'admin'),
+                                                                                                                                                'memcached' => get_string('sessionhandlermemcache', 'admin'),
+                                                                                                                                                'file' => get_string('sessionhandlerfile', 'admin'))));
 $temp->add(new admin_setting_configselect('sessiontimeout', get_string('sessiontimeout', 'admin'), get_string('configsessiontimeout', 'admin'), 7200, array(14400 => get_string('numhours', '', 4),
                                                                                                                                                       10800 => get_string('numhours', '', 3),
                                                                                                                                                       7200 => get_string('numhours', '', 2),
@@ -47,6 +49,7 @@ $temp->add(new admin_setting_configselect('sessiontimeout', get_string('sessiont
                                                                                                                                                       1800 => get_string('numminutes', '', 30),
                                                                                                                                                       900 => get_string('numminutes', '', 15),
                                                                                                                                                       300 => get_string('numminutes', '', 5))));
+$temp->add(new admin_setting_configtext('sessionsavepath', get_string('sessionsavepath', 'admin'), get_string('configmemcachedhosts', 'admin'), '', PARAM_TEXT, 50));
 $temp->add(new admin_setting_configtext('sessioncookie', get_string('sessioncookie', 'admin'), get_string('configsessioncookie', 'admin'), '', PARAM_ALPHANUM));
 $temp->add(new admin_setting_configtext('sessioncookiepath', get_string('sessioncookiepath', 'admin'), get_string('configsessioncookiepath', 'admin'), '', PARAM_RAW));
 $temp->add(new admin_setting_configtext('sessioncookiedomain', get_string('sessioncookiedomain', 'admin'), get_string('configsessioncookiedomain', 'admin'), '', PARAM_RAW, 50));
