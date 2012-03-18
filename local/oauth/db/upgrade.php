@@ -51,7 +51,7 @@ function xmldb_local_oauth_upgrade($oldversion) {
             $table->add_index('userid', XMLDB_INDEX_NOTUNIQUE, array('userid'));
         }
 
-        if (! $DB->get_record('oauth_site_directory', array('name' => 'google.com')) {
+        if (! $DB->get_record('oauth_site_directory', array('name' => 'google.com')) ) {
             // create a default entry for all Google Fusion OAuth integration
             $record = new object();
             $record->name                = 'google.com';
@@ -64,7 +64,7 @@ function xmldb_local_oauth_upgrade($oldversion) {
             $DB->insert_record('oauth_site_directory', $record);
         }
 
-        if (! $DB->get_record('oauth_site_directory', array('name' => 'googledocs.com')) {
+        if (! $DB->get_record('oauth_site_directory', array('name' => 'googledocs.com')) ) {
             // create a default entry for all Google Docs OAuth integration
             $record = new object();
             $record->name                = 'googledocs.com';
