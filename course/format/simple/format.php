@@ -7,6 +7,8 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  */
 
+    require_once('lib.php');
+    simple_topics_add_sectioninfo();
 
     $streditsummary  = get_string('editsummary');
     $stradd          = get_string('add');
@@ -93,6 +95,12 @@
     }
 
 /// Create any missing sections
+    
+    $sectioninfo = $DB->get_record_sql("SELECT id FROM ".$CFG->prefix."simple_topics_sections WHERE sectionid=".$sections[0]->id);
+    if (empty($sectioninfo)) {
+        $DB->insert_record('simple_topics_sections', (object) array('sectionid' => $sections[0]->id, 'showtitle' => 1));
+    }
+
     for ($i=count($sections);$i<$course->numsections;$i++) {
         $newsection = new stdClass();
 
@@ -104,6 +112,7 @@
         if (!$newsection->id = $DB->insert_record('course_sections', $newsection)) {
             notify('Error inserting new topic!');
         }
+        $DB->insert_record('simple_topics_sections', (object) array('sectionid' => $newsection->id, 'showtitle' => 1));
         $sections[$i] = $newsection;
     }
 
@@ -162,11 +171,27 @@
                 print_heading($currenttext.$weekperiod.' ('.get_string('notavailable').')', null, 3, 'weekdates');
 
             } else {
-                echo $OUTPUT->heading($thissection->name, 3, 'sectionname');
+                $sectiontitle_sql = "SELECT showtitle FROM ".$CFG->prefix."simple_topics_sections ".
+                                    "WHERE sectionid=".$thissection->id;
+
+                $sectiontitle = $DB->get_record_sql($sectiontitle_sql);
+                if (empty($sectiontitle)) {
+                    $sectiontitle->showtitle = 1;
+                }
+
+                if ($sectiontitle->showtitle || ($PAGE->user_is_editing($course->id) && has_capability('moodle/course:update', get_context_instance(CONTEXT_COURSE, $course->id)))) {
+                    echo $OUTPUT->heading($thissection->name, 3, 'sectionname');
+                } else {
+                    echo '<h3 class="sectionname" style="display:none;">'.$thissection->name.'</h3>';
+                }
 
                 echo '<div class="summary">';
+                $summarytext = file_rewrite_pluginfile_urls($thissection->summary, 'pluginfile.php', $context->id, 'course', 'section', $thissection->id);
+                $summaryformatoptions = new stdClass;
                 $summaryformatoptions->noclean = true;
-                echo format_text($thissection->summary, FORMAT_HTML, $summaryformatoptions);
+                $summaryformatoptions->overflowdiv = true;
+
+                echo format_text($summarytext, FORMAT_HTML, $summaryformatoptions);
 
                 if ($PAGE->user_is_editing($course->id) && has_capability('moodle/course:update', get_context_instance(CONTEXT_COURSE, $course->id))) {
                     echo ' <a title="'.$streditsummary.'" href="editsection.php?id='.$thissection->id.'">'.

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="course/format/simple/db" VERSION="20111115" COMMENT="XMLDB file for Moodle simple topics course format"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../../lib/xmldb/xmldb.xsd"
+>
+    <TABLES>
+        <TABLE NAME="simple_topics_sections" COMMENT="Defines hide or show of section names in a course">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="sectionid"/>
+                <FIELD NAME="sectionid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="showtitle"/>
+                <FIELD NAME="showtitle" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="1" SEQUENCE="false" PREVIOUS="sectionid"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="sectionid"/>
+                <KEY NAME="sectionid" TYPE="foreign" FIELDS="sectionid" REFTABLE="course_sections" REFFIELDS="id" PREVIOUS="primary"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="sectionid" UNIQUE="true" FIELDS="sectionid"/>
+            </INDEXES>
+        </TABLE>
+    </TABLES>
+</XMLDB>

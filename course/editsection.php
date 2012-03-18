@@ -43,6 +43,12 @@ $editoroptions = array('context'=>$context ,'maxfiles' => EDITOR_UNLIMITED_FILES
 $section = file_prepare_standard_editor($section, 'summary', $editoroptions, $context, 'course', 'section', $section->id);
 $section->usedefaultname = (is_null($section->name));
 $mform = new editsection_form(null, array('course'=>$course, 'editoroptions'=>$editoroptions));
+
+if ($course->format == 'simple') {
+    $simple = $DB->get_record_sql("SELECT showtitle FROM ".$CFG->prefix."simple_topics_sections WHERE sectionid=".$section->id);
+    $section->showtitle = $simple->showtitle;
+}
+
 $mform->set_data($section); // set current value
 
 /// If data submitted, then process and store.
@@ -59,6 +65,13 @@ if ($mform->is_cancelled()){
     $section->summary = $data->summary;
     $section->summaryformat = $data->summaryformat;
     $DB->update_record('course_sections', $section);
+
+    if ($course->format == 'simple') {
+        $simple = $DB->get_record_sql("SELECT id FROM ".$CFG->prefix."simple_topics_sections WHERE sectionid=".$section->id);
+        $showtitle = empty($data->showtitle) ? 0 : 1;
+        $DB->update_record('simple_topics_sections', (object) array('id' => $simple->id, 'sectionid' => $section->id, 'showtitle' => $showtitle));
+    }
+
     add_to_log($course->id, "course", "editsection", "editsection.php?id=$section->id", "$section->section");
     $PAGE->navigation->clear_cache();
     redirect("view.php?id=$course->id");

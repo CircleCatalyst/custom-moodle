@@ -14,17 +14,35 @@
 }
 
 .simpleforwardbutton-text {
-    margin: 22px 0px 10px 5px;
+    margin: 21px 0px 10px 5px;
     float: right;
 	width:38%;
 	text-align:right;
 
 }
 
+.simpleforwardbutton-text p {
+    margin: 0;
+    padding: 0;
+    margin-right: 10px;
+    float: right;
+    font-size: 12px;
+    margin-top: 1px;
+}
+
 .simplebackbutton-text {
-    margin: 22px 5px 10px 0px;
+    margin: 21px 5px 10px 0px;
     float: left;
 	width:38%;
+}
+
+.simplebackbutton-text p {
+    margin: 0;
+    padding: 0;
+    margin-left: 10px;
+    float: left;
+    font-size: 12px;
+    margin-top: 1px;
 }
 
 .simplebutton-title-left {
@@ -174,7 +192,7 @@
 		margin:0;
 }
 .course-content .simplecss-format ul.simplecss li {
-	list-style:none;
+	/*list-style:none;*/
 }
 .course-content .simplecss-format .simplebackbutton {
 	margin: 20px 0 10px 10px;

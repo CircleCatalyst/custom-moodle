@@ -9,13 +9,17 @@ require_once($CFG->libdir.'/formslib.php');
 class editsection_form extends moodleform {
 
     function definition() {
-        global $CFG, $DB;
+        global $CFG, $DB, $COURSE;
 
         $mform  = $this->_form;
         $course = $this->_customdata['course'];
 
         $mform->addElement('checkbox', 'usedefaultname', get_string('sectionusedefaultname'));
         $mform->setDefault('usedefaultname', true);
+
+        if ($COURSE->format == 'simple') {
+            $mform->addElement('checkbox', 'showtitle', 'Show Section Name in Course');
+        }
 
         $mform->addElement('text', 'name', get_string('sectionname'), array('size'=>'30'));
         $mform->setType('name', PARAM_TEXT);

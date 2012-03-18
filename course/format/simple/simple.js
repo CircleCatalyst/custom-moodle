@@ -47,7 +47,7 @@ YAHOO.moodle.simpleformat =  function() {
                     YAHOO.util.Dom.addClass(previouslink, 'simplebackbutton-text');
 
                     if (linkname && linkname.innerHTML) {
-                       previouslink.innerHTML = linkname.innerHTML;
+                       previouslink.innerHTML = '<p>'+ linkname.innerHTML +'</p>';
                     }
 
 
@@ -66,7 +66,7 @@ YAHOO.moodle.simpleformat =  function() {
                     YAHOO.util.Dom.addClass(nextlink, 'simpleforwardbutton-text');
 
                     if (linkname && linkname.innerHTML) {
-                       nextlink.innerHTML = linkname.innerHTML;
+                       nextlink.innerHTML = '<p>'+ linkname.innerHTML +'</p>';
                     }
 
                     topics[i].appendChild(YAHOO.moodle.simpleformat.createforwardbutton('next_'+i, strnext, YAHOO.moodle.simpleformat.shownext));
