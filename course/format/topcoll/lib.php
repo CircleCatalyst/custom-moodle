@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 /**
   This file contains general functions for the course format Collapsed Topics
   Thanks to Sam Hemelryk who modified the Moodle core code for 2.0, and

@@ -1,4 +1,4 @@
-<?php 
+<?php
 /**
  * Collapsed Topics Information
  *
@@ -67,7 +67,7 @@ $coursecontext = get_context_instance(CONTEXT_COURSE, $course->id);
 
 if (($marker >= 0) && has_capability('moodle/course:setcurrentsection', $coursecontext) && confirm_sesskey()) {
     $course->marker = $marker;
-    course_set_marker($course->id, $marker);
+    $DB->set_field("course", "marker", $marker, array("id" => $course->id));
 }
 
 $streditsummary = get_string('editsummary');
