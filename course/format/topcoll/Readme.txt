@@ -3,9 +3,9 @@ Introduction
 Topic based course format with an individual 'toggle' for each topic except 0.  This format differs from the
 Accordion format in that two or more topics can be visible at the same time.
 
-This version works with Moodle 2.3.x.
+This version works with Moodle 2.2.x.
 
-Documented on http://docs.moodle.org/23/en/Collapsed_Topics_course_format
+Documented on http://docs.moodle.org/22/en/Collapsed_Topics_course_format
 
 Installation
 ------------
@@ -250,28 +250,28 @@ Released Moodle 2.0 version.  Treat as completed and out of development.
   1. Updated Brazilian translation thanks to Tarcísio Nunes (http://moodle.org/user/profile.php?id=1149633).
   2. Changed version to relate to Moodle version, so this is for Moodle 2.2.
 
-9th December 2011 - Version 2.3.1.1 - Moodle Tracker CONTRIB-3295
+9th December 2011 - Version 2.2.1.1 - Moodle Tracker CONTRIB-3295
   1. Fixed issue of the web browser miscaluating the width of the content in 'editing' mode so that the sections
      are less than 100%.
 
-3rd January 2012 - Version 2.3.1.1.1 - Moodle Tracker MDL-30632
+3rd January 2012 - Version 2.2.1.1.1 - Moodle Tracker MDL-30632
   1. Use consistent edit section icon.
 
-9th January 2012 - Version 2.3.1.1.2
+9th January 2012 - Version 2.2.1.1.2
   1. Corrected licence to be correct one used by Moodle Plugins - thanks to Tim Hunt (http://moodle.org/user/profile.php?id=93821).
 
-23rd January 2012 - Version 2.3.2
+23rd January 2012 - Version 2.2.2
   1. Sorted out UTF-8 BOM issue, see MDL-31343.
   2. Added Russian translation, thanks to Pavel Evgenjevich Timoshenko (http://moodle.org/user/profile.php?id=1322784).
 
-2nd February 2012 - Version 2.3.3 - BETA
+2nd February 2012 - Version 2.2.3 - BETA
   1. Added capability for layouts with persisence in the database.
 
-4th February 2012 - Version 2.3.3 - BETA 2
+4th February 2012 - Version 2.2.3 - BETA 2
   1. A big thank you to Carlos Sánchez Martín (http://moodle.org/user/profile.php?id=743362) for his help in discovering the install.xml bug.
   2. Fixed issue with install.xml file, gained knowledge on uninstallation for the note below:
 
-5th February 2012 - Version 2.3.3 - BETA 3
+5th February 2012 - Version 2.2.3 - BETA 3
   1. A big thank you to Carlos Sánchez Martín (http://moodle.org/user/profile.php?id=743362) spotting issues in set_layout.php.
   2. Fixed issues in set_layout.php.
   3. Tidied up code to remove debug statements and development code.
@@ -279,38 +279,38 @@ Released Moodle 2.0 version.  Treat as completed and out of development.
   5. Made strings in the English language file for the layout options and 'Set layout format'.  Others to follow.
   6. Raised CONTRIB-3378 to document the development.
 
-8th February 2012 - Version 2.3.3 - BETA 4
+8th February 2012 - Version 2.2.3 - BETA 4
   1. A big thank you to Andrew Nicols (http://moodle.org/user/view.php?id=268794) for his contribution on the developer forum (http://moodle.org/mod/forum/discuss.php?d=195293).
   2. Implemented the fixes and suggestions to tidy up the code as specified by Andrew above.
   3. Implemented Spanish translations thanks to Carlos Sánchez Martín (http://moodle.org/user/profile.php?id=743362).
 
-11th February 2012 - Version 2.3.3 - BETA 5
+11th February 2012 - Version 2.2.3 - BETA 5
   1. Implemented the capability to have different 'structures' thereby encapsulating the 'Collapsed Weeks' and 'Latest First' formats into this one.
   2. If you have previously installed this development, you need to drop the table 'format_topcoll_layout' in your database to upgrade as I do
      not wish to have a complicated upgrade.php in the db folder at this stage whilst development continues.
   3. As a consequence of some changes, the Spanish translation now needs fixing, sorry Carlos.
 
-12th February 2012 - Version 2.3.3 - BETA 6
+12th February 2012 - Version 2.2.3 - BETA 6
   1. Fixed CONTRIB-3283 in lib.js (and hence lib_min.js) for when you are in display only 'Section x' mode and the number of sections is reduced, you go back to the course with a section number for you in the database that no longer exists and the 'Jump to...' drop down box does not work.  Leading to having to change the database or the value of 'ctopics' in the URL to that od a valid one.
   2. Added 'callback_topcoll_get_section_url' in 'lib.php' for MDL-26477.
   3. Corrected slight mistake with version number.
 
-15th February 2012 - Version 2.3.3 - BETA 7
+15th February 2012 - Version 2.2.3 - BETA 7
   1. Added strings for MDL-26105 in format_topcoll.php.
   2. Used non-depreciated 'create_table' method in 'upgrade.php'.
   3. Finally worked out how to ensure that the 'Settings Block' displays the course and not front page administration by using 'require_login($course)'.
 
-18th February 2012 - Version 2.3.3 - BETA 8
+18th February 2012 - Version 2.2.3 - BETA 8
   1. CONTRIB-3225 - Added screen reader capability using 'h3' tags, the same as the standard Topics format.
 
-25th February 2012 - Version 2.3.3 - Release Candidate 1
+25th February 2012 - Version 2.2.3 - Release Candidate 1
   1. Added help information to the drop down options on the set layout form.
   2. Tidied up to be consistent and use less words where required.
   3. In format.php changed from depreciated js_function_call() to js_init_call().
   4. If you have previously installed a beta version you will need to drop the table 'format_topcoll_layout' in the database.
   5. If you are a native speaker of a language other than English, I would be grateful of a translation of the new language strings in 'lang/en/format_topcoll.php' under the comment 'Layout enhancement - Moodle Tracker CONTRIB-3378'.  Please message me using the details in my Moodle profile 'http://moodle.org/user/profile.php?id=442195'.
 
-28th February 2012 - Version 2.3.3 - Release Candidate 2
+28th February 2012 - Version 2.2.3 - Release Candidate 2
   1. Added 'Current Topic First' as a new structure as suggested by 'Hartmut Scherer' (http://moodle.org/user/view.php?id=441502) on discussion '
 Collapsed Topics with Custom Layouts' (http://moodle.org/mod/forum/discuss.php?d=195292).
   2. Fixed an issue in moving to js_init_call() in RC 1 and then followed the 'JavaScript guidelines' (http://docs.moodle.org/dev/JavaScript_guidelines) and 'How to include javascript file in a new course format?' (http://moodle.org/mod/forum/discuss.php?d=169124) to understand how to transition to using 'module.js' correctly.  Still going to include 'tc_section_classes_min.js' using the old way until I can figure out how to do this the new way.
@@ -321,41 +321,42 @@ Collapsed Topics with Custom Layouts' (http://moodle.org/mod/forum/discuss.php?d
 
 NOTE: If uninstallation fails, drop the table 'format_topcoll_layout' and the entry for 'format_topcoll' in the table 'config_plugins' where tables are with the prefix you use, the default being 'mdl_'.  Then delete the installation folder and replace with the current stable version.
 
-28th February 2012 - Version 2.3.3 - Release Candidate 3
+28th February 2012 - Version 2.2.3 - Release Candidate 3
   1. Tidied up 'module.js' to be more efficient in using the YUI instance given.
   2. Updated installation and toggle state instructions. 
   3. Added uninstall procedure in the unlikely event that you need it.
 
-29th February 2012 - Version 2.3.3 - Release Candidate 4
+29th February 2012 - Version 2.2.3 - Release Candidate 4
   1. Updated Spanish language files thanks to Carlos Sánchez Martín.
   2. Added setting default layout and structure to installation instructions.
   3. Decided to have '$formcourselayoutstrutures' out of config.php to prevent possible future user error.
   4. Spotted a minor issue with changing language whilst on the 'Set Layout' form.  Added to known issues as very minor and rare as almost certainly the user will not have changed language on this form but would have done so beforehand.
   5. Fixed duplicate entry issue in 'course_sections' table when the default structure is 'Current Topic First' and a new course is created.
 
-1st March 2012 - Version 2.3.3 - Stable
-  1. Integrated Git Branch CONTRIB-3378 into stable branch master.
+1st March 2012 - Version 2.2.3 - Stable
+  1. Integrated Git Branch CONTRIB-3378 into stable branch MOODLE_22.
   2. NOTE: If you have previously installed a Beta or Release Candidate please drop the table 'format_topcoll_layout' before use.
   3. Removed redudant lib.js and lib_min.js in this branch.
 
-2nd March 2012 - Version 2.3.3.1
+2nd March 2012 - Version 2.2.3.1
   1. Minor fix to ensure consistent use of $coursecontext and not $context.
 
-14th March 2012 - Version 2.3.4 - BETA - CONTRIB-3520.
+14th March 2012 - Version 2.2.4 - BETA - CONTRIB-3520.
   1. Added backup and restore functionality.  If required when restoring a course 'Overwrite course configuration' needs to be 'Yes' to set the structure and elements correctly.
   2. Added the function 'format_topcoll_delete_course' in 'lib.php' which will remove the entry in the 'format_topcoll_layout' table for the course when it is deleted.
   3. Added language strings to the language files that were missing previous changes.  Still in English at the moment in the hope a native speaker will translate them for me.  I intend to translate the basics like 'Topic' and 'Week' though before release in line with what was already there.
 
-15th March 2012 - Version 2.3.4 - CONTRIB-3520 - Stable.
+15th March 2012 - Version 2.2.4 - CONTRIB-3520 - Stable.
   1. Completed files for 1.9 and placed in the root folder of the format in the hope that they are executed by the upgrade restoring code as they are in the Moodle 1.9 version of this issue.  I think it is a Moodle core coding issue that they are not called in Moodle 2.x+ when importing a Moodle 1.9 course backup - need to investigate.
   2. Translated the words 'Topic' and 'Week' in all language files so that the toggle bar is correct in all structures.  If you are a native speaker I would appreciate translation of the rest as Google Translate is not so good with long sentences.
   3. Added backup and restore instructions to this file.
 
-17th March 2012 - Version 2.3.4.1
+16th March 2012 - Version 2.2.4.1
   1. Tried with restorelib.php in the root folder for importing Moodle 1.9 courses and did not work.  So for tidiness, moved the Moodle 1.9 backup and restore code to backup/moodle1 folder.
   2. So please note that restoring Moodle 1.9 courses in this course format will not retain the structure settings and will default to the values in 'config.php'.  I hope to investigate and either fix or have this fixed.
-  3. Release '2012030100.02' of Moodle 2.3dev converted all tables to have signed integers in the function 'upgrade_mysql_fix_unsigned_columns()' in '/lib/db/upgradelib.php' called from 'upgrade.php' in the same folder.  This included 'format_topcoll_layout' because of the code was written.  This made it very difficult for me to create an effective upgrade in my own 'upgrade.php' because I would be converting what had already been converted if the format was installed and you were updating Moodle 2.3dev but if you install for the first time, the code has been written as such to have signed fields.  Therefore if you have previously installed this format for Moodle 2.3, please remove the table 'format_topcoll_layout' from your database before upgrading.  This is not quite brilliant, but I consider reasonable for this development version at this stage.
-  4. Implemented the change in 'format.php' introduced by MDL-31255, therefore you now require Moodle 2.3 version '2012031500.00'.
+
+21st March 2012 - Version 2.2.4.2
+  1. Received an updated version of 'format_topcoll.php' from Luiggi Sansonetti for the French translation - Merci :).
 
 Thanks
 ------
@@ -388,6 +389,8 @@ Andrew Nicols (http://moodle.org/user/view.php?id=268794) for his assistance on 
 
 Hartmut Scherer (http://moodle.org/user/view.php?id=441502) for suggesting the 'Current Topic First' structure and testing the Moodle 2.2 code on discussion 'Collapsed Topics with Custom Layouts' (http://moodle.org/mod/forum/discuss.php?d=195292).
 
+Luiggi Sansonetti (http://moodle.org/user/profile.php?id=1297063) for the French translation.
+
 References
 ----------
 .Net Magazine Issue 186 - Article on Collapsed Tables by Craig Grannell -
@@ -408,4 +411,4 @@ Desired Enhancements
    'certain' browsers causing issues in making this happen.
 2. Smoother animated toggle action.
 
-G J Barnard - MSc, BSc(Hons)(Sndw), MBCS, CEng, CITP, PGCE - 17th March 2012.
+G J Barnard - MSc, BSc(Hons)(Sndw), MBCS, CEng, CITP, PGCE - 16th March 2012.
