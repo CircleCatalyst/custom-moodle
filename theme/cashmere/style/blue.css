@@ -1,0 +1,121 @@
+/********************************************************
+**
+** Theme name: Cashmere
+** Creation Date: 30/06/09
+** Author: Synergy Learning
+** Author URI: http://synergylearning.com
+** Modified: Catalyst / Dataview [BK]
+*********************************************************/
+
+/* Global 
+------------------------*/
+
+body.cashmere-blue {                /* Define margins and background colour/image */
+    /*background: url([[pix:theme|bgblue]]) top left repeat-x #fff;
+	background: url("../images/bg_main_tile.jpg") scroll 0 0 transparent; */
+	background: url([[pix:theme|bgblue]]) scroll 0 0 transparent;
+    margin: 0 auto;
+    padding: 0;
+    width: 100%;
+}
+
+.cashmere-blue a:link {        /* Defining all link styles*/
+    color: #262571;
+}
+
+.cashmere-blue a:visited {        /* Setting all visited link styles */
+    color: #262571;
+}
+
+.cashmere-blue a:hover {        /* Setting all rollover link styles */
+    color: #100f30;
+}
+
+.cashmere-blue a:active {        /* Setting all active link styles */
+    color: #262571;
+}
+
+
+/* Header 
+-----------------------*/
+.cashmere-blue #page-header {            /* Set height for header */
+    float: none;
+    padding: 0;
+    margin:0;
+    color: #fff;
+    height: 308px;
+    background: url([[pix:theme|pageheaderbgblue]]) top center no-repeat;
+
+}
+
+.cashmere-blue #logobox{  /* holder background for logo*/
+    height: 185px;
+    width: 252px;
+    margin: auto;
+    text-align: center;
+    background: url([[pix:theme|lbgv2blue]]) no-repeat;
+    float: left;
+}
+
+
+.cashmere-blue #colourswitcher p{
+    color:#a36831
+}
+
+
+/* Custom Menu
+-----------------------*/
+.cashmere-blue #custommenu .yui3-menu-content ul.first-of-type li{
+    border-right: 1px solid #bfced7;
+}
+
+.cashmere-blue #custommenu div.yui3-menu.custom_menu_submenu .yui3-menu-content{
+    background:#a36831;
+    border:1px solid #fff;
+    color: #fff;
+}
+
+/* Content
+-----------------------*/
+
+.cashmere-blue .coursebox{
+    padding-left:5px;
+    border-bottom: 1px dashed #cbd3d6;
+}
+
+.cashmere-blue ul.topics li#section-0, ul.weeks li#section-0 {
+    background: #a36831;
+    border: 1px solid #ccc;
+}
+
+/* Sideblocks
+-----------------------*/
+
+.cashmere-blue #region-pre .block .header,
+.cashmere-blue #region-post .block .header {  /*-- right block header   --*/
+    background: url([[pix:theme|sbheaderbg2blue]]) center no-repeat;
+    padding: 12px 5px 5px;
+    color: #fff;
+}
+
+/* Mini Calendar
+------------------------*/
+
+.cashmere-blue .block .minicalendar td.weekend {    /* setting weekend date colour */
+    color:#a36831;
+}
+
+
+/* Forum
+------------------------*/
+
+.cashmere-blue .forumpost .topic .subject,
+.path-blog.cashmere-blue .forumpost .subject a,
+.path-blog.cashmere-blue .forumpost .subject a:link,
+.path-blog.cashmere-blue .forumpost .subject a:visited {    /* forum subject section inside topic header */
+    font-weight: bold;
+    font-size: 1.1em;
+    padding-left: 5px;
+    background: #a36831;
+    color: #fff;
+}
