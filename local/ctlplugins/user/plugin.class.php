@@ -337,7 +337,7 @@ class moodlectl_plugin_user extends moodlectl_plugin_base {
         global $CFG, $DB;
 
         //$columns = '*';
-		$columns = 'id, username, idnumber, firstname, lastname, email';
+		$columns = 'id, username, idnumber, firstname, lastname, email, institution';
         if ('opts' == $format) {
             $columns = 'id';
         }
