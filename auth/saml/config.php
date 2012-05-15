@@ -26,4 +26,5 @@ $SIMPLESAMLPHP_RETURN_TO = 'http://'.$_SERVER['HTTP_HOST'].'/auth/saml/';
 
 // change this to something specific if you don't want users to be sent to
 // Moodle $CFG->wwwroot when logout is completed
-$SIMPLESAMLPHP_LOGOUT_LINK = ""; 
+// ## BK: the above is BS. The redirect goes to '/' which is www004.kncluster or its mates, use this instead:
+$SIMPLESAMLPHP_LOGOUT_LINK = 'http://'.$_SERVER['HTTP_HOST']; 
