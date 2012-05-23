@@ -54,8 +54,9 @@ echo $OUTPUT->doctype() ?>
                         echo html_writer::tag('div', $OUTPUT->user_picture($USER, array('size'=>55)), array('class'=>'userimg'));
                     } else {
                         echo html_writer::start_tag('div', array('id'=>'userdetails_loggedout'));
-                        $loginlink = html_writer::link(new moodle_url('/login/'), get_string('loginhere', 'theme_chchgirls'));
-                        echo html_writer::tag('h1', get_string('welcome', 'theme_chchgirls', $loginlink));
+                        //$loginlink = html_writer::link(new moodle_url('/login/'), get_string('loginhere', 'theme_chchgirls'));
+                        $loginlink = "<a href='https://idp.cghs.school.nz/saml2/idp/SSOService.php?spentityid=http://onstream.cghs.school.nz/simplesaml/module.php/saml/sp/metadata.php/default-sp&RelayState=http://onstream.cghs.school.nz/auth/saml/'>Login Here!</a>";
+						echo html_writer::tag('h1', get_string('welcome', 'theme_chchgirls', $loginlink));
                         echo html_writer::end_tag('div');;
                     } ?>
                     <div class="clearer"></div>
