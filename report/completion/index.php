@@ -68,8 +68,7 @@ $leftcols = 1 + count($extrafields);
 function csv_quote($value) {
     global $excel;
     if ($excel) {
-        $tl = textlib_get_instance();
-        return $tl->convert('"'.str_replace('"',"'",$value).'"','UTF-8','UTF-16LE');
+        return textlib::convert('"'.str_replace('"',"'",$value).'"','UTF-8','UTF-16LE');
     } else {
         return '"'.str_replace('"',"'",$value).'"';
     }
@@ -148,9 +147,8 @@ if (!$csv) {
  */
 if ($csv) {
     $shortname = format_string($course->shortname, true, array('context' => $context));
-    $textlib = textlib_get_instance();
     header('Content-Disposition: attachment; filename=progress.'.
-        preg_replace('/[^a-z0-9-]/','_',$textlib->strtolower(strip_tags($shortname))).'.csv');
+        preg_replace('/[^a-z0-9-]/','_',textlib::strtolower(strip_tags($shortname))).'.csv');
     // Unicode byte-order mark for Excel
     if ($excel) {
         header('Content-Type: text/csv; charset=UTF-16LE');
@@ -604,7 +602,7 @@ foreach ($progress as $user) {
                 ($activity->completion==COMPLETION_TRACKING_AUTOMATIC ? 'auto' : 'manual').
                 '-'.$completiontype;
 
-            $describe=get_string('completion-alt-auto-'.$completiontype,'completion');
+            $describe = get_string('completion-' . $completiontype, 'completion');
             $a=new StdClass;
             $a->state=$describe;
             $a->date=$date;
@@ -633,7 +631,7 @@ foreach ($progress as $user) {
         $completiontype = $is_complete ? 'y' : 'n';
         $completionicon = 'completion-auto-'.$completiontype;
 
-        $describe = get_string('completion-alt-auto-'.$completiontype, 'completion');
+        $describe = get_string('completion-' . $completiontype, 'completion');
 
         $a = new stdClass();
         $a->state    = $describe;
@@ -647,7 +645,7 @@ foreach ($progress as $user) {
         } else {
 
             if ($allow_marking_criteria === $criterion->id) {
-                $describe = get_string('completion-alt-auto-'.$completiontype,'completion');
+                $describe = get_string('completion-' . $completiontype, 'completion');
 
                 print '<td class="completion-progresscell">'.
                     '<a href="'.$CFG->wwwroot.'/course/togglecompletion.php?user='.$user->id.'&amp;course='.$course->id.'&amp;rolec='.$allow_marking_criteria.'&amp;sesskey='.sesskey().'">'.
@@ -672,7 +670,7 @@ foreach ($progress as $user) {
     $ccompletion = new completion_completion($params);
     $completiontype =  $ccompletion->is_complete() ? 'y' : 'n';
 
-    $describe = get_string('completion-alt-auto-'.$completiontype, 'completion');
+    $describe = get_string('completion-' . $completiontype, 'completion');
 
     $a = new StdClass;
     $a->state    = $describe;

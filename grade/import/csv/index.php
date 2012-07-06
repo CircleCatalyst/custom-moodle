@@ -116,17 +116,18 @@ if ($formdata = $mform->get_data()) {
 
     $text = $mform->get_file_content('userfile');
     // trim utf-8 bom
-    $textlib = textlib_get_instance();
     /// normalize line endings and do the encoding conversion
-    $text = $textlib->convert($text, $formdata->encoding);
-    $text = $textlib->trim_utf8_bom($text);
+    $text = textlib::convert($text, $formdata->encoding);
+    $text = textlib::trim_utf8_bom($text);
     // Fix mac/dos newlines
     $text = preg_replace('!\r\n?!',"\n",$text);
     $fp = fopen($filename, "w");
     fwrite($fp,$text);
     fclose($fp);
 
-    $fp = fopen($filename, "r");
+    if (!$fp = fopen($filename, "r")) {
+        print_error('cannotopenfile');
+    }
 
     // --- get header (field names) ---
     $header = explode($csv_delimiter, fgets($fp, GRADE_CSV_LINE_LENGTH));

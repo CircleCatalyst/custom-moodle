@@ -174,9 +174,8 @@ function cron_run() {
 
     // Send login failures notification - brute force protection in moodle is weak,
     // we should at least send notices early in each cron execution
-    if (!empty($CFG->notifyloginfailures)) {
-        notify_login_failures();
-        mtrace(' Notified login failured');
+    if (notify_login_failures()) {
+        mtrace(' Notified login failures');
     }
 
 
@@ -357,7 +356,7 @@ function cron_run() {
         require_once($CFG->dirroot . '/blog/lib.php');
         mtrace("Fetching external blog entries...", '');
         $sql = "timefetched < ? OR timefetched = 0";
-        $externalblogs = $DB->get_records_select('blog_external', $sql, array(mktime() - $CFG->externalblogcrontime));
+        $externalblogs = $DB->get_records_select('blog_external', $sql, array(time() - $CFG->externalblogcrontime));
 
         foreach ($externalblogs as $eb) {
             blog_sync_external_entries($eb);
@@ -376,11 +375,17 @@ function cron_run() {
 
     //Run registration updated cron
     mtrace(get_string('siteupdatesstart', 'hub'));
-    require_once($CFG->dirroot . '/admin/registration/lib.php');
+    require_once($CFG->dirroot . '/' . $CFG->admin . '/registration/lib.php');
     $registrationmanager = new registration_manager();
     $registrationmanager->cron();
     mtrace(get_string('siteupdatesend', 'hub'));
 
+    // If enabled, fetch information about available updates and eventually notify site admins
+    if (empty($CFG->disableupdatenotifications)) {
+        require_once($CFG->libdir.'/pluginlib.php');
+        $updateschecker = available_update_checker::instance();
+        $updateschecker->cron();
+    }
 
     //cleanup old session linked tokens
     //deletes the session linked tokens that are over a day old.
@@ -397,9 +402,9 @@ function cron_run() {
     cron_execute_plugin_type('format', 'course formats');
     cron_execute_plugin_type('profilefield', 'profile fields');
     cron_execute_plugin_type('webservice', 'webservices');
-    // TODO: Repository lib.php files are messed up (include many other files, etc), so it is
-    // currently not possible to implement repository plugin cron using this infrastructure
-    // cron_execute_plugin_type('repository', 'repository plugins');
+    cron_execute_plugin_type('repository', 'repository plugins');
+    cron_execute_plugin_type('qbehaviour', 'question behaviours');
+    cron_execute_plugin_type('qformat', 'question import/export formats');
     cron_execute_plugin_type('qtype', 'question types');
     cron_execute_plugin_type('plagiarism', 'plagiarism plugins');
     cron_execute_plugin_type('theme', 'themes');
@@ -454,6 +459,9 @@ function cron_run() {
     $fs = get_file_storage();
     $fs->cron();
 
+    mtrace("Clean up cached external files");
+    // 1 week
+    cache_file::cleanup(array(), 60 * 60 * 24 * 7);
 
     mtrace("Cron script completed correctly");
 
@@ -594,14 +602,25 @@ function cron_bc_hack_plugin_functions($plugintype, $plugins) {
  * Note that this function must be only executed from the cron script
  * It uses the cache_flags system to store temporary records, deleting them
  * by name before finishing
+ *
+ * @return bool True if executed, false if not
  */
 function notify_login_failures() {
     global $CFG, $DB, $OUTPUT;
+
+    if (empty($CFG->notifyloginfailures)) {
+        return false;
+    }
 
     $recip = get_users_from_config($CFG->notifyloginfailures, 'moodle/site:config');
 
     if (empty($CFG->lastnotifyfailure)) {
         $CFG->lastnotifyfailure=0;
+    }
+
+    // If it has been less than an hour, or if there are no recipients, don't execute.
+    if (((time() - HOURSECS) < $CFG->lastnotifyfailure) || !is_array($recip) || count($recip) <= 0) {
+        return false;
     }
 
     // we need to deal with the threshold stuff first.
@@ -676,10 +695,8 @@ function notify_login_failures() {
     }
     $rs->close();
 
-    // If we haven't run in the last hour and
-    // we have something useful to report and we
-    // are actually supposed to be reporting to somebody
-    if ((time() - HOURSECS) > $CFG->lastnotifyfailure && $count > 0 && is_array($recip) && count($recip) > 0) {
+    // If we have something useful to report.
+    if ($count > 0) {
         $site = get_site();
         $subject = get_string('notifyloginfailuressubject', '', format_string($site->fullname));
         // Calculate the complete body of notification (start + messages + end)
@@ -694,11 +711,13 @@ function notify_login_failures() {
             //emailing the admins directly rather than putting these through the messaging system
             email_to_user($admin,get_admin(), $subject, $body);
         }
-
-        // Update lastnotifyfailure with current time
-        set_config('lastnotifyfailure', time());
     }
+
+    // Update lastnotifyfailure with current time
+    set_config('lastnotifyfailure', time());
 
     // Finally, delete all the temp records we have created in cache_flags
     $DB->delete_records_select('cache_flags', "flagtype IN ('login_failure_by_ip', 'login_failure_by_info')");
+
+    return true;
 }

@@ -148,7 +148,7 @@ class feedback_item_multichoicerated extends feedback_item_base {
         $sizeoflines = count($lines);
         for ($i = 1; $i <= $sizeoflines; $i++) {
             $item_values = explode(FEEDBACK_MULTICHOICERATED_VALUE_SEP, $lines[$i-1]);
-            $ans = null;
+            $ans = new stdClass();
             $ans->answertext = $item_values[1];
             $avg = 0.0;
             $anscount = 0;
@@ -678,4 +678,11 @@ class feedback_item_multichoicerated extends feedback_item_base {
         return true;
     }
 
+    public function value_type() {
+        return PARAM_INT;
+    }
+
+    public function clean_input_value($value) {
+        return clean_param($value, $this->value_type());
+    }
 }

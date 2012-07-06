@@ -145,7 +145,8 @@ function wiki_get_current_version($pageid) {
             FROM {wiki_versions}
             WHERE pageid = ?
             ORDER BY version DESC";
-    return array_pop($DB->get_records_sql($sql, array($pageid), 0, 1));
+    $records = $DB->get_records_sql($sql, array($pageid), 0, 1);
+    return array_pop($records);
 
 }
 
@@ -1273,7 +1274,7 @@ function wiki_print_page_content($page, $context, $subwikiid) {
         }
     }
     $html = file_rewrite_pluginfile_urls($page->cachedcontent, 'pluginfile.php', $context->id, 'mod_wiki', 'attachments', $subwikiid);
-    $html = format_text($html, FORMAT_MOODLE, array('overflowdiv'=>true));
+    $html = format_text($html, FORMAT_MOODLE, array('overflowdiv'=>true, 'allowid'=>true));
     echo $OUTPUT->box($html);
 
     if (!empty($CFG->usetags)) {

@@ -106,7 +106,7 @@ class feedback_item_info extends feedback_item_base {
     public function get_analysed($item, $groupid = false, $courseid = false) {
 
         $presentation = $item->presentation;
-        $analysed_val = null;
+        $analysed_val = new stdClass();;
         $analysed_val->data = null;
         $analysed_val->name = $item->name;
         $values = feedback_get_group_values($item, $groupid, $courseid);
@@ -387,5 +387,13 @@ class feedback_item_info extends feedback_item_base {
 
     public function can_switch_require() {
         return false;
+    }
+
+    public function value_type() {
+        return PARAM_INT;
+    }
+
+    public function clean_input_value($value) {
+        return clean_param($value, $this->value_type());
     }
 }

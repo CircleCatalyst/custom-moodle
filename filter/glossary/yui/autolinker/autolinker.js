@@ -5,7 +5,6 @@ YUI.add('moodle-filter_glossary-autolinker', function(Y) {
         POPUPNAME = 'name',
         POPUPOPTIONS = 'options',
         TITLE = 'title',
-        COURSEID = 'courseid',
         WIDTH = 'width',
         HEIGHT = 'height',
         MENUBAR = 'menubar',
@@ -70,7 +69,8 @@ YUI.add('moodle-filter_glossary-autolinker', function(Y) {
                     this.overlay.hide(); //hide progress indicator
 
                     for (key in data.entries) {
-                        new M.core.alert({title:data.entries[key].concept, message:data.entries[key].definition, lightbox:false});
+                        definition = data.entries[key].definition + data.entries[key].attachments
+                        new M.core.alert({title:data.entries[key].concept, message:definition, lightbox:false});
                     }
 
                     return true;
@@ -121,8 +121,7 @@ YUI.add('moodle-filter_glossary-autolinker', function(Y) {
             status : {value : true},
             directories : {value : false},
             fullscreen : {value : false},
-            dependent : {value : true},
-            courseid : {value : 1}
+            dependent : {value : true}
         }
     });
 

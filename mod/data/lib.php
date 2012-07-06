@@ -829,11 +829,11 @@ function data_tags_check($dataid, $template) {
 /**
  * Adds an instance of a data
  *
- * @global object
- * @param object $data
- * @return $int
+ * @param stdClass $data
+ * @param mod_data_mod_form $mform
+ * @return int intance id
  */
-function data_add_instance($data) {
+function data_add_instance($data, $mform = null) {
     global $DB;
 
     if (empty($data->assessed)) {
@@ -1036,8 +1036,7 @@ function data_get_user_grades($data, $userid=0) {
 /**
  * Update activity grades
  *
- * @global object
- * @global object
+ * @category grade
  * @param object $data
  * @param int $userid specific user only, 0 means all
  * @param bool $nullifnone
@@ -1097,9 +1096,9 @@ function data_upgrade_grades() {
 /**
  * Update/create grade item for given data
  *
- * @global object
- * @param object $data object with extra cmidnumber
- * @param mixed optional array/object of grade(s); 'reset' means reset grades in gradebook
+ * @category grade
+ * @param stdClass $data A database instance with extra cmidnumber property
+ * @param mixed $grades Optional array/object of grade(s); 'reset' means reset grades in gradebook
  * @return object grade_item
  */
 function data_grade_item_update($data, $grades=NULL) {
@@ -1132,7 +1131,7 @@ function data_grade_item_update($data, $grades=NULL) {
 /**
  * Delete grade item for given data
  *
- * @global object
+ * @category grade
  * @param object $data object
  * @return object grade_item
  */
@@ -1141,71 +1140,6 @@ function data_grade_item_delete($data) {
     require_once($CFG->libdir.'/gradelib.php');
 
     return grade_update('mod/data', $data->course, 'mod', 'data', $data->id, 0, NULL, array('deleted'=>1));
-}
-
-/**
- * returns a list of participants of this database
- *
- * Returns the users with data in one data
- * (users with records in data_records, data_comments and ratings)
- *
- * @todo: deprecated - to be deleted in 2.2
- *
- * @param int $dataid
- * @return array
- */
-function data_get_participants($dataid) {
-    global $DB;
-
-    $params = array('dataid' => $dataid);
-
-    $sql = "SELECT DISTINCT u.id, u.id
-              FROM {user} u,
-                   {data_records} r
-             WHERE r.dataid = :dataid AND
-                   u.id = r.userid";
-    $records = $DB->get_records_sql($sql, $params);
-
-    $sql = "SELECT DISTINCT u.id, u.id
-              FROM {user} u,
-                   {data_records} r,
-                   {comments} c
-             WHERE r.dataid = ? AND
-                   u.id = r.userid AND
-                   r.id = c.itemid AND
-                   c.commentarea = 'database_entry'";
-    $comments = $DB->get_records_sql($sql, $params);
-
-    $sql = "SELECT DISTINCT u.id, u.id
-              FROM {user} u,
-                   {data_records} r,
-                   {ratings} a
-             WHERE r.dataid = ? AND
-                   u.id = r.userid AND
-                   r.id = a.itemid AND
-                   a.component = 'mod_data' AND
-                   a.ratingarea = 'entry'";
-    $ratings = $DB->get_records_sql($sql, $params);
-
-    $participants = array();
-
-    if ($records) {
-        foreach ($records as $record) {
-            $participants[$record->id] = $record;
-        }
-    }
-    if ($comments) {
-        foreach ($comments as $comment) {
-            $participants[$comment->id] = $comment;
-        }
-    }
-    if ($ratings) {
-        foreach ($ratings as $rating) {
-            $participants[$rating->id] = $rating;
-        }
-    }
-
-    return $participants;
 }
 
 // junk functions
@@ -2725,7 +2659,7 @@ function data_export_csv($export, $delimiter_name, $dataname, $count, $return=fa
     $filename .= '.csv';
     if (empty($return)) {
         header("Content-Type: application/download\n");
-        header("Content-Disposition: attachment; filename=$filename");
+        header("Content-Disposition: attachment; filename=\"$filename\"");
         header('Expires: 0');
         header('Cache-Control: must-revalidate,post-check=0,pre-check=0');
         header('Pragma: public');
@@ -2866,17 +2800,22 @@ function data_get_exportdata($dataid, $fields, $selectedfields, $currentgroup=0)
     return $exportdata;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// File API                                                                   //
+////////////////////////////////////////////////////////////////////////////////
+
 /**
  * Lists all browsable file areas
  *
- * @param object $course
- * @param object $cm
- * @param object $context
+ * @package  mod_data
+ * @category files
+ * @param stdClass $course course object
+ * @param stdClass $cm course module object
+ * @param stdClass $context context object
  * @return array
  */
 function data_get_file_areas($course, $cm, $context) {
-    $areas = array();
-    return $areas;
+    return array('content' => get_string('areacontent', 'mod_data'));
 }
 
 /**
@@ -2893,76 +2832,92 @@ function data_get_file_areas($course, $cm, $context) {
  * @param string $filename
  * @return file_info_stored file_info_stored instance or null if not found
  */
-function mod_data_get_file_info($browser, $areas, $course, $cm, $context, $filearea, $itemid, $filepath, $filename) {
-    global $CFG, $DB;
+function data_get_file_info($browser, $areas, $course, $cm, $context, $filearea, $itemid, $filepath, $filename) {
+    global $CFG, $DB, $USER;
 
     if ($context->contextlevel != CONTEXT_MODULE) {
         return null;
     }
 
-    if ($filearea === 'content') {
-        if (!$content = $DB->get_record('data_content', array('id'=>$itemid))) {
-            return null;
-        }
-
-        if (!$field = $DB->get_record('data_fields', array('id'=>$content->fieldid))) {
-            return null;
-        }
-
-        if (!$record = $DB->get_record('data_records', array('id'=>$content->recordid))) {
-            return null;
-        }
-
-        if (!$data = $DB->get_record('data', array('id'=>$field->dataid))) {
-            return null;
-        }
-
-        //check if approved
-        if ($data->approval and !$record->approved and !data_isowner($record) and !has_capability('mod/data:approve', $context)) {
-            return null;
-        }
-
-        // group access
-        if ($record->groupid) {
-            $groupmode = groups_get_activity_groupmode($cm, $course);
-            if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $context)) {
-                if (!groups_is_member($record->groupid)) {
-                    return null;
-                }
-            }
-        }
-
-        $fieldobj = data_get_field($field, $data, $cm);
-
-        $filepath = is_null($filepath) ? '/' : $filepath;
-        $filename = is_null($filename) ? '.' : $filename;
-        if (!$fieldobj->file_ok($filepath.$filename)) {
-            return null;
-        }
-
-        $fs = get_file_storage();
-        if (!($storedfile = $fs->get_file($context->id, 'mod_data', $filearea, $itemid, $filepath, $filename))) {
-            return null;
-        }
-        $urlbase = $CFG->wwwroot.'/pluginfile.php';
-        return new file_info_stored($browser, $context, $storedfile, $urlbase, $filearea, $itemid, true, true, false);
+    if (!isset($areas[$filearea])) {
+        return null;
     }
 
-    return null;
+    if (is_null($itemid)) {
+        require_once($CFG->dirroot.'/mod/data/locallib.php');
+        return new data_file_info_container($browser, $course, $cm, $context, $areas, $filearea);
+    }
+
+    if (!$content = $DB->get_record('data_content', array('id'=>$itemid))) {
+        return null;
+    }
+
+    if (!$field = $DB->get_record('data_fields', array('id'=>$content->fieldid))) {
+        return null;
+    }
+
+    if (!$record = $DB->get_record('data_records', array('id'=>$content->recordid))) {
+        return null;
+    }
+
+    if (!$data = $DB->get_record('data', array('id'=>$field->dataid))) {
+        return null;
+    }
+
+    //check if approved
+    if ($data->approval and !$record->approved and !data_isowner($record) and !has_capability('mod/data:approve', $context)) {
+        return null;
+    }
+
+    // group access
+    if ($record->groupid) {
+        $groupmode = groups_get_activity_groupmode($cm, $course);
+        if ($groupmode == SEPARATEGROUPS and !has_capability('moodle/site:accessallgroups', $context)) {
+            if (!groups_is_member($record->groupid)) {
+                return null;
+            }
+        }
+    }
+
+    $fieldobj = data_get_field($field, $data, $cm);
+
+    $filepath = is_null($filepath) ? '/' : $filepath;
+    $filename = is_null($filename) ? '.' : $filename;
+    if (!$fieldobj->file_ok($filepath.$filename)) {
+        return null;
+    }
+
+    $fs = get_file_storage();
+    if (!($storedfile = $fs->get_file($context->id, 'mod_data', $filearea, $itemid, $filepath, $filename))) {
+        return null;
+    }
+
+    // Checks to see if the user can manage files or is the owner.
+    // TODO MDL-33805 - Do not use userid here and move the capability check above.
+    if (!has_capability('moodle/course:managefiles', $context) && $storedfile->get_userid() != $USER->id) {
+        return null;
+    }
+
+    $urlbase = $CFG->wwwroot.'/pluginfile.php';
+
+    return new file_info_stored($browser, $context, $storedfile, $urlbase, $itemid, true, true, false, false);
 }
 
 /**
  * Serves the data attachments. Implements needed access control ;-)
  *
- * @param object $course
- * @param object $cm
- * @param object $context
- * @param string $filearea
- * @param array $args
- * @param bool $forcedownload
+ * @package  mod_data
+ * @category files
+ * @param stdClass $course course object
+ * @param stdClass $cm course module object
+ * @param stdClass $context context object
+ * @param string $filearea file area
+ * @param array $args extra arguments
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
  * @return bool false if file not found, does not return if found - justsend the file
  */
-function data_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload) {
+function data_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
     global $CFG, $DB;
 
     if ($context->contextlevel != CONTEXT_MODULE) {
@@ -3025,7 +2980,7 @@ function data_pluginfile($course, $cm, $context, $filearea, $args, $forcedownloa
         }
 
         // finally send the file
-        send_stored_file($file, 0, 0, true); // download MUST be forced - security!
+        send_stored_file($file, 0, 0, true, $options); // download MUST be forced - security!
     }
 
     return false;
@@ -3341,6 +3296,9 @@ function data_presets_export($course, $cm, $data, $tostorage=false) {
  * Capability check has been done in comment->check_permissions(), we
  * don't need to do it again here.
  *
+ * @package  mod_data
+ * @category comment
+ *
  * @param stdClass $comment_param {
  *              context  => context the context object
  *              courseid => int course id
@@ -3367,6 +3325,9 @@ function data_comment_permissions($comment_param) {
 
 /**
  * Validate comment parameter before perform other comments actions
+ *
+ * @package  mod_data
+ * @category comment
  *
  * @param stdClass $comment_param {
  *              context  => context the context object
@@ -3447,6 +3408,175 @@ function data_comment_validate($comment_param) {
 function data_page_type_list($pagetype, $parentcontext, $currentcontext) {
     $module_pagetype = array('mod-data-*'=>get_string('page-mod-data-x', 'data'));
     return $module_pagetype;
+}
+
+/**
+ * Get all of the record ids from a database activity.
+ *
+ * @param int $dataid      The dataid of the database module.
+ * @return array $idarray  An array of record ids
+ */
+function data_get_all_recordids($dataid) {
+    global $DB;
+    $initsql = 'SELECT c.recordid
+                  FROM {data_fields} f,
+                       {data_content} c
+                 WHERE f.dataid = :dataid
+                   AND f.id = c.fieldid
+              GROUP BY c.recordid';
+    $initrecord = $DB->get_recordset_sql($initsql, array('dataid' => $dataid));
+    $idarray = array();
+    foreach ($initrecord as $data) {
+        $idarray[] = $data->recordid;
+    }
+    // Close the record set and free up resources.
+    $initrecord->close();
+    return $idarray;
+}
+
+/**
+ * Get the ids of all the records that match that advanced search criteria
+ * This goes and loops through each criterion one at a time until it either
+ * runs out of records or returns a subset of records.
+ *
+ * @param array $recordids    An array of record ids.
+ * @param array $searcharray  Contains information for the advanced search criteria
+ * @param int $dataid         The data id of the database.
+ * @return array $recordids   An array of record ids.
+ */
+function data_get_advance_search_ids($recordids, $searcharray, $dataid) {
+    $searchcriteria = array_keys($searcharray);
+    // Loop through and reduce the IDs one search criteria at a time.
+    foreach ($searchcriteria as $key) {
+        $recordids = data_get_recordids($key, $searcharray, $dataid, $recordids);
+        // If we don't have anymore IDs then stop.
+        if (!$recordids) {
+            break;
+        }
+    }
+    return $recordids;
+}
+
+/**
+ * Gets the record IDs given the search criteria
+ *
+ * @param string $alias       Record alias.
+ * @param array $searcharray  Criteria for the search.
+ * @param int $dataid         Data ID for the database
+ * @param array $recordids    An array of record IDs.
+ * @return array $nestarray   An arry of record IDs
+ */
+function data_get_recordids($alias, $searcharray, $dataid, $recordids) {
+    global $DB;
+
+    $nestsearch = $searcharray[$alias];
+    // searching for content outside of mdl_data_content
+    if ($alias < 0) {
+        $alias = '';
+    }
+    list($insql, $params) = $DB->get_in_or_equal($recordids, SQL_PARAMS_NAMED);
+    $nestselect = 'SELECT c' . $alias . '.recordid
+                     FROM {data_content} c' . $alias . ',
+                          {data_fields} f,
+                          {data_records} r,
+                          {user} u ';
+    $nestwhere = 'WHERE u.id = r.userid
+                    AND f.id = c' . $alias . '.fieldid
+                    AND r.id = c' . $alias . '.recordid
+                    AND r.dataid = :dataid
+                    AND c' . $alias .'.recordid ' . $insql . '
+                    AND ';
+
+    $params['dataid'] = $dataid;
+    if (count($nestsearch->params) != 0) {
+        $params = array_merge($params, $nestsearch->params);
+        $nestsql = $nestselect . $nestwhere . $nestsearch->sql;
+    } else {
+        $thing = $DB->sql_like($nestsearch->field, ':search1', false);
+        $nestsql = $nestselect . $nestwhere . $thing . ' GROUP BY c' . $alias . '.recordid';
+        $params['search1'] = "%$nestsearch->data%";
+    }
+    $nestrecords = $DB->get_recordset_sql($nestsql, $params);
+    $nestarray = array();
+    foreach ($nestrecords as $data) {
+        $nestarray[] = $data->recordid;
+    }
+    // Close the record set and free up resources.
+    $nestrecords->close();
+    return $nestarray;
+}
+
+/**
+ * Returns an array with an sql string for advanced searches and the parameters that go with them.
+ *
+ * @param int $sort            DATA_*
+ * @param stdClass $data       Data module object
+ * @param array $recordids     An array of record IDs.
+ * @param string $selectdata   Information for the select part of the sql statement.
+ * @param string $sortorder    Additional sort parameters
+ * @return array sqlselect     sqlselect['sql'] has the sql string, sqlselect['params'] contains an array of parameters.
+ */
+function data_get_advanced_search_sql($sort, $data, $recordids, $selectdata, $sortorder) {
+    global $DB;
+    if ($sort == 0) {
+        $nestselectsql = 'SELECT r.id, r.approved, r.timecreated, r.timemodified, r.userid, u.firstname, u.lastname
+                        FROM {data_content} c,
+                             {data_records} r,
+                             {user} u ';
+        $groupsql = ' GROUP BY r.id, r.approved, r.timecreated, r.timemodified, r.userid, u.firstname, u.lastname ';
+    } else {
+        // Sorting through 'Other' criteria
+        if ($sort <= 0) {
+            switch ($sort) {
+                case DATA_LASTNAME:
+                    $sortcontentfull = "u.lastname";
+                    break;
+                case DATA_FIRSTNAME:
+                    $sortcontentfull = "u.firstname";
+                    break;
+                case DATA_APPROVED:
+                    $sortcontentfull = "r.approved";
+                    break;
+                case DATA_TIMEMODIFIED:
+                    $sortcontentfull = "r.timemodified";
+                    break;
+                case DATA_TIMEADDED:
+                default:
+                    $sortcontentfull = "r.timecreated";
+            }
+        } else {
+            $sortfield = data_get_field_from_id($sort, $data);
+            $sortcontent = $DB->sql_compare_text('c.' . $sortfield->get_sort_field());
+            $sortcontentfull = $sortfield->get_sort_sql($sortcontent);
+        }
+
+        $nestselectsql = 'SELECT r.id, r.approved, r.timecreated, r.timemodified, r.userid, u.firstname, u.lastname, ' . $sortcontentfull . '
+                              AS sortorder
+                            FROM {data_content} c,
+                                 {data_records} r,
+                                 {user} u ';
+        $groupsql = ' GROUP BY r.id, r.approved, r.timecreated, r.timemodified, r.userid, u.firstname, u.lastname, ' .$sortcontentfull;
+    }
+    $nestfromsql = 'WHERE c.recordid = r.id
+                      AND r.dataid = :dataid
+                      AND r.userid = u.id';
+
+    // Find the field we are sorting on
+    if ($sort > 0 or data_get_field_from_id($sort, $data)) {
+        $nestfromsql .= ' AND c.fieldid = :sort';
+    }
+
+    // If there are no record IDs then return an sql statment that will return no rows.
+    if (count($recordids) != 0) {
+        list($insql, $inparam) = $DB->get_in_or_equal($recordids, SQL_PARAMS_NAMED);
+    } else {
+        list($insql, $inparam) = $DB->get_in_or_equal(array('-1'), SQL_PARAMS_NAMED);
+    }
+    $nestfromsql .= ' AND c.recordid ' . $insql . $groupsql;
+    $nestfromsql = "$nestfromsql $selectdata";
+    $sqlselect['sql'] = "$nestselectsql $nestfromsql $sortorder";
+    $sqlselect['params'] = $inparam;
+    return $sqlselect;
 }
 
 /**

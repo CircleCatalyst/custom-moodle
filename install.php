@@ -73,11 +73,6 @@ if (!function_exists('iconv')) {
     echo 'Moodle requires the iconv PHP extension. Please install or enable the iconv extension.';
     die();
 }
-if (iconv('UTF-8', 'UTF-8//IGNORE', 'abc') !== 'abc') {
-    // known to be broken in mid-2011 MAMP installations
-    echo 'Broken iconv PHP extension detected, installation can not continue.';
-    die;
-}
 
 if (PHP_INT_SIZE > 4) {
     // most probably 64bit PHP - we need a lot more memory
@@ -415,7 +410,7 @@ if ($config->stage == INSTALL_DATABASE) {
 
     $disabled = empty($distro->dbhost) ? '' : 'disabled="disabled';
     echo '<div class="formrow"><label for="id_dbhost" class="formlabel">'.$strdbhost.'</label>';
-    echo '<input id="id_dbhost" name="dbhost" '.$disabled.' type="text" value="'.s($config->dbhost).'" size="50" class="forminput" />';
+    echo '<input id="id_dbhost" name="dbhost" '.$disabled.' type="text" value="'.s($config->dbhost).'" size="30" class="forminput" />';
     echo '</div>';
 
     echo '<div class="formrow"><label for="id_dbname" class="formlabel">'.$strdbname.'</label>';

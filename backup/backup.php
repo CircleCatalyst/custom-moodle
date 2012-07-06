@@ -62,7 +62,7 @@ switch ($type) {
     case backup::TYPE_1SECTION :
         $coursecontext = get_context_instance(CONTEXT_COURSE, $course->id);
         require_capability('moodle/backup:backupsection', $coursecontext);
-        if (!empty($section->name)) {
+        if ((string)$section->name !== '') {
             $sectionname = format_string($section->name, true, array('context' => $coursecontext));
             $heading = get_string('backupsection', 'backup', $sectionname);
             $PAGE->navbar->add($sectionname);
@@ -101,7 +101,7 @@ if ($backup->enforce_changed_dependencies()) {
     echo $renderer->dependency_notification(get_string('dependenciesenforced','backup'));
 }
 echo $renderer->progress_bar($backup->get_progress_bar());
-echo $backup->display();
+echo $backup->display($renderer);
 $backup->destroy();
 unset($backup);
 echo $OUTPUT->footer();

@@ -41,7 +41,7 @@ if (!$cm = get_coursemodule_from_instance('chat', $chat->id, $course->id)) {
 }
 
 $context = get_context_instance(CONTEXT_MODULE, $cm->id);
-require_login($course->id, false, $cm);
+require_login($course, false, $cm);
 require_capability('mod/chat:chat', $context);
 $PAGE->set_pagelayout('base');
 
@@ -115,7 +115,6 @@ if (!empty($refresh) and data_submitted()) {
 
 $PAGE->set_title("$strchat: $course->shortname: ".format_string($chat->name,true)."$groupname");
 echo $OUTPUT->header();
-echo '<div id="">';
 echo $OUTPUT->container_start(null, 'page-mod-chat-gui_basic');
 echo $OUTPUT->heading(get_string('participants'), 2, 'mdl-left');
 

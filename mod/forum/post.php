@@ -113,7 +113,7 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
         if (!isguestuser()) {
             if (!is_enrolled($coursecontext)) {
                 if (enrol_selfenrol_available($course->id)) {
-                    $SESSION->wantsurl = $FULLME;
+                    $SESSION->wantsurl = qualified_me();
                     $SESSION->enrolcancel = $_SERVER['HTTP_REFERER'];
                     redirect($CFG->wwwroot.'/enrol/index.php?id='.$course->id, get_string('youneedtoenrol'));
                 }
@@ -181,7 +181,7 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     if (! forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext)) {
         if (!isguestuser()) {
             if (!is_enrolled($coursecontext)) {  // User is a guest here!
-                $SESSION->wantsurl = $FULLME;
+                $SESSION->wantsurl = qualified_me();
                 $SESSION->enrolcancel = $_SERVER['HTTP_REFERER'];
                 redirect($CFG->wwwroot.'/enrol/index.php?id='.$course->id, get_string('youneedtoenrol'));
             }
@@ -515,15 +515,17 @@ file_prepare_draft_area($draftitemid, $modcontext->id, 'mod_forum', 'attachment'
 //load data into form NOW!
 
 if ($USER->id != $post->userid) {   // Not the original author, so add a message to the end
+    $data = new stdClass();
     $data->date = userdate($post->modified);
     if ($post->messageformat == FORMAT_HTML) {
         $data->name = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$USER->id.'&course='.$post->course.'">'.
                        fullname($USER).'</a>';
-        $post->message .= '<p>(<span class="edited">'.get_string('editedby', 'forum', $data).'</span>)</p>';
+        $post->message .= '<p><span class="edited">('.get_string('editedby', 'forum', $data).')</span></p>';
     } else {
         $data->name = fullname($USER);
         $post->message .= "\n\n(".get_string('editedby', 'forum', $data).')';
     }
+    unset($data);
 }
 
 if (!empty($parent)) {
@@ -645,7 +647,13 @@ if ($fromform = $mform_post->get_data()) {
         if (!empty($message)) { // if we're printing stuff about the file upload
             $timemessage = 4;
         }
-        $message .= '<br />'.get_string("postupdated", "forum");
+
+        if ($realpost->userid == $USER->id) {
+            $message .= '<br />'.get_string("postupdated", "forum");
+        } else {
+            $realuser = $DB->get_record('user', array('id' => $realpost->userid));
+            $message .= '<br />'.get_string("editedpostupdated", "forum", fullname($realuser));
+        }
 
         if ($subscribemessage = forum_post_subscription($fromform, $forum)) {
             $timemessage = 4;

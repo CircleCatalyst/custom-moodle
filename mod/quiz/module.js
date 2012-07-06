@@ -96,7 +96,11 @@ M.mod_quiz.timer = {
             Y.one('#quiz-time-left').setContent(M.str.quiz.timesup);
             var input = Y.one('input[name=timeup]');
             input.set('value', 1);
-            input.ancestor('form').submit();
+            var form = input.ancestor('form');
+            if (form.one('input[name=finishattempt]')) {
+                form.one('input[name=finishattempt]').set('value', 0);
+            }
+            form.submit();
             return;
         }
 
@@ -208,10 +212,13 @@ M.mod_quiz.secure_window = {
             window.location = 'about:blank';
         }
         Y.delegate('contextmenu', M.mod_quiz.secure_window.prevent, document, '*');
-        Y.delegate('mousedown', M.mod_quiz.secure_window.prevent_mouse, document, '*');
-        Y.delegate('mouseup', M.mod_quiz.secure_window.prevent_mouse, document, '*');
-        Y.delegate('dragstart', M.mod_quiz.secure_window.prevent, document, '*');
+        Y.delegate('mousedown',   M.mod_quiz.secure_window.prevent_mouse, document, '*');
+        Y.delegate('mouseup',     M.mod_quiz.secure_window.prevent_mouse, document, '*');
+        Y.delegate('dragstart',   M.mod_quiz.secure_window.prevent, document, '*');
         Y.delegate('selectstart', M.mod_quiz.secure_window.prevent, document, '*');
+        Y.delegate('cut',         M.mod_quiz.secure_window.prevent, document, '*');
+        Y.delegate('copy',        M.mod_quiz.secure_window.prevent, document, '*');
+        Y.delegate('paste',       M.mod_quiz.secure_window.prevent, document, '*');
         M.mod_quiz.secure_window.clear_status;
         Y.on('beforeprint', function() {
             Y.one(document.body).setStyle('display', 'none');

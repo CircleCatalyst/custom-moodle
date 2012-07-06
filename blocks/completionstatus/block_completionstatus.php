@@ -36,7 +36,7 @@ require_once($CFG->libdir.'/completionlib.php');
 class block_completionstatus extends block_base {
 
     public function init() {
-        $this->title   = get_string('completionstatus', 'block_completionstatus');
+        $this->title   = get_string('pluginname', 'block_completionstatus');
     }
 
     public function get_content() {
@@ -171,7 +171,7 @@ class block_completionstatus extends block_base {
             $a = new stdClass();
             $a->first = $prerequisites_complete;
             $a->second = count($prerequisites);
-            $shtml .= get_string('firstofsecond', 'block_completionstatus', $a);
+            $phtml .= get_string('firstofsecond', 'block_completionstatus', $a);
             $phtml .= '</td></tr>';
 
             $shtml = $phtml . $shtml;

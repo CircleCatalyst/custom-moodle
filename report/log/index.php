@@ -17,8 +17,7 @@
 /**
  * Displays different views of the logs.
  *
- * @package    report
- * @subpackage log
+ * @package    report_log
  * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -43,7 +42,7 @@ if (empty($host_course)) {
 
 $group       = optional_param('group', 0, PARAM_INT); // Group to display
 $user        = optional_param('user', 0, PARAM_INT); // User to display
-$date        = optional_param('date', 0, PARAM_FILE); // Date to display - number or some string
+$date        = optional_param('date', 0, PARAM_INT); // Date to display
 $modname     = optional_param('modname', '', PARAM_PLUGIN); // course_module->id
 $modid       = optional_param('modid', 0, PARAM_FILE); // number or 'site_errors'
 $modaction   = optional_param('modaction', '', PARAM_PATH); // an action as recorded in the logs
