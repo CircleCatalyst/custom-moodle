@@ -68,8 +68,9 @@ class MoodleQuickForm_externalpicker extends MoodleQuickForm_group
         global $CFG;
         $this->_elements = array();
 
-        $this->_elements[0] =& MoodleQuickForm::createElement('text', 'value', '', array('size'=>'48'));
-        $this->_elements[1] =& MoodleQuickForm::createElement('button', 'popup', $this->_options['buttoncaption'].' ...');
+        // E_STRICT creating elements without forms is nasty because it internally uses $this
+        $this->_elements[0] = @MoodleQuickForm::createElement('text', 'value', '', array('size'=>'48'));
+        $this->_elements[1] = @MoodleQuickForm::createElement('button', 'popup', $this->_options['buttoncaption'].' ...');
 
         // Since the Moodle 1.9 "openpopup" Javascript function no longer exists, we'll define it here
         $rawhtml = <<<HTML
@@ -106,7 +107,8 @@ HTML;
 </script>
 HTML;
 
-        $this->_elements[2] =& MoodleQuickForm::createElement('html', $rawhtml);
+        // E_STRICT creating elements without forms is nasty because it internally uses $this
+        $this->_elements[2] = @MoodleQuickForm::createElement('html', $rawhtml);
 
         $button =& $this->_elements[1];
 
