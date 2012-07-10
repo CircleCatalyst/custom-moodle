@@ -83,11 +83,8 @@ class mod_hotpot_report_renderer extends mod_hotpot_renderer {
      * @param xxx $hotpot
      */
     public function render_report($hotpot)  {
-        global $CFG;
         $this->init($hotpot);
         echo $this->header();
-        $currenttab = 'reports';
-        require($CFG->dirroot . '/mod/hotpot/tabs.php');
         echo $this->reportcontent();
         echo $this->footer();
     }
@@ -141,7 +138,7 @@ class mod_hotpot_report_renderer extends mod_hotpot_renderer {
         }
 
         // setup the report table
-        $table->setup($tablecolumns, $baseurl);
+        $table->setup_report_table($tablecolumns, $baseurl);
 
         // setup sql to COUNT records
         list($select, $from, $where, $params) = $this->count_sql($userid);
@@ -198,19 +195,24 @@ class mod_hotpot_report_renderer extends mod_hotpot_renderer {
         $where  = 'hotpotid=:hotpotid';
         $params['hotpotid'] = $this->hotpot->id;
 
-        // add user details (if necessary)
+        // add user fields. if required
         if (in_array('fullname', $this->tablecolumns)) {
+            // remove the explicit specification of the user fields because they cause
+            // an error on MS-SQL: Column 'mdl_user.id' is invalid in the select list
+            // because it is not contained in either an aggregate function or the GROUP BY clause.
+            // $select .= ', u.id AS userid, u.firstname, u.lastname, u.picture, u.imagealt, u.email';
+            // However, we need the next two lines to JOIN the user table (see CONTRIB-3689)
             $from   .= ', {user} u';
             $where  .= ' AND ha.userid=u.id';
         }
 
-        // restrict to a specific user
+        // restrict sql to a specific user
         if ($userid) {
             $where .= ' AND ha.userid=:userid';
             $params['userid'] = $userid;
         }
 
-        // restrict to a specific attempt
+        // restrict sql to a specific attempt
         if ($attemptid) {
             $where = ' AND ha.id=:attemptid';
             $params['attemptid'] = $attemptid;
