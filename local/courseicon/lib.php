@@ -159,7 +159,7 @@ function local_courseicon_send_icon($courseid, $courseicon, $type, $size) {
                 $context = get_context_instance(CONTEXT_COURSECAT, $courseid);
                 break;
         }
-        $files = $fs->get_area_files($context->id, 'local_courseicon', "customicon-{$size}");
+        $files = $fs->get_area_files($context->id, 'local_courseicon', "customicon_{$size}");
 
         // If we found the custom icon in file storage, send it back and don't continue
         if (count($files)){
@@ -210,8 +210,8 @@ function local_courseicon_update_icon($course, $type, $data, &$mform) {
                     break;
             }
             $fs->delete_area_files($context->id, 'local_courseicon');
-            local_courseicon_resize_image($tempfilepath, 'icon-large', $context, 'local_courseicon', 'customicon-large', 0, '/', 50, 50, 'png');
-            local_courseicon_resize_image($tempfilepath, 'icon-small', $context, 'local_courseicon', 'customicon-small', 0, '/', 25, 25, 'png');
+            local_courseicon_resize_image($tempfilepath, 'icon-large', $context, 'local_courseicon', 'customicon_large', 0, '/', 50, 50, 'png');
+            local_courseicon_resize_image($tempfilepath, 'icon-small', $context, 'local_courseicon', 'customicon_small', 0, '/', 25, 25, 'png');
 
             @unlink($tempfilepath);
         }
