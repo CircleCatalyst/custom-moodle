@@ -38,7 +38,12 @@ class SearchEngine_google extends SearchEngine{
             $this->searchurl .= '&key='.$apikey;
         }
 
-        $safesearch = $blockconfig->google_safesearch;
+        if (isset($blockconfig->google_safesearch)) {
+            $safesearch = $blockconfig->google_safesearch;
+        } else {
+            $safesearch = 'moderate';
+        }
+
         if ($safesearch === 'moderate') {
             $this->searchurl .= '&safe=moderate';
         }
