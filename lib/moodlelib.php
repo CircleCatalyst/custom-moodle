@@ -386,6 +386,8 @@ define('FEATURE_GRADE_HAS_GRADE', 'grade_has_grade');
 define('FEATURE_GRADE_OUTCOMES', 'outcomes');
 /** True if module supports advanced grading methods */
 define('FEATURE_ADVANCED_GRADING', 'grade_advanced_grading');
+/** True if module controls the grade visibility over the gradebook */
+define('FEATURE_CONTROLS_GRADE_VISIBILITY', 'controlsgradevisbility');
 
 /** True if module has code to track whether somebody viewed it */
 define('FEATURE_COMPLETION_TRACKS_VIEWS', 'completion_tracks_views');
@@ -653,7 +655,8 @@ function optional_param_array($parname, $default, $type) {
  * @param string $type PARAM_ constant
  * @param bool $allownull are nulls valid value?
  * @param string $debuginfo optional debug information
- * @return mixed the $param value converted to PHP type or invalid_parameter_exception
+ * @return mixed the $param value converted to PHP type
+ * @throws invalid_parameter_exception if $param is not of given type
  */
 function validate_param($param, $type, $allownull=NULL_NOT_ALLOWED, $debuginfo='') {
     if (is_null($param)) {
@@ -668,7 +671,15 @@ function validate_param($param, $type, $allownull=NULL_NOT_ALLOWED, $debuginfo='
     }
 
     $cleaned = clean_param($param, $type);
-    if ((string)$param !== (string)$cleaned) {
+
+    if ($type == PARAM_FLOAT) {
+        // Do not detect precision loss here.
+        if (is_float($param) or is_int($param)) {
+            // These always fit.
+        } else if (!is_numeric($param) or !preg_match('/^[\+-]?[0-9]*\.?[0-9]*(e[-+]?[0-9]+)?$/i', (string)$param)) {
+            throw new invalid_parameter_exception($debuginfo);
+        }
+    } else if ((string)$param !== (string)$cleaned) {
         // conversion to string is usually lossless
         throw new invalid_parameter_exception($debuginfo);
     }
@@ -5728,15 +5739,15 @@ function get_max_upload_file_size($sitebytes=0, $coursebytes=0, $modulebytes=0) 
         }
     }
 
-    if ($sitebytes and $sitebytes < $minimumsize) {
+    if (($sitebytes > 0) and ($sitebytes < $minimumsize)) {
         $minimumsize = $sitebytes;
     }
 
-    if ($coursebytes and $coursebytes < $minimumsize) {
+    if (($coursebytes > 0) and ($coursebytes < $minimumsize)) {
         $minimumsize = $coursebytes;
     }
 
-    if ($modulebytes and $modulebytes < $minimumsize) {
+    if (($modulebytes > 0) and ($modulebytes < $minimumsize)) {
         $minimumsize = $modulebytes;
     }
 
@@ -10593,4 +10604,20 @@ function get_home_page() {
         }
     }
     return HOMEPAGE_SITE;
+}
+
+/**
+ * Gets the name of a course to be displayed when showing a list of courses.
+ * By default this is just $course->fullname but user can configure it. The
+ * result of this function should be passed through print_string.
+ * @param object $course Moodle course object
+ * @return string Display name of course (either fullname or short + fullname)
+ */
+function get_course_display_name_for_list($course) {
+    global $CFG;
+    if (!empty($CFG->courselistshortnames)) {
+        return get_string('courseextendednamedisplay', '', $course);
+    } else {
+        return $course->fullname;
+    }
 }
