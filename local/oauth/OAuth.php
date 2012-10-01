@@ -30,9 +30,9 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 /* Generic exception class
  */
-class OAuthException extends Exception {
-  // pass
-}
+//class OAuthException extends Exception {
+  // pass WTF is this beig redefined for??
+//}
 
 class OAuthConsumer {
   public $key;
