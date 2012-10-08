@@ -15,4 +15,6 @@ IMPORTANT
 
 3) more instructions to come..
 
+http://chrisjean.com/2009/04/20/git-submodules-adding-using-removing-and-updating/
+
 
