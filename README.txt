@@ -10,8 +10,14 @@ IMPORTANT
   - blocks/dndupload
   - course/format/topcoll
 
-2) these need updating seperately, using 
+2) When cloning, these need updating seperately, using 
+  $ git clone --recursive https://github.com/WatchdogNZ/custom-moodle.git
+OR
+  - go into each submodule location and
+  $ git submodule init
   $ git submodule update
+  or use
+  $ git submodule update --init
 
 3) more instructions to come..
 
