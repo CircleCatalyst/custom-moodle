@@ -4,3 +4,6 @@
 [submodule "blocks/dndupload"]
 	path = blocks/dndupload
 	url = https://github.com/davosmith/moodle-block_dndupload.git
+[submodule "local/hub"]
+	path = local/hub
+	url = https://github.com/moodlehq/moodle-local_hub.git
