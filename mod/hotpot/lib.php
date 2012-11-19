@@ -148,7 +148,7 @@ function hotpot_process_formdata(stdclass &$data, $mform) {
     }
 
     // get context for this HotPot instance
-    $context = get_context_instance(CONTEXT_MODULE, $data->coursemodule);
+    $context = hotpot_get_context(CONTEXT_MODULE, $data->coursemodule);
 
     $sourcefile = null;
     $data->sourcefile = '';
@@ -351,10 +351,10 @@ function hotpot_delete_instance($id) {
     }
 
     // delete all associated hotpot questions
-    $DB->delete_records('hotpot_questions', array('hotpotid' => $id));
+    $DB->delete_records('hotpot_questions', array('hotpotid' => $hotpot->id));
 
     // delete all associated hotpot attempts, details and responses
-    if ($attempts = $DB->get_records('hotpot_attempts', array('hotpotid' => $id), '', 'id, id')) {
+    if ($attempts = $DB->get_records('hotpot_attempts', array('hotpotid' => $hotpot->id), '', 'id')) {
         $ids = array_keys($attempts);
         $DB->delete_records_list('hotpot_details',   'attemptid', $ids);
         $DB->delete_records_list('hotpot_responses', 'attemptid', $ids);
@@ -470,7 +470,7 @@ function hotpot_print_recent_activity($course, $viewfullnames, $timestart) {
 
     if ($logs = $DB->get_records_select('log', $select, $params, 'time ASC')) {
 
-        $coursecontext = get_context_instance(CONTEXT_COURSE, $course->id);
+        $coursecontext = hotpot_get_context(CONTEXT_COURSE, $course->id);
         $viewhiddensections = has_capability('moodle/course:viewhiddensections', $coursecontext);
 
         if ($modinfo = unserialize($course->modinfo)) {
@@ -490,7 +490,7 @@ function hotpot_print_recent_activity($course, $viewfullnames, $timestart) {
             }
             $sortorder = array_search($cmid, $coursemoduleids);
             if (! array_key_exists($sortorder, $stats)) {
-                $context = get_context_instance(CONTEXT_MODULE, $cmid);
+                $context = hotpot_get_context(CONTEXT_MODULE, $cmid);
                 if (has_capability('mod/hotpot:reviewmyattempts', $context) || has_capability('mod/hotpot:reviewallattempts', $context)) {
                     $viewreport = true;
                 } else {
@@ -612,7 +612,7 @@ function hotpot_print_recent_activity($course, $viewfullnames, $timestart) {
  *     $activity->timestamp : the time that the content was recorded in the database
  */
 function hotpot_get_recent_mod_activity(&$activities, &$index, $timestart, $courseid, $coursemoduleid=0, $userid=0, $groupid=0) {
-    global $CFG, $DB;
+    global $CFG, $DB, $USER;
 
     if (! $course = $DB->get_record('course', array('id'=>$courseid))) {
         return; // invalid course id - shouldn't happen !!
@@ -620,6 +620,15 @@ function hotpot_get_recent_mod_activity(&$activities, &$index, $timestart, $cour
 
     if (! $modinfo = unserialize($course->modinfo)) {
         return; // no activity mods
+    }
+
+    // CONTRIB-4025 don't allow students to see each other's scores
+    $coursecontext = hotpot_get_context(CONTEXT_COURSE, $courseid);
+    if (! has_capability('mod/hotpot:reviewmyattempts', $coursecontext)) {
+        return; // can't view recent activity
+    }
+    if (! has_capability('mod/hotpot:reviewallattempts', $coursecontext)) {
+        $userid = $USER->id; // force this user only
     }
 
     $hotpots = array(); // hotpotid => cmid
@@ -1044,19 +1053,20 @@ function hotpot_get_file_areas($course, $cm, $context) {
 }
 
 /**
- * Serves the files from the hotpot file areas
+ * Serves the plugin files from the specified $filearea
  *
- * hotpot files may be media inserted into entrypage, exitpage and sourcefile content
- *
- * @param stdclass $course
- * @param stdclass $cm
- * @param stdclass $context
- * @param string $filearea
- * @param array $args filepath split into folder and file names
- * @param bool $forcedownload
- * @return void this should never return to the caller
+ * @package  mod_hotpot
+ * @category files
+ * @param stdClass $course course object
+ * @param stdClass $cm course module object
+ * @param stdClass $context context object
+ * @param string $filearea file area
+ * @param array $args extra arguments
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if file not found, does not return if found - just send the file
  */
-function mod_hotpot_pluginfile($course, $cm, $context, $filearea, array $args, $forcedownload) {
+function hotpot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, $options=array()) {
     global $CFG;
 
     require_course_login($course, true, $cm);
@@ -1071,14 +1081,21 @@ function mod_hotpot_pluginfile($course, $cm, $context, $filearea, array $args, $
     require_capability($capability, $context);
 
     $fs = get_file_storage();
+    $component = 'mod_hotpot';
     $filename = array_pop($args);
     $filepath = $args ? '/'.implode('/', $args).'/' : '/';
 
-    $lifetime = isset($CFG->filelifetime) ? $CFG->filelifetime : 86400;
+    // Note: $lifetime is the frequency at which files are synched
+    if (isset($CFG->filelifetime)) {
+        $lifetime =  $CFG->filelifetime;
+    } else {
+        $lifetime =  DAYSECS; // DAYSECS = 86400 secs = 24 hours
+    }
+    $filter   = 0; // don't apply filters
 
-    if ($file = $fs->get_file($context->id, 'mod_hotpot', $filearea, 0, $filepath, $filename)) {
+    if ($file = $fs->get_file($context->id, $component, $filearea, 0, $filepath, $filename)) {
         // file found - this is what we expect to happen
-        send_stored_file($file, $lifetime, 0);
+        send_stored_file($file, $lifetime, $filter, $forcedownload, $options);
     }
 
     /////////////////////////////////////////////////////////////
@@ -1090,15 +1107,21 @@ function mod_hotpot_pluginfile($course, $cm, $context, $filearea, array $args, $
     /////////////////////////////////////////////////////////////
 
     $file_record = array(
-        'contextid'=>$context->id, 'component'=>'mod_hotpot', 'filearea'=>$filearea,
+        'contextid'=>$context->id, 'component'=>$component, 'filearea'=>$filearea,
         'sortorder'=>0, 'itemid'=>0, 'filepath'=>$filepath, 'filename'=>$filename
     );
 
+    // search in external directory
+    if ($file = hotpot_pluginfile_externalfile($context, $component, $filearea, $filepath, $filename, $file_record)) {
+        send_stored_file($file, $lifetime, $filter, $forcedownload, $options);
+    }
+
     // search course legacy files
-    $coursecontext = get_context_instance(CONTEXT_COURSE, $course->id);
+    $coursecontext = hotpot_get_context(CONTEXT_COURSE, $course->id);
     if ($file = $fs->get_file($coursecontext->id, 'course', 'legacy', 0, $filepath, $filename)) {
         if ($file = $fs->create_file_from_storedfile($file_record, $file)) {
-            send_stored_file($file, $lifetime, 0);
+            //send_stored_file($file, $lifetime, 0);
+            send_stored_file($file, $lifetime, $filter, $forcedownload, $options);
         }
     }
 
@@ -1111,12 +1134,13 @@ function mod_hotpot_pluginfile($course, $cm, $context, $filearea, array $args, $
     }
 
     // search other fileareas for this HotPot
-    $other_fileareas = array('sourcefile', 'entry', 'exit');
-    foreach($other_fileareas as $other_filearea) {
-        if ($other_filearea==$filearea) {
+    $hotpot_fileareas = hotpot_get_file_areas($course, $cm, $context);
+    $hotpot_fileareas = array_keys($hotpot_fileareas);
+    foreach($hotpot_fileareas as $hotpot_filearea) {
+        if ($hotpot_filearea==$filearea) {
             continue; // we have already checked this filearea
         }
-        if ($file = $fs->get_file($context->id, 'mod_hotpot', $other_filearea, 0, $filepath, $filename)) {
+        if ($file = $fs->get_file($context->id, $component, $hotpot_filearea, 0, $filepath, $filename)) {
             if ($file = $fs->create_file_from_storedfile($file_record, $file)) {
                 send_stored_file($file, $lifetime, 0);
             }
@@ -1125,6 +1149,270 @@ function mod_hotpot_pluginfile($course, $cm, $context, $filearea, array $args, $
 
     // file not found :-(
     send_file_not_found();
+}
+
+/**
+ * Gets main file in a file area
+ *
+ * if the main file is a link from an external repository
+ * look for the target file in the main file's repository
+ * Note: this functionality only exists in Moodle 2.3+
+ *
+ * @param stdclass $context
+ * @param string $component 'mod_hotpot'
+ * @param string $filearea  'sourcefile', 'entrytext' or 'exittext'
+ * @param string $filepath  despite the name, this is a dir path with leading and trailing "/"
+ * @param string $filename
+ * @param array $file_record
+ * @return stdclass if external file found, false otherwise
+ */
+function hotpot_pluginfile_externalfile($context, $component, $filearea, $filepath, $filename, $file_record) {
+
+    // get file storage
+    $fs = get_file_storage();
+
+    // get main file for this $component/$filearea
+    // typically this will be the HotPot quiz file
+    $mainfile = hotpot_pluginfile_mainfile($context, $component, $filearea);
+
+    // get repository - cautiously :-)
+    if (! $mainfile) {
+        return false; // no main file - shouldn't happen !!
+    }
+    if (! method_exists($mainfile, 'get_repository_id')) {
+        return false; // no file linking in Moodle 2.0 - 2.2
+    }
+    if (! $repositoryid = $mainfile->get_repository_id()) {
+        return false; // $mainfile is not from an external repository
+    }
+    if (! $repository = repository::get_repository_by_id($repositoryid, $context)) {
+        return false; // $repository is not accessible in this context - shouldn't happen !!
+    }
+
+    // get repository type
+    switch (true) {
+        case isset($repository->options['type']):
+            $type = $repository->options['type'];
+            break;
+        case isset($repository->instance->typeid):
+            $type = repository::get_type_by_id($repository->instance->typeid);
+            $type = $type->get_typename();
+            break;
+        default:
+            $type = ''; // shouldn't happen !!
+    }
+
+    // set paths (within repository) to required file
+    // how we do this depends on the repository $typename
+    // "filesystem" path is in plain text, others are encoded
+
+    $mainreference = $mainfile->get_reference();
+    switch ($type) {
+        case 'filesystem':
+            $maindirname   = dirname($mainreference);
+            $encodepath    = false;
+            break;
+        case 'user':
+        case 'coursefiles':
+            $params        = file_storage::unpack_reference($mainreference, true);
+            $maindirname   = $params['filepath'];
+            $encodepath    = true;
+            break;
+        default:
+            echo 'unknown repository type in hotpot_pluginfile_externalfile(): '.$type;
+            die;
+    }
+
+    // remove leading and trailing "/" from dir names
+    $maindirname = trim($maindirname, '/');
+    $dirname = trim($filepath, '/');
+
+    // assume path to target dir is same as path to main dir
+    $path = explode('/', $maindirname);
+
+    // traverse back up folder hierarchy if necessary
+    $count = count(explode('/', $dirname));
+    array_splice($path, -$count);
+
+    // reconstruct expected dir path for source file
+    if ($dirname) {
+        $path[] = $dirname;
+    }
+    $source = $path;
+    $source[] = $filename;
+    $source = implode('/', $source);
+    $path = implode('/', $path);
+
+    // filepaths in the repository to search for the file
+    $paths = array();
+
+    // add to the list of possible paths
+    $paths[$path] = $source;
+
+    if ($dirname) {
+        $paths[$dirname] = $dirname.'/'.$filename;
+    }
+    if ($maindirname) {
+        $paths[$maindirname] = $maindirname.'/'.$filename;
+    }
+    if ($maindirname && $dirname) {
+        $paths[$maindirname.'/'.$dirname] = $maindirname.'/'.$dirname.'/'.$filename;
+        $paths[$dirname.'/'.$maindirname] = $dirname.'/'.$maindirname.'/'.$filename;
+    }
+
+    // add leading and trailing "/" to dir names
+    $dirname = ($dirname=='' ? '/' : '/'.$dirname.'/');
+    $maindirname = ($maindirname=='' ? '/' : '/'.$maindirname.'/');
+
+    // locate $dirname within $maindirname
+    // typically it will be absent or occur just once,
+    // but it could possibly occur several times
+    $search = '/'.preg_quote($dirname, '/').'/i';
+    if (preg_match_all($search, $maindirname, $matches, PREG_OFFSET_CAPTURE)) {
+
+        $i_max = count($matches[0]);
+        for ($i=0; $i<$i_max; $i++) {
+            list($match, $start) = $matches[0][$i];
+            $path = substr($maindirname, 0, $start).$match;
+            $path = trim($path, '/'); // e.g. hp6.2/html_files
+            $paths[$path] = $path.'/'.$filename;
+        }
+    }
+
+    // setup $params for path encoding, if necessary
+    $params = array();
+    if ($encodepath) {
+        $listing = $repository->get_listing();
+        if (isset($listing['list'][0]['path'])) {
+            $params = file_storage::unpack_reference($listing['list'][0]['path'], true);
+        }
+    }
+
+    foreach ($paths as $path => $source) {
+
+        if (! hotpot_pluginfile_dirpath_exists($path, $repository, $encodepath, $params)) {
+            continue;
+        }
+
+        if ($encodepath) {
+            $params['filepath'] = '/'.$path.($path=='' ? '' : '/');
+            $params['filename'] = '.'; // "." signifies a directory
+            $path = file_storage::pack_reference($params);
+        }
+
+        $listing = $repository->get_listing($path);
+        foreach ($listing['list'] as $file) {
+
+            if (empty($file['source'])) {
+                continue; // a directory - shouldn't happen !!
+            }
+
+            if ($encodepath) {
+                $file['source'] = file_storage::unpack_reference($file['source']);
+                $file['source'] = trim($file['source']['filepath'], '/').'/'.$file['source']['filename'];
+            }
+
+            if ($file['source']==$source) {
+
+                if ($encodepath) {
+                    $params['filename'] = $filename;
+                    $source = file_storage::pack_reference($params);
+                }
+
+                if ($file = $fs->create_file_from_reference($file_record, $repositoryid, $source)) {
+                    return $file;
+                }
+                break; // couldn't create file, so give up and try a different $path
+            }
+        }
+    }
+
+    // external file not found (or found but not created)
+    return false;
+}
+
+/**
+ * Determine if dir path exists or not in repository
+ *
+ * @param string   $dirpath
+ * @param stdclass $repository
+ * @param boolean  $encodepath
+ * @param array    $params
+ * @return boolean true if dir path exists in repository, false otherwise
+ */
+function hotpot_pluginfile_dirpath_exists($dirpath, $repository, $encodepath, $params) {
+    $dirs = explode('/', $dirpath);
+    foreach ($dirs as $i => $dir) {
+        $dirpath = implode('/', array_slice($dirs, 0, $i));
+
+        if ($encodepath) {
+            $params['filepath'] = '/'.$dirpath.($dirpath=='' ? '' : '/');
+            $params['filename'] = '.'; // "." signifies a directory
+            $dirpath = file_storage::pack_reference($params);
+        }
+
+        $exists = false;
+        $listing = $repository->get_listing($dirpath);
+        foreach ($listing['list'] as $file) {
+            if (empty($file['source'])) {
+                if ($file['title']==$dir) {
+                    $exists = true;
+                    break;
+                }
+            }
+        }
+        if (! $exists) {
+            return false;
+        }
+    }
+    // all dirs in path exist - success !!
+    return true;
+}
+
+/**
+ * Gets main file in a file area
+ *
+ * @param stdclass $context
+ * @param string $component e.g. 'mod_hotpot'
+ * @param string $filearea
+ * @return stdclass if main file found, false otherwise
+ */
+function hotpot_pluginfile_mainfile($context, $component, $filearea) {
+    $fs = get_file_storage();
+
+    // the main file for this HotPot activity
+    // (file with lowest sortorder in $filearea)
+    $mainfile = false;
+
+    $area_files = $fs->get_area_files($context->id, $component, $filearea);
+    foreach ($area_files as $file) {
+        if ($file->is_directory() || $file->get_sortorder()==0) {
+            continue;
+        }
+        if (empty($mainfile) || $file->get_sortorder() < $mainfile->get_sortorder()) {
+            $mainfile  = $file;
+        }
+    }
+
+    return $mainfile;
+}
+
+/**
+ * Serves the files from the hotpot file areas
+ *
+ * hotpot files may be media inserted into entrypage, exitpage and sourcefile content
+ *
+ * @param stdclass $course
+ * @param stdclass $cm
+ * @param stdclass $context
+ * @param string $filearea
+ * @param array $args filepath split into folder and file names
+ * @param bool $forcedownload
+ * @param array $options
+ * @return void this should never return to the caller
+ */
+function mod_hotpot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, $options=array()) {
+    hotpot_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, $options);
 }
 
 /**
@@ -1245,9 +1533,9 @@ function hotpot_reset_userdata($data) {
         return array();
     }
 
-    if ($hotpots = $DB->get_records('hotpot', array('course' => $data->courseid), 'id', 'id, id')) {
+    if ($hotpots = $DB->get_records('hotpot', array('course' => $data->courseid), 'id', 'id')) {
         foreach ($hotpots as $hotpot) {
-            if ($attempts = $DB->get_records('hotpot_attempts', array('hotpotid' => $hotpot->id), 'id', 'id, id')) {
+            if ($attempts = $DB->get_records('hotpot_attempts', array('hotpotid' => $hotpot->id), 'id', 'id')) {
                 $ids = array_keys($attempts);
                 $DB->delete_records_list('hotpot_details',   'attemptid', $ids);
                 $DB->delete_records_list('hotpot_responses', 'attemptid', $ids);
@@ -1287,7 +1575,7 @@ function hotpot_refresh_events($courseid=0) {
 
     // get previous ids for events for these hotpots
     list($filter, $params) = $DB->get_in_or_equal(array_keys($hotpots));
-    if ($eventids = $DB->get_records_select('event', "modulename='hotpot' AND instance $filter", $params, 'id', 'id, id AS eventid')) {
+    if ($eventids = $DB->get_records_select('event', "modulename='hotpot' AND instance $filter", $params, 'id', 'id')) {
         $eventids = array_keys($eventids);
     } else {
         $eventids = array();
@@ -1318,7 +1606,7 @@ function hotpot_refresh_events($courseid=0) {
  */
 function hotpot_update_events_wrapper($hotpot) {
     global $DB;
-    if ($eventids = $DB->get_records('event', array('modulename'=>'hotpot', 'instance'=>$hotpot->id), 'id', 'id, id AS eventid')) {
+    if ($eventids = $DB->get_records('event', array('modulename'=>'hotpot', 'instance'=>$hotpot->id), 'id', 'id')) {
         $eventids = array_keys($eventids);
     } else {
         $eventids = array();
@@ -1341,6 +1629,21 @@ function hotpot_update_events(&$hotpot, &$eventids, $delete) {
     static $strcloses = '';
     static $maxduration = null;
 
+    // check to see if this user is allowed
+    // to manage calendar events in this course
+    $capability = 'moodle/calendar:manageentries';
+    if (has_capability($capability, hotpot_get_context(CONTEXT_SYSTEM))) {
+        $can_manage_events = true; // site admin
+    } else if (has_capability($capability, hotpot_get_context(CONTEXT_COURSE, $hotpot->course))) {
+        $can_manage_events = true; // course admin/teacher
+    } else {
+        $can_manage_events = false; // not allowed to add/edit calendar events !!
+    }
+
+    // don't check calendar capabiltiies
+    // whwne adding or updating events
+    $checkcapabilties = false;
+
     // cache text strings and max duration (first time only)
     if (is_null($maxduration)) {
         if (isset($CFG->hotpot_maxeventlength)) {
@@ -1358,64 +1661,69 @@ function hotpot_update_events(&$hotpot, &$eventids, $delete) {
     // array to hold events for this hotpot
     $events = array();
 
-    // set duration
-    if ($hotpot->timeclose && $hotpot->timeopen) {
-        $duration = max(0, $hotpot->timeclose - $hotpot->timeopen);
-    } else {
-        $duration = 0;
-    }
+    // only setup calendar events,
+    // if this user is allowed to
+    if ($can_manage_events) {
 
-    if ($duration > $maxduration) {
-        // long duration, two events
-        $events[] = (object)array(
-            'name' => $hotpot->name.' ('.$stropens.')',
-            'eventtype' => 'open',
-            'timestart' => $hotpot->timeopen,
-            'timeduration' => 0
-        );
-        $events[] = (object)array(
-            'name' => $hotpot->name.' ('.$strcloses.')',
-            'eventtype' => 'close',
-            'timestart' => $hotpot->timeclose,
-            'timeduration' => 0
-        );
-    } else if ($duration) {
-        // short duration, just a single event
-        if ($duration < DAYSECS) {
-            // less than a day (1:07 p.m.)
-            $fmt = get_string('strftimetime');
-        } else if ($duration < WEEKSECS) {
-            // less than a week (Thu, 13:07)
-            $fmt = get_string('strftimedaytime');
-        } else if ($duration < YEARSECS) {
-            // more than a week (2 Feb, 13:07)
-            $fmt = get_string('strftimerecent');
+        // set duration
+        if ($hotpot->timeclose && $hotpot->timeopen) {
+            $duration = max(0, $hotpot->timeclose - $hotpot->timeopen);
         } else {
-            // more than a year (Thu, 2 Feb 2012, 01:07 pm)
-            $fmt = get_string('strftimerecentfull');
+            $duration = 0;
         }
-        $events[] = (object)array(
-            'name' => $hotpot->name.' ('.userdate($hotpot->timeopen, $fmt).' - '.userdate($hotpot->timeclose, $fmt).')',
-            'eventtype' => 'open',
-            'timestart' => $hotpot->timeopen,
-            'timeduration' => $duration,
-        );
-    } else if ($hotpot->timeopen) {
-        // only an open date
-        $events[] = (object)array(
-            'name' => $hotpot->name.' ('.$stropens.')',
-            'eventtype' => 'open',
-            'timestart' => $hotpot->timeopen,
-            'timeduration' => 0,
-        );
-    } else if ($hotpot->timeclose) {
-        // only a closing date
-        $events[] = (object)array(
-            'name' => $hotpot->name.' ('.$strcloses.')',
-            'eventtype' => 'close',
-            'timestart' => $hotpot->timeclose,
-            'timeduration' => 0,
-        );
+
+        if ($duration > $maxduration) {
+            // long duration, two events
+            $events[] = (object)array(
+                'name' => $hotpot->name.' ('.$stropens.')',
+                'eventtype' => 'open',
+                'timestart' => $hotpot->timeopen,
+                'timeduration' => 0
+            );
+            $events[] = (object)array(
+                'name' => $hotpot->name.' ('.$strcloses.')',
+                'eventtype' => 'close',
+                'timestart' => $hotpot->timeclose,
+                'timeduration' => 0
+            );
+        } else if ($duration) {
+            // short duration, just a single event
+            if ($duration < DAYSECS) {
+                // less than a day (1:07 p.m.)
+                $fmt = get_string('strftimetime');
+            } else if ($duration < WEEKSECS) {
+                // less than a week (Thu, 13:07)
+                $fmt = get_string('strftimedaytime');
+            } else if ($duration < YEARSECS) {
+                // more than a week (2 Feb, 13:07)
+                $fmt = get_string('strftimerecent');
+            } else {
+                // more than a year (Thu, 2 Feb 2012, 01:07 pm)
+                $fmt = get_string('strftimerecentfull');
+            }
+            $events[] = (object)array(
+                'name' => $hotpot->name.' ('.userdate($hotpot->timeopen, $fmt).' - '.userdate($hotpot->timeclose, $fmt).')',
+                'eventtype' => 'open',
+                'timestart' => $hotpot->timeopen,
+                'timeduration' => $duration,
+            );
+        } else if ($hotpot->timeopen) {
+            // only an open date
+            $events[] = (object)array(
+                'name' => $hotpot->name.' ('.$stropens.')',
+                'eventtype' => 'open',
+                'timestart' => $hotpot->timeopen,
+                'timeduration' => 0,
+            );
+        } else if ($hotpot->timeclose) {
+            // only a closing date
+            $events[] = (object)array(
+                'name' => $hotpot->name.' ('.$strcloses.')',
+                'eventtype' => 'close',
+                'timestart' => $hotpot->timeclose,
+                'timeduration' => 0,
+            );
+        }
     }
 
     // cache description and visiblity (saves doing it twice for long events)
@@ -1437,13 +1745,14 @@ function hotpot_update_events(&$hotpot, &$eventids, $delete) {
         if (count($eventids)) {
             $event->id = array_shift($eventids);
             $calendarevent = calendar_event::load($event->id);
-            $calendarevent->update($event);
+            $calendarevent->update($event, $checkcapabilties);
         } else {
-            calendar_event::create($event);
+            calendar_event::create($event, $checkcapabilties);
         }
     }
 
     // delete surplus events, if required
+    // (no need to check capabilities here)
     if ($delete) {
         while (count($eventids)) {
             $id = array_shift($eventids);
@@ -1451,4 +1760,52 @@ function hotpot_update_events(&$hotpot, &$eventids, $delete) {
             $event->delete();
         }
     }
+}
+
+/**
+ * context
+ *
+ * a wrapper method to offer consistent API to get contexts
+ * in Moodle 2.0 and 2.1, we use get_context_instance() function
+ * in Moodle >= 2.2, we use static context_xxx::instance() method
+ *
+ * @param integer $contextlevel
+ * @param integer $instanceid (optional, default=0)
+ * @param int $strictness (optional, default=0 i.e. IGNORE_MISSING)
+ * @return required context
+ * @todo Finish documenting this function
+ */
+function hotpot_get_context($contextlevel, $instanceid=0, $strictness=0) {
+    if (class_exists('context_helper')) {
+        // use call_user_func() to prevent syntax error in PHP 5.2.x
+        // return $classname::instance($instanceid, $strictness);
+        $class = context_helper::get_class_for_level($contextlevel);
+        return call_user_func(array($class, 'instance'), $instanceid, $strictness);
+    } else {
+        return get_context_instance($contextlevel, $instanceid);
+    }
+}
+
+/**
+ * textlib
+ *
+ * a wrapper method to offer consistent API for textlib class
+ * in Moodle 2.0 and 2.1, $textlib is first initiated, then called.
+ * in Moodle >= 2.2, we use only static methods of the "textlib" class.
+ *
+ * @param string $method
+ * @param mixed any extra params that are required by the textlib $method
+ * @return result from the textlib $method
+ * @todo Finish documenting this function
+ */
+function hotpot_textlib() {
+    if (method_exists('textlib', 'textlib')) {
+        $textlib = textlib_get_instance();
+    } else {
+        $textlib = 'textlib'; // Moodle >= 2.2
+    }
+    $args = func_get_args();
+    $method = array_shift($args);
+    $callback = array($textlib, $method);
+    return call_user_func_array($callback, $args);
 }

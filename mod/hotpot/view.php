@@ -24,6 +24,7 @@
  */
 
 require_once(dirname(dirname(dirname(__FILE__))).'/config.php');
+require_once(dirname(dirname(dirname(__FILE__))).'/lib/completionlib.php');
 require_once(dirname(__FILE__).'/locallib.php');
 
 $id  = optional_param('id', 0, PARAM_INT); // course_module ID, or
@@ -71,6 +72,10 @@ if ($action=='deleteselected') {
 // Log this request
 add_to_log($course->id, 'hotpot', 'view', 'view.php?id='.$cm->id, $hotpot->id, $cm->id);
 
+// Update 'viewed' state if required by completion system
+$completion = new completion_info($course);
+$completion->set_module_viewed($cm);
+
 // Set editing mode
 if ($PAGE->user_allowed_editing()) {
     hotpot::set_user_editing();
@@ -80,7 +85,6 @@ if ($PAGE->user_allowed_editing()) {
 $PAGE->set_url($hotpot->view_url());
 $PAGE->set_title($hotpot->name);
 $PAGE->set_heading($course->fullname);
-
 
 $output = $PAGE->get_renderer('mod_hotpot');
 
